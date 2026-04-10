@@ -1,0 +1,9 @@
+{
+  "manifest_version": 3,
+  "name": "xallor",
+  "version": "0.0.1",
+  "description": "xallor new tab navigation page - load unpacked from the dist folder after npm run build.",
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  }
+}
