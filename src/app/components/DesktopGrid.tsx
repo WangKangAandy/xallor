@@ -1,9 +1,10 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { DndProvider, useDrop, useDrag } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { DesktopGridItem, Favicon, EditableLabel } from './DesktopGridItem';
 import { GridItemType, GridShape, SiteItem, FolderItem, GRID_CELL_SIZE, GRID_GAP } from './DesktopGridTypes';
+import { loadGridPayload, saveGridPayload } from '../storage/repository';
 
 const INITIAL_ITEMS: GridItemType[] = [
   { id: 'w1', type: 'widget', widgetType: 'weather', shape: { cols: 2, rows: 2 } },
@@ -98,7 +99,7 @@ function GridDropZone({ onDropEmpty, children }: { onDropEmpty: (item: any) => v
 }
 
 export function DesktopGrid() {
-  const [items, setItems] = useState<GridItemType[]>(INITIAL_ITEMS);
+  const [items, setItems] = useState<GridItemType[]>([]);
   const [mergeIntent, setMergeIntentState] = useState<{ targetId: string; draggedId: string } | null>(null);
   const [openFolderId, setOpenFolderId] = useState<string | null>(null);
   const [isFolderDragging, setIsFolderDragging] = useState(false);
@@ -106,6 +107,31 @@ export function DesktopGrid() {
 
   // TODO: Add a global setting toggle interface for this state
   const [showLabels, setShowLabels] = useState(true);
+  const hydratedRef = useRef(false);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const persisted = await loadGridPayload({ items: INITIAL_ITEMS, showLabels: true });
+      if (cancelled) return;
+      setItems(persisted.items);
+      setShowLabels(persisted.showLabels);
+      hydratedRef.current = true;
+      setIsHydrated(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!hydratedRef.current) return;
+    const timer = globalThis.setTimeout(() => {
+      void saveGridPayload({ items, showLabels });
+    }, 400);
+    return () => globalThis.clearTimeout(timer);
+  }, [items, showLabels]);
 
   const setMergeIntent = useCallback((intent: { targetId: string; draggedId: string } | null) => {
     mergeIntentRef.current = intent;
@@ -298,7 +324,7 @@ export function DesktopGrid() {
           margin: '0 auto',
           transition: 'gap 0.3s ease-in-out'
         }}>
-          {items.map((item, i) => (
+          {isHydrated && items.map((item, i) => (
             <DesktopGridItem
               key={item.id}
               item={item}

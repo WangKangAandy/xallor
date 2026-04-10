@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, KeyboardEvent } from 'react';
 import { ChevronRight, Plus, X, Check } from 'lucide-react';
+import { loadSearchPayload, saveSearchPayload } from '../storage/repository';
+import { FaviconIcon } from './shared/FaviconIcon';
 
 interface SearchEngine {
   id: string;
@@ -15,31 +17,6 @@ const DEFAULT_ENGINES: SearchEngine[] = [
   { id: 'baidu',      name: '百度',        domain: 'baidu.com',        searchUrl: 'https://www.baidu.com/s?wd=' },
   { id: 'brave',      name: 'Brave',      domain: 'search.brave.com', searchUrl: 'https://search.brave.com/search?q=' },
 ];
-
-function EngineFavicon({ domain, name, size = 20 }: { domain: string; name: string; size?: number }) {
-  const [errored, setErrored] = useState(false);
-  if (errored) {
-    return (
-      <div
-        className="rounded-sm bg-white/40 flex items-center justify-center font-bold text-gray-700 shadow-sm"
-        style={{ width: size, height: size, fontSize: size * 0.55, lineHeight: 1 }}
-      >
-        {name.charAt(0).toUpperCase()}
-      </div>
-    );
-  }
-  return (
-    <img
-      src={`https://icons.duckduckgo.com/ip3/${domain}.ico`}
-      alt={domain}
-      width={size}
-      height={size}
-      className="rounded-sm object-contain"
-      style={{ imageRendering: 'auto' }}
-      onError={() => setErrored(true)}
-    />
-  );
-}
 
 interface AddEngineFormProps {
   onAdd: (engine: SearchEngine) => void;
@@ -108,6 +85,38 @@ export function SearchBar() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [query, setQuery] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
+  const hydratedRef = useRef(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const persisted = await loadSearchPayload({
+        engines: DEFAULT_ENGINES,
+        selectedEngineId: DEFAULT_ENGINES[0].id,
+      });
+      if (cancelled) return;
+      setEngines(persisted.engines);
+      const selectedEngine = persisted.engines.find((item) => item.id === persisted.selectedEngineId) ?? persisted.engines[0];
+      if (selectedEngine) {
+        setSelected(selectedEngine);
+      }
+      hydratedRef.current = true;
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!hydratedRef.current || engines.length === 0) return;
+    const timer = globalThis.setTimeout(() => {
+      void saveSearchPayload({
+        engines,
+        selectedEngineId: selected.id,
+      });
+    }, 400);
+    return () => globalThis.clearTimeout(timer);
+  }, [engines, selected]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -158,7 +167,13 @@ export function SearchBar() {
               opacity: 0.75,
             }}
           >
-            <EngineFavicon domain={selected.domain} name={selected.name} size={20} />
+            <FaviconIcon
+              domain={selected.domain}
+              name={selected.name}
+              size={20}
+              className="rounded-sm object-contain"
+              style={{ imageRendering: 'auto' }}
+            />
           </div>
           {/* Right-pointing chevron rotates down when open */}
           <ChevronRight
@@ -197,7 +212,13 @@ export function SearchBar() {
                   selected.id === engine.id ? 'bg-white/60' : ''
                 }`}
               >
-                <EngineFavicon domain={engine.domain} name={engine.name} size={18} />
+                <FaviconIcon
+                  domain={engine.domain}
+                  name={engine.name}
+                  size={18}
+                  className="rounded-sm object-contain"
+                  style={{ imageRendering: 'auto' }}
+                />
                 <span className="text-sm text-gray-700 flex-1 whitespace-nowrap">{engine.name}</span>
                 {selected.id === engine.id && (
                   <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />

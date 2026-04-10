@@ -3,31 +3,31 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useDrag, useDrop } from 'react-dnd';
 import { GridItemType, GridShape, SiteItem, FolderItem, WidgetItem, GRID_CELL_SIZE, GRID_GAP, GRID_STEP } from './DesktopGridTypes';
 import { WeatherCard } from './WeatherCard';
+import { FaviconIcon } from './shared/FaviconIcon';
+import { computeResizedShape } from './folderResizeRules';
+import { buildFolderPreviewItemStyle } from './folderPreviewStyle';
+import { computeResizePreviewSize, shapeToPixels } from './resizePreview';
+import {
+  computeDrawerContentShape,
+  computeFolderContentLayout,
+  computeFolderResizeAnchors,
+  getFolderPreviewDecorationScale,
+  getPreviewCountForShape,
+  normalizeFolderPreviewGrid,
+  shouldActivateResizeAnchor,
+  type FolderPreviewTier,
+} from './folderPreviewLayout';
 
 // ─── Favicon helper ──────────────────────────────────────────────────────────────
 
 export function Favicon({ domain, name, size = 44 }: { domain: string; name: string; size?: number }) {
-  const [err, setErr] = useState(false);
-  if (err) {
-    return (
-      <div
-        className="flex items-center justify-center font-bold text-gray-700 shadow-sm bg-white/40"
-        style={{ width: size, height: size, borderRadius: size * 0.25, fontSize: size * 0.45 }}
-      >
-        {name.charAt(0).toUpperCase()}
-      </div>
-    );
-  }
   return (
-    <img
-      src={`https://icons.duckduckgo.com/ip3/${domain}.ico`}
-      alt={name}
-      width={size}
-      height={size}
+    <FaviconIcon
+      domain={domain}
+      name={name}
+      size={size}
       className="object-contain drop-shadow-sm"
       style={{ borderRadius: size * 0.2 }}
-      onError={() => setErr(true)}
-      draggable={false}
     />
   );
 }
@@ -43,16 +43,7 @@ function FolderPreviewItem({ site, folderId, maxIconSize, innerBorderRadius, fav
     <div
       ref={drag}
       onClick={(e) => { e.stopPropagation(); window.open(site.url, '_blank'); }} 
-      style={{ 
-        width: '100%', height: '100%', 
-        maxWidth: maxIconSize, maxHeight: maxIconSize, 
-        borderRadius: innerBorderRadius, 
-        background: 'rgba(255,255,255,0.5)', 
-        display: 'flex', alignItems: 'center', justifyContent: 'center', 
-        boxShadow: '0 2px 12px rgba(0,0,0,0.06)', 
-        transition: 'background 0.2s',
-        opacity: isDragging ? 0 : 1
-      }} 
+      style={buildFolderPreviewItemStyle({ maxIconSize, innerBorderRadius, isDragging })}
       className="hover:bg-white/80 cursor-grab active:cursor-grabbing"
     >
       <div ref={dragPreview}>
@@ -220,70 +211,85 @@ export function DesktopGridItem({
   const ref = useRef<HTMLDivElement>(null);
   const [isBorderHovered, setIsBorderHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+  const [resizePreview, setResizePreview] = useState<{ width: number; height: number } | null>(null);
+  const pendingShapeRef = useRef<GridShape | null>(null);
+  const [activeResizeDir, setActiveResizeDir] = useState<string | null>(null);
+  const resizeEngagedRef = useRef(false);
+  const resizeFolderStartRef = useRef<GridShape | null>(null);
+  const [resizeFolderPending, setResizeFolderPending] = useState<GridShape | null>(null);
 
   const startResize = (e: ReactPointerEvent, dir: string) => {
     e.stopPropagation();
     e.preventDefault();
+    resizeEngagedRef.current = false;
+    if (item.type === "folder") {
+      resizeFolderStartRef.current = { ...item.shape };
+      setResizeFolderPending(normalizeFolderPreviewGrid(item.shape));
+    }
     const startX = e.clientX;
     const startY = e.clientY;
     const startCols = item.shape.cols;
     const startRows = item.shape.rows;
+    const startShape = { cols: startCols, rows: startRows };
+    const lastShapeRef = { current: { cols: startCols, rows: startRows } };
+    const folderSiteCount = item.type === "folder" ? item.sites.length : 0;
+    const maxCols = item.type === "folder" ? (folderSiteCount <= 4 ? 2 : folderSiteCount <= 6 ? 3 : 4) : 4;
+    const maxRows = item.type === "folder" ? (folderSiteCount <= 4 ? 2 : folderSiteCount <= 6 ? 3 : 4) : 4;
 
     const onPointerMove = (moveEvent: PointerEvent) => {
         const deltaX = moveEvent.clientX - startX;
         const deltaY = moveEvent.clientY - startY;
 
-        let newCols = startCols;
-        let newRows = startRows;
-
-        if (dir.includes('right')) {
-            newCols = startCols + Math.round(deltaX / GRID_STEP);
-        } else if (dir.includes('left')) {
-            newCols = startCols - Math.round(deltaX / GRID_STEP);
-        }
-        
-        if (dir.includes('bottom')) {
-            newRows = startRows + Math.round(deltaY / GRID_STEP);
-        } else if (dir.includes('top')) {
-            newRows = startRows - Math.round(deltaY / GRID_STEP);
+        if (!resizeEngagedRef.current && shouldActivateResizeAnchor(deltaX, deltaY)) {
+          resizeEngagedRef.current = true;
+          setActiveResizeDir(dir);
         }
 
-        // Constrain limits
-        newCols = Math.max(1, Math.min(newCols, 4));
-        newRows = Math.max(1, Math.min(newRows, 4));
+        const previewSize = computeResizePreviewSize({
+          startCols,
+          startRows,
+          deltaX,
+          deltaY,
+          dir,
+          maxCols,
+          maxRows,
+        });
+        setResizePreview(previewSize);
 
-        if (item.type === 'folder') {
-          const count = item.sites.length;
-          
-          let maxCols = 3;
-          let maxRows = 3;
-          
-          if (count <= 4) {
-              maxCols = 2; maxRows = 2;
-          } else if (count <= 6) {
-              if (newCols >= 3 && newRows >= 3) {
-                  if (startCols >= 3) newRows = 2;
-                  else newCols = 2;
-              }
-              maxCols = 3; maxRows = 3;
-          }
-          
-          newCols = Math.min(newCols, maxCols);
-          newRows = Math.min(newRows, maxRows);
-          
-          if (count <= 6 && newCols === 3 && newRows === 3) {
-              newRows = 2; 
-          }
+        const nextShape = computeResizedShape({
+          startShape,
+          baseShape: lastShapeRef.current,
+          deltaX,
+          deltaY,
+          dir,
+          isFolder: item.type === 'folder',
+          siteCount: folderSiteCount,
+        });
+
+        if (item.type === "folder") {
+          setResizeFolderPending(nextShape);
         }
 
-        if (newCols !== item.shape.cols || newRows !== item.shape.rows) {
-            onResize(item.id, { cols: newCols, rows: newRows });
+        if (nextShape.cols !== lastShapeRef.current.cols || nextShape.rows !== lastShapeRef.current.rows) {
+            lastShapeRef.current = nextShape;
+            pendingShapeRef.current = nextShape;
         }
     };
 
     const onPointerUp = () => {
+        resizeEngagedRef.current = false;
         setIsResizing(false);
         setIsBorderHovered(false);
+        setResizePreview(null);
+        if (pendingShapeRef.current && (pendingShapeRef.current.cols !== item.shape.cols || pendingShapeRef.current.rows !== item.shape.rows)) {
+          onResize(item.id, pendingShapeRef.current);
+        }
+        pendingShapeRef.current = null;
+        setActiveResizeDir(null);
+        if (item.type === "folder") {
+          resizeFolderStartRef.current = null;
+          setResizeFolderPending(null);
+        }
         window.removeEventListener('pointermove', onPointerMove);
         window.removeEventListener('pointerup', onPointerUp);
     };
@@ -401,6 +407,8 @@ export function DesktopGridItem({
   const opacity = isDragging ? 0.3 : 1;
   const transform = isMergeTarget ? 'scale(1.05)' : 'scale(1)';
   const zIndex = isMergeTarget ? 20 : isDragging ? 30 : 10;
+  const targetSize = shapeToPixels(item.shape.cols, item.shape.rows);
+  const renderSize = resizePreview ?? targetSize;
 
   // Let's render the inside
   let content = null;
@@ -438,49 +446,109 @@ export function DesktopGridItem({
       </div>
     );
   } else if (item.type === 'folder') {
-    const isLarge = item.shape.cols > 1 || item.shape.rows > 1;
+    // 占多于一格时用 large 档位（与单格 1×1 小文件夹区分比例）
+    const isMultiCellFolder = item.shape.cols > 1 || item.shape.rows > 1;
+    const previewTier: FolderPreviewTier = isMultiCellFolder ? "large" : "small";
+    const contentPadding = isMultiCellFolder ? 20 : 12;
 
-    // Determine grid layout for preview based on shape
-    let gridCols = 2;
-    let gridRows = 2;
-    let previewCount = 4;
+    const committedGrid = normalizeFolderPreviewGrid(item.shape);
+    const viewportWidth = Math.max(0, renderSize.width);
+    const viewportHeight = Math.max(0, renderSize.height);
+    const isFolderDrag =
+      resizePreview !== null && resizeFolderStartRef.current !== null;
 
-    if (item.shape.cols === 1 && item.shape.rows === 1) {
-       gridCols = 2; gridRows = 2; previewCount = 4;
-    } else {
-       gridCols = item.shape.cols;
-       gridRows = item.shape.rows;
-       if (gridCols === 4 && gridRows === 1) { previewCount = 4; }
-       else if (gridCols === 1 && gridRows === 4) { previewCount = 4; }
-       else { previewCount = gridCols * gridRows; }
-    }
+    const canvasGrid: GridShape = isFolderDrag
+      ? computeDrawerContentShape({
+          committedShape: committedGrid,
+          dragStartShape: normalizeFolderPreviewGrid(resizeFolderStartRef.current),
+          livePendingShape: resizeFolderPending,
+          resizePreview,
+          siteCount: item.sites.length,
+        })
+      : committedGrid;
 
+    const layoutRefSize = shapeToPixels(canvasGrid.cols, canvasGrid.rows);
+    const previewCount = Math.min(item.sites.length, getPreviewCountForShape(canvasGrid.cols, canvasGrid.rows));
     const previewSites = item.sites.slice(0, previewCount);
 
-    // Adjust icon size dynamically
-    const maxIconSize = isLarge ? 64 : 32;
-    const innerBorderRadius = isLarge ? 20 : 12;
-    const faviconSize = isLarge ? 40 : 20;
+    const { iconSize, horizontalGap, verticalGap, canvasWidth, canvasHeight } = computeFolderContentLayout({
+      viewportWidth: isFolderDrag ? layoutRefSize.width : viewportWidth,
+      viewportHeight: isFolderDrag ? layoutRefSize.height : viewportHeight,
+      contentPadding,
+      cols: canvasGrid.cols,
+      rows: canvasGrid.rows,
+      tier: previewTier,
+    });
+    const { faviconMul, radiusMul } = getFolderPreviewDecorationScale(previewTier);
+    const innerBorderRadius = Math.max(8, Math.round(iconSize * radiusMul));
+    const faviconSize = Math.round(iconSize * faviconMul);
+
+    const { vertical: vAnchor, horizontal: hAnchor } = computeFolderResizeAnchors({
+      activeResizeDir,
+      resizePreview: isFolderDrag ? resizePreview : null,
+      dragStartShape: resizeFolderStartRef.current,
+    });
+
+    const transforms: string[] = [];
+    if (hAnchor === "center") transforms.push("translateX(-50%)");
+    if (vAnchor === "center") transforms.push("translateY(-50%)");
+
+    const anchorStyle: React.CSSProperties = {};
+    if (hAnchor === "start") {
+      anchorStyle.left = contentPadding;
+      anchorStyle.right = "auto";
+    } else if (hAnchor === "end") {
+      anchorStyle.right = contentPadding;
+      anchorStyle.left = "auto";
+    } else {
+      anchorStyle.left = "50%";
+    }
+
+    if (vAnchor === "start") {
+      anchorStyle.top = contentPadding;
+      anchorStyle.bottom = "auto";
+    } else if (vAnchor === "end") {
+      anchorStyle.bottom = contentPadding;
+      anchorStyle.top = "auto";
+    } else {
+      anchorStyle.top = "50%";
+    }
+    if (transforms.length > 0) anchorStyle.transform = transforms.join(" ");
+
+    const gridAlignContent =
+      !activeResizeDir ? "center" : vAnchor === "end" ? "end" : vAnchor === "center" ? "center" : "start";
+    const gridJustifyContent =
+      !activeResizeDir ? "center" : hAnchor === "end" ? "end" : hAnchor === "center" ? "center" : "start";
 
     content = (
-      <div className="relative flex flex-col w-full h-full pointer-events-auto cursor-pointer group/folder" onClick={(e) => { e.stopPropagation(); onOpenFolder?.(item.id); }} style={{ borderRadius: 36, backdropFilter: 'blur(16px)', background: 'rgba(255,255,255,0.35)', border: isMergeTarget ? '3px solid #3b82f6' : '1px solid rgba(255,255,255,0.65)', padding: isLarge ? 20 : 12, transition: 'transform 0.2s', boxShadow: '0 8px 32px rgba(0,0,0,0.06)' }}>
-        {/* We need to arrange them based on shape! */}
-        <div style={{
-          display: 'grid', width: '100%', height: '100%',
-          gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
-          gridTemplateRows: `repeat(${gridRows}, 1fr)`,
-          gap: isLarge ? 12 : 6, placeItems: 'center'
-        }}>
-          {previewSites.map((site, i) => (
-            <FolderPreviewItem 
-              key={i}
-              site={site}
-              folderId={item.id}
-              maxIconSize={maxIconSize}
-              innerBorderRadius={innerBorderRadius}
-              faviconSize={faviconSize}
-            />
-          ))}
+      <div className="relative flex flex-col w-full h-full pointer-events-auto cursor-pointer group/folder" onClick={(e) => { e.stopPropagation(); onOpenFolder?.(item.id); }} style={{ borderRadius: 36, backdropFilter: 'blur(16px)', background: 'rgba(255,255,255,0.35)', border: isMergeTarget ? '3px solid #3b82f6' : '1px solid rgba(255,255,255,0.65)', transition: 'transform 0.2s', boxShadow: '0 8px 32px rgba(0,0,0,0.06)' }}>
+        <div className="relative w-full h-full overflow-hidden" style={{ width: viewportWidth, height: viewportHeight, borderRadius: 36 }}>
+          <div
+            style={{
+              position: 'absolute',
+              ...anchorStyle,
+              width: canvasWidth,
+              height: canvasHeight,
+              display: 'grid',
+              gridTemplateColumns: `repeat(${canvasGrid.cols}, ${iconSize}px)`,
+              gridAutoRows: `${iconSize}px`,
+              columnGap: horizontalGap,
+              rowGap: verticalGap,
+              alignContent: gridAlignContent,
+              justifyContent: gridJustifyContent,
+            }}
+          >
+            {previewSites.map((site, i) => (
+              <FolderPreviewItem 
+                key={site.url + i}
+                site={site}
+                folderId={item.id}
+                maxIconSize={iconSize}
+                innerBorderRadius={innerBorderRadius}
+                faviconSize={faviconSize}
+              />
+            ))}
+          </div>
         </div>
         <EditableLabel 
           initialName={item.name} 
@@ -516,12 +584,21 @@ export function DesktopGridItem({
   return (
     <motion.div
       ref={ref}
-      layout
+      // Animate only position to avoid non-uniform scale distortion of inner preview icons
+      // during large shape changes (e.g. 4x4 -> 1x2).
+      layout="position"
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity, scale: isMergeTarget ? 1.05 : 1 }}
       exit={{ opacity: 0, scale: 0.5 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      style={{ gridColumn, gridRow, zIndex, cursor: isDragging ? 'grabbing' : 'grab' }}
+      transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+      style={{
+        gridColumn,
+        gridRow,
+        width: renderSize.width,
+        height: renderSize.height,
+        zIndex,
+        cursor: isDragging ? 'grabbing' : 'grab'
+      }}
       className="relative group flex items-center justify-center"
     >
       {/* Resize Overlay */}
