@@ -62,6 +62,9 @@ export function canWheelNextPage(pages: GridPayload[], activePageIndex: number):
   return (current?.items.length ?? 0) > 0;
 }
 
+/**
+ * @param fallback 须为**稳定引用**（如模块级常量）；若每次 render 传入新对象会重复触发 hydrate。
+ */
 export function useMultiPageGridPersistence(fallback: MultiPageGridState) {
   const [state, dispatch] = useReducer(multiPageGridReducer, {
     ...fallback,
