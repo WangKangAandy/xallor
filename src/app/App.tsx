@@ -6,9 +6,9 @@ const SearchBar = lazy(async () => {
   return { default: m.SearchBar };
 });
 
-const DesktopGrid = lazy(async () => {
-  const m = await import("./components/DesktopGrid");
-  return { default: m.DesktopGrid };
+const MultiDesktopStrip = lazy(async () => {
+  const m = await import("./components/MultiDesktopStrip");
+  return { default: m.MultiDesktopStrip };
 });
 
 const Sidebar = lazy(async () => {
@@ -16,13 +16,13 @@ const Sidebar = lazy(async () => {
   return { default: m.Sidebar };
 });
 
-function DesktopGridFallback() {
+function MultiDesktopFallback() {
   return (
     <div
       className="w-full min-h-[320px] max-w-[1200px] xl:max-w-[1280px] mx-auto flex items-center justify-center rounded-3xl border border-white/20 bg-white/5 text-white/70 text-sm backdrop-blur-sm"
       aria-hidden
     >
-      加载桌面网格…
+      加载桌面…
     </div>
   );
 }
@@ -64,10 +64,10 @@ export default function App() {
             </Suspense>
           </div>
 
-          {/* Unified Desktop Grid */}
-          <div className="w-full flex-1 flex justify-center max-w-[1200px] xl:max-w-[1280px] transition-all duration-500">
-            <Suspense fallback={<DesktopGridFallback />}>
-              <DesktopGrid />
+          {/* 多桌面条带（纵向滚轮切页）；单页时与原先单网格一致 */}
+          <div className="w-full flex-1 flex min-h-0 justify-center max-w-[1200px] xl:max-w-[1280px] transition-all duration-500">
+            <Suspense fallback={<MultiDesktopFallback />}>
+              <MultiDesktopStrip />
             </Suspense>
           </div>
         </div>

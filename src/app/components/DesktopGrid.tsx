@@ -3,12 +3,17 @@ import { DndProvider, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { DesktopGridItem } from "./DesktopGridItem";
 import { DesktopGridFolderPortal } from "./DesktopGridFolderPortal";
-import type { GridShape, FolderItem } from "./desktopGridTypes";
+import type { GridItemType, GridShape, FolderItem } from "./desktopGridTypes";
 import type { GridDnDDragItem } from "./desktopGridDnDTypes";
 import { GRID_CELL_SIZE, GRID_GAP } from "./desktopGridConstants";
-import { DEFAULT_GRID_PAYLOAD } from "./desktopGridInitialItems";
-import { useGridPersistence } from "./useGridPersistence";
 import { useGridDnD } from "./useGridDnD";
+
+export type DesktopGridProps = {
+  items: GridItemType[];
+  setItems: React.Dispatch<React.SetStateAction<GridItemType[]>>;
+  showLabels: boolean;
+  isHydrated: boolean;
+};
 
 function GridDropZone({ onDropEmpty, children }: { onDropEmpty: (item: unknown) => void; children: React.ReactNode }) {
   const [, drop] = useDrop({
@@ -26,8 +31,7 @@ function GridDropZone({ onDropEmpty, children }: { onDropEmpty: (item: unknown) 
   );
 }
 
-export function DesktopGrid() {
-  const { items, setItems, showLabels, isHydrated } = useGridPersistence(DEFAULT_GRID_PAYLOAD);
+export function DesktopGrid({ items, setItems, showLabels, isHydrated }: DesktopGridProps) {
   const { mergeIntent, handleReorder, handleHoverMergeIntent, handleClearMergeIntent, handleDropItem } =
     useGridDnD(setItems);
 

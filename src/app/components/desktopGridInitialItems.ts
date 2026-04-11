@@ -14,3 +14,8 @@ if (!isValidGridPayload(parsed)) {
 export const DEFAULT_GRID_PAYLOAD: GridPayload = parsed;
 
 export const DEFAULT_DESKTOP_GRID_ITEMS: GridItemType[] = DEFAULT_GRID_PAYLOAD.items;
+
+/** 新建空白桌面（仅清空图标，保留 showLabels 默认开启）。 */
+export function emptyGridPayload(): GridPayload {
+  return { items: [], showLabels: true };
+}

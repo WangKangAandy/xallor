@@ -12,7 +12,14 @@ vi.mock("./adapter", () => ({
   getOrCreateDeviceId: getOrCreateDeviceIdMock,
 }));
 
-import { loadGridPayload, loadSearchPayload, saveGridPayload, saveSearchPayload } from "./repository";
+import {
+  loadGridPayload,
+  loadMultiPageGridState,
+  loadSearchPayload,
+  saveGridPayload,
+  saveMultiPageGridState,
+  saveSearchPayload,
+} from "./repository";
 
 describe("storage repository", () => {
   beforeEach(() => {
@@ -79,6 +86,48 @@ describe("storage repository", () => {
   /**
    * 目的：保存搜索配置时，必须附带版本、用户与设备标识等基础元数据。
    */
+  /**
+   * 目的：无多页键时，应把 legacy 单页 `xallor_grid_v1` 迁成 MultiPageGridState，避免老用户丢桌面。
+   */
+  it("should_wrap_legacy_grid_payload_as_first_page_when_multipage_key_missing", async () => {
+    const fallback = {
+      pages: [{ items: [{ id: "fallback", type: "site" as const, shape: { cols: 1, rows: 1 }, site: { name: "x", domain: "x.com", url: "https://x.com" } }], showLabels: true }],
+      activePageIndex: 0,
+    };
+    readStorageKeyMock.mockImplementation(async (key: string) => {
+      if (key === "xallor_multipage_grid_v1") return null;
+      if (key === "xallor_grid_v1") {
+        return { version: 1, payload: { items: [], showLabels: false } };
+      }
+      return null;
+    });
+
+    const result = await loadMultiPageGridState(fallback);
+    expect(result).toEqual({
+      pages: [{ items: [], showLabels: false }],
+      activePageIndex: 0,
+    });
+  });
+
+  /**
+   * 目的：多页状态必须写入独立存储键，与 legacy 单页键分离。
+   */
+  it("should_persist_multipage_state_under_multipage_key", async () => {
+    const state = {
+      pages: [
+        { items: [], showLabels: true },
+        { items: [], showLabels: true },
+      ],
+      activePageIndex: 1,
+    };
+    await saveMultiPageGridState(state);
+
+    expect(writeStorageKeyMock).toHaveBeenCalled();
+    const call = writeStorageKeyMock.mock.calls.find((c) => c[0] === "xallor_multipage_grid_v1");
+    expect(call).toBeDefined();
+    expect(call![1]).toMatchObject({ version: 1, payload: state });
+  });
+
   it("should_persist_search_payload_with_envelope_metadata", async () => {
     const payload = {
       engines: [{ id: "g", name: "Google", domain: "google.com", searchUrl: "https://google.com?q=" }],

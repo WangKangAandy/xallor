@@ -6,12 +6,15 @@ import { readStorageKey, writeStorageKey, getOrCreateDeviceId } from "./adapter"
 import {
   ANONYMOUS_USER_ID,
   GridPayload,
+  MultiPageGridState,
   PersistedEnvelope,
   SearchPayload,
   STORAGE_VERSION,
 } from "./types";
 
 const GRID_KEY = "xallor_grid_v1";
+/** 多桌面状态（含多页网格）；优先于 legacy `GRID_KEY` 读取，写入时只写此键。 */
+const MULTIPAGE_GRID_KEY = "xallor_multipage_grid_v1";
 const SEARCH_KEY = "xallor_search_v1";
 
 function createEnvelope<T>(payload: T): PersistedEnvelope<T> {
@@ -45,6 +48,24 @@ export function isValidGridPayload(value: unknown): value is GridPayload {
   if (!value || typeof value !== "object") return false;
   const payload = value as GridPayload;
   return Array.isArray(payload.items) && typeof payload.showLabels === "boolean";
+}
+
+export function isValidMultiPageGridState(value: unknown): value is MultiPageGridState {
+  if (!value || typeof value !== "object") return false;
+  const o = value as MultiPageGridState;
+  if (!Array.isArray(o.pages) || o.pages.length === 0) return false;
+  if (!Number.isInteger(o.activePageIndex) || o.activePageIndex < 0 || o.activePageIndex >= o.pages.length) {
+    return false;
+  }
+  return o.pages.every((p) => isValidGridPayload(p));
+}
+
+function clampMultiPageGridState(state: MultiPageGridState): MultiPageGridState {
+  const last = Math.max(0, state.pages.length - 1);
+  return {
+    ...state,
+    activePageIndex: Math.min(Math.max(0, state.activePageIndex), last),
+  };
 }
 
 function isValidSearchPayload(value: unknown): value is SearchPayload {
@@ -82,6 +103,34 @@ export async function loadGridPayload(fallback: GridPayload): Promise<GridPayloa
 
 export async function saveGridPayload(payload: GridPayload): Promise<void> {
   await writeStorageKey(GRID_KEY, createEnvelope(payload));
+}
+
+/**
+ * 读取多桌面状态：优先新键；若无则尝试 legacy 单页 `xallor_grid_v1` 并包成单页。
+ */
+export async function loadMultiPageGridState(fallback: MultiPageGridState): Promise<MultiPageGridState> {
+  const rawMulti = await readStorageKey<PersistedEnvelope<unknown>>(MULTIPAGE_GRID_KEY);
+  const envMulti = migrateEnvelope<MultiPageGridState>(rawMulti);
+  if (envMulti && isValidMultiPageGridState(envMulti.payload)) {
+    return clampMultiPageGridState(envMulti.payload);
+  }
+
+  const rawLegacy = await readStorageKey<PersistedEnvelope<unknown>>(GRID_KEY);
+  const envLegacy = migrateEnvelope<GridPayload>(rawLegacy);
+  if (envLegacy && isValidGridPayload(envLegacy.payload)) {
+    return {
+      pages: [envLegacy.payload],
+      activePageIndex: 0,
+    };
+  }
+
+  return fallback;
+}
+
+export async function saveMultiPageGridState(state: MultiPageGridState): Promise<void> {
+  const safe = clampMultiPageGridState(state);
+  if (!isValidMultiPageGridState(safe)) return;
+  await writeStorageKey(MULTIPAGE_GRID_KEY, createEnvelope(safe));
 }
 
 export async function loadSearchPayload(fallback: SearchPayload): Promise<SearchPayload> {

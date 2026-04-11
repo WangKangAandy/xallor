@@ -15,6 +15,12 @@ export interface GridPayload {
   showLabels: boolean;
 }
 
+/** 横向多桌面：每页一个 GridPayload；activePageIndex 为当前可见页。 */
+export interface MultiPageGridState {
+  pages: GridPayload[];
+  activePageIndex: number;
+}
+
 export interface SearchPayload {
   engines: SearchEngineItem[];
   selectedEngineId: string;
