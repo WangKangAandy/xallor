@@ -3,9 +3,11 @@
  * 加载中 / 失败 / 空状态由 React 展示层统一处理（例如 `src/app/components/feedback/RemoteContentPlaceholder.tsx`）。
  */
 import { readStorageKey, writeStorageKey, getOrCreateDeviceId } from "./adapter";
+import { newPageId } from "./pageIds";
 import {
   ANONYMOUS_USER_ID,
   GridPayload,
+  GridPagePayload,
   MultiPageGridState,
   PersistedEnvelope,
   SearchPayload,
@@ -50,6 +52,35 @@ export function isValidGridPayload(value: unknown): value is GridPayload {
   return Array.isArray(payload.items) && typeof payload.showLabels === "boolean";
 }
 
+export function isValidGridPagePayload(value: unknown): value is GridPagePayload {
+  if (!isValidGridPayload(value)) return false;
+  const p = value as GridPayload & { pageId?: unknown };
+  return typeof p.pageId === "string" && p.pageId.length > 0;
+}
+
+/**
+ * 从磁盘原始 JSON 恢复多页状态：补齐缺失的 `pageId`、去重重号 id（旧数据迁移）。
+ */
+export function normalizeMultiPageGridPayload(raw: unknown): MultiPageGridState | null {
+  if (!raw || typeof raw !== "object") return null;
+  const o = raw as { pages?: unknown[]; activePageIndex?: number };
+  if (!Array.isArray(o.pages) || o.pages.length === 0) return null;
+  if (!Number.isInteger(o.activePageIndex) || o.activePageIndex < 0 || o.activePageIndex >= o.pages.length) {
+    return null;
+  }
+  const seen = new Set<string>();
+  const pages: GridPagePayload[] = [];
+  for (const p of o.pages) {
+    if (!isValidGridPayload(p)) return null;
+    const ext = p as GridPayload & { pageId?: unknown };
+    let pageId = typeof ext.pageId === "string" && ext.pageId.length > 0 ? ext.pageId : newPageId();
+    while (seen.has(pageId)) pageId = newPageId();
+    seen.add(pageId);
+    pages.push({ items: ext.items, showLabels: ext.showLabels, pageId });
+  }
+  return { pages, activePageIndex: o.activePageIndex };
+}
+
 export function isValidMultiPageGridState(value: unknown): value is MultiPageGridState {
   if (!value || typeof value !== "object") return false;
   const o = value as MultiPageGridState;
@@ -57,7 +88,7 @@ export function isValidMultiPageGridState(value: unknown): value is MultiPageGri
   if (!Number.isInteger(o.activePageIndex) || o.activePageIndex < 0 || o.activePageIndex >= o.pages.length) {
     return false;
   }
-  return o.pages.every((p) => isValidGridPayload(p));
+  return o.pages.every((p) => isValidGridPagePayload(p));
 }
 
 function clampMultiPageGridState(state: MultiPageGridState): MultiPageGridState {
@@ -111,15 +142,16 @@ export async function saveGridPayload(payload: GridPayload): Promise<void> {
 export async function loadMultiPageGridState(fallback: MultiPageGridState): Promise<MultiPageGridState> {
   const rawMulti = await readStorageKey<PersistedEnvelope<unknown>>(MULTIPAGE_GRID_KEY);
   const envMulti = migrateEnvelope<MultiPageGridState>(rawMulti);
-  if (envMulti && isValidMultiPageGridState(envMulti.payload)) {
-    return clampMultiPageGridState(envMulti.payload);
+  if (envMulti?.payload !== undefined && envMulti.payload !== null) {
+    const normalized = normalizeMultiPageGridPayload(envMulti.payload);
+    if (normalized) return clampMultiPageGridState(normalized);
   }
 
   const rawLegacy = await readStorageKey<PersistedEnvelope<unknown>>(GRID_KEY);
   const envLegacy = migrateEnvelope<GridPayload>(rawLegacy);
   if (envLegacy && isValidGridPayload(envLegacy.payload)) {
     return {
-      pages: [envLegacy.payload],
+      pages: [{ ...envLegacy.payload, pageId: newPageId() }],
       activePageIndex: 0,
     };
   }

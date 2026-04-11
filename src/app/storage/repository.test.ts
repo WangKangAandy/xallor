@@ -16,6 +16,7 @@ import {
   loadGridPayload,
   loadMultiPageGridState,
   loadSearchPayload,
+  normalizeMultiPageGridPayload,
   saveGridPayload,
   saveMultiPageGridState,
   saveSearchPayload,
@@ -84,14 +85,58 @@ describe("storage repository", () => {
   });
 
   /**
-   * 目的：保存搜索配置时，必须附带版本、用户与设备标识等基础元数据。
+   * 目的：旧版多页 JSON 未存 `pageId` 时，加载须补齐 id，避免列表 key 依赖下标。
    */
+  it("should_fill_missing_pageIds_when_loading_multipage_payload", () => {
+    const raw = {
+      pages: [
+        { items: [], showLabels: true },
+        { items: [], showLabels: true },
+      ],
+      activePageIndex: 0,
+    };
+    const out = normalizeMultiPageGridPayload(raw);
+    expect(out).not.toBeNull();
+    expect(out!.pages[0].pageId.length).toBeGreaterThan(0);
+    expect(out!.pages[1].pageId.length).toBeGreaterThan(0);
+    expect(out!.pages[0].pageId).not.toBe(out!.pages[1].pageId);
+  });
+
+  /**
+   * 目的：重复 `pageId` 时须去重，防止后续删/排页时状态错乱。
+   */
+  it("should_regenerate_duplicate_pageIds_when_normalizing", () => {
+    const raw = {
+      pages: [
+        { items: [], showLabels: true, pageId: "dup" },
+        { items: [], showLabels: true, pageId: "dup" },
+      ],
+      activePageIndex: 0,
+    };
+    const out = normalizeMultiPageGridPayload(raw);
+    expect(out!.pages[0].pageId).toBe("dup");
+    expect(out!.pages[1].pageId).not.toBe("dup");
+  });
+
   /**
    * 目的：无多页键时，应把 legacy 单页 `xallor_grid_v1` 迁成 MultiPageGridState，避免老用户丢桌面。
    */
   it("should_wrap_legacy_grid_payload_as_first_page_when_multipage_key_missing", async () => {
     const fallback = {
-      pages: [{ items: [{ id: "fallback", type: "site" as const, shape: { cols: 1, rows: 1 }, site: { name: "x", domain: "x.com", url: "https://x.com" } }], showLabels: true }],
+      pages: [
+        {
+          items: [
+            {
+              id: "fallback",
+              type: "site" as const,
+              shape: { cols: 1, rows: 1 },
+              site: { name: "x", domain: "x.com", url: "https://x.com" },
+            },
+          ],
+          showLabels: true,
+          pageId: "fallback-page",
+        },
+      ],
       activePageIndex: 0,
     };
     readStorageKeyMock.mockImplementation(async (key: string) => {
@@ -103,10 +148,10 @@ describe("storage repository", () => {
     });
 
     const result = await loadMultiPageGridState(fallback);
-    expect(result).toEqual({
-      pages: [{ items: [], showLabels: false }],
-      activePageIndex: 0,
-    });
+    expect(result.pages[0].items).toEqual([]);
+    expect(result.pages[0].showLabels).toBe(false);
+    expect(typeof result.pages[0].pageId).toBe("string");
+    expect(result.activePageIndex).toBe(0);
   });
 
   /**
@@ -115,8 +160,8 @@ describe("storage repository", () => {
   it("should_persist_multipage_state_under_multipage_key", async () => {
     const state = {
       pages: [
-        { items: [], showLabels: true },
-        { items: [], showLabels: true },
+        { items: [], showLabels: true, pageId: "p1" },
+        { items: [], showLabels: true, pageId: "p2" },
       ],
       activePageIndex: 1,
     };

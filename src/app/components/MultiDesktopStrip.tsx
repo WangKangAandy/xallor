@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "motion/react";
 import type { MultiPageGridState } from "../storage/types";
-import { DEFAULT_GRID_PAYLOAD } from "./desktopGridInitialItems";
+import { defaultFirstGridPagePayload } from "./desktopGridInitialItems";
 import { DesktopGrid } from "./DesktopGrid";
 import { DesktopPageDotsRow } from "./DesktopPageDotsRow";
 import { DESKTOP_SLIDE_MS } from "./multiDesktopStripConstants";
@@ -9,7 +9,7 @@ import { useDesktopStripWheel } from "./useDesktopStripWheel";
 import { useMultiPageGridPersistence } from "./useMultiPageGridPersistence";
 
 const FALLBACK: MultiPageGridState = {
-  pages: [DEFAULT_GRID_PAYLOAD],
+  pages: [defaultFirstGridPagePayload()],
   activePageIndex: 0,
 };
 
@@ -60,7 +60,7 @@ export function MultiDesktopStrip() {
       >
         {pages.map((page, i) => (
           <div
-            key={`desktop-page-${i}`}
+            key={page.pageId}
             className="box-border flex shrink-0 justify-center px-0"
             style={{ flex: `0 0 ${100 / pageCount}%` }}
           >

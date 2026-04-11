@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "react";
-import type { GridPayload } from "../storage/types";
+import type { GridPagePayload } from "../storage/types";
 import { canWheelNextPage } from "./useMultiPageGridPersistence";
 import { WHEEL_COOLDOWN_MS, WHEEL_DELTA_MIN } from "./multiDesktopStripConstants";
 
 type Params = {
   isHydrated: boolean;
-  pages: GridPayload[];
+  pages: GridPagePayload[];
   activePageIndex: number;
   goNextPage: () => void;
   goPrevPage: () => void;

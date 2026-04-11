@@ -15,9 +15,17 @@ export interface GridPayload {
   showLabels: boolean;
 }
 
-/** 横向多桌面：每页一个 GridPayload；activePageIndex 为当前可见页。 */
+/**
+ * 多桌面中的一页：在 {@link GridPayload} 上增加稳定 `pageId`。
+ * 用于列表 key 与后续删页/重排；勿用数组下标作 React key。
+ */
+export interface GridPagePayload extends GridPayload {
+  pageId: string;
+}
+
+/** 横向多桌面：每页为 {@link GridPagePayload}；activePageIndex 为当前可见页。 */
 export interface MultiPageGridState {
-  pages: GridPayload[];
+  pages: GridPagePayload[];
   activePageIndex: number;
 }
 

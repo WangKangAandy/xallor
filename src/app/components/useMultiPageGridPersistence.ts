@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useReducer } from "react";
 import type { GridItemType } from "./desktopGridTypes";
-import type { GridPayload, MultiPageGridState } from "../storage/types";
+import type { GridPagePayload, MultiPageGridState } from "../storage/types";
 import { loadMultiPageGridState, saveMultiPageGridState } from "../storage/repository";
-import { emptyGridPayload } from "./desktopGridInitialItems";
+import { emptyGridPagePayload } from "./desktopGridInitialItems";
 
 const SAVE_DEBOUNCE_MS = 400;
 
@@ -40,7 +40,7 @@ export function multiPageGridReducer(state: State, action: Action): State {
       }
       return {
         ...state,
-        pages: [...pages, emptyGridPayload()],
+        pages: [...pages, emptyGridPagePayload()],
         activePageIndex: pages.length,
       };
     }
@@ -55,7 +55,7 @@ export function multiPageGridReducer(state: State, action: Action): State {
 }
 
 /** 与 `wheelNext` 分支一致：能否前进/在末页新建下一页（末页为空则为 false）。 */
-export function canWheelNextPage(pages: GridPayload[], activePageIndex: number): boolean {
+export function canWheelNextPage(pages: GridPagePayload[], activePageIndex: number): boolean {
   if (pages.length === 0) return false;
   if (activePageIndex < pages.length - 1) return true;
   const current = pages[activePageIndex];

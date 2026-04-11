@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "motion/react";
-import type { GridPayload } from "../storage/types";
+import type { GridPagePayload } from "../storage/types";
 import { DESKTOP_SLIDE_MS, DOTS_AUTO_HIDE_MS } from "./multiDesktopStripConstants";
 
 /**
@@ -8,7 +8,7 @@ import { DESKTOP_SLIDE_MS, DOTS_AUTO_HIDE_MS } from "./multiDesktopStripConstant
  */
 export function useDesktopPageIndicator(
   isHydrated: boolean,
-  pages: GridPayload[],
+  pages: GridPagePayload[],
   activePageIndex: number,
 ) {
   const reduceMotion = useReducedMotion();
