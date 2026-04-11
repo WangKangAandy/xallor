@@ -26,6 +26,44 @@ describe("canWheelNextPage", () => {
   });
 });
 
+/**
+ * 目的：按 pageId 更新网格项，重排页序后仍指向同一页；未知 id 不改变状态。
+ */
+describe("multiPageGridReducer updateItems", () => {
+  it("should_update_items_for_matching_pageId", () => {
+    const state = {
+      pages: [
+        { items: [siteItem], showLabels: true, pageId: "p-a" },
+        { items: [], showLabels: false, pageId: "p-b" },
+      ],
+      activePageIndex: 0,
+      isHydrated: true,
+    };
+    const next = multiPageGridReducer(state, {
+      type: "updateItems",
+      pageId: "p-b",
+      updater: [siteItem],
+    });
+    expect(next.pages[0].items).toHaveLength(1);
+    expect(next.pages[1].items).toHaveLength(1);
+    expect(next.pages[1].pageId).toBe("p-b");
+  });
+
+  it("should_noop_when_pageId_not_found", () => {
+    const state = {
+      pages: [{ items: [], showLabels: true, pageId: "only" }],
+      activePageIndex: 0,
+      isHydrated: true,
+    };
+    const next = multiPageGridReducer(state, {
+      type: "updateItems",
+      pageId: "missing",
+      updater: [siteItem],
+    });
+    expect(next).toBe(state);
+  });
+});
+
 describe("multiPageGridReducer wheelNext", () => {
   it("should_not_append_page_when_current_last_page_has_no_items", () => {
     const state = {

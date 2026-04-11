@@ -10,7 +10,7 @@ type State = MultiPageGridState & { isHydrated: boolean };
 
 type Action =
   | { type: "hydrate"; payload: MultiPageGridState }
-  | { type: "updateItems"; pageIndex: number; updater: React.SetStateAction<GridItemType[]> }
+  | { type: "updateItems"; pageId: string; updater: React.SetStateAction<GridItemType[]> }
   | { type: "wheelNext" }
   | { type: "wheelPrev" };
 
@@ -20,12 +20,15 @@ export function multiPageGridReducer(state: State, action: Action): State {
     case "hydrate":
       return { ...action.payload, isHydrated: true };
     case "updateItems": {
-      const { pageIndex, updater } = action;
-      const pages = state.pages.map((p, i) => {
-        if (i !== pageIndex) return p;
+      const { pageId, updater } = action;
+      let touched = false;
+      const pages = state.pages.map((p) => {
+        if (p.pageId !== pageId) return p;
+        touched = true;
         const nextItems = typeof updater === "function" ? updater(p.items) : updater;
         return { ...p, items: nextItems };
       });
+      if (!touched) return state;
       return { ...state, pages };
     }
     case "wheelNext": {
@@ -93,8 +96,8 @@ export function useMultiPageGridPersistence(fallback: MultiPageGridState) {
     return () => globalThis.clearTimeout(timer);
   }, [pages, activePageIndex, isHydrated]);
 
-  const setPageItems = useCallback((pageIndex: number, updater: React.SetStateAction<GridItemType[]>) => {
-    dispatch({ type: "updateItems", pageIndex, updater });
+  const setPageItems = useCallback((pageId: string, updater: React.SetStateAction<GridItemType[]>) => {
+    dispatch({ type: "updateItems", pageId, updater });
   }, []);
 
   const goNextPage = useCallback(() => dispatch({ type: "wheelNext" }), []);

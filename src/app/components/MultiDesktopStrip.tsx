@@ -67,7 +67,7 @@ export function MultiDesktopStrip() {
             <div className="w-full max-w-[1200px] xl:max-w-[1280px]">
               <DesktopGrid
                 items={page.items}
-                setItems={(u) => setPageItems(i, u)}
+                setItems={(u) => setPageItems(page.pageId, u)}
                 showLabels={page.showLabels}
                 isHydrated={isHydrated}
               />
