@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useReducer, useRef } from "react";
+import { useCallback, useEffect, useReducer } from "react";
 import type { GridItemType } from "./desktopGridTypes";
-import type { MultiPageGridState } from "../storage/types";
+import type { GridPayload, MultiPageGridState } from "../storage/types";
 import { loadMultiPageGridState, saveMultiPageGridState } from "../storage/repository";
 import { emptyGridPayload } from "./desktopGridInitialItems";
 
@@ -14,7 +14,8 @@ type Action =
   | { type: "wheelNext" }
   | { type: "wheelPrev" };
 
-function reducer(state: State, action: Action): State {
+/** 导出供单元测试覆盖「空页不叠新页」等行为。 */
+export function multiPageGridReducer(state: State, action: Action): State {
   switch (action.type) {
     case "hydrate":
       return { ...action.payload, isHydrated: true };
@@ -32,6 +33,11 @@ function reducer(state: State, action: Action): State {
       if (activePageIndex < pages.length - 1) {
         return { ...state, activePageIndex: activePageIndex + 1 };
       }
+      const current = pages[activePageIndex];
+      // 当前页无任何图标时不再追加新桌面，避免滚轮无限叠空页
+      if (!current || current.items.length === 0) {
+        return state;
+      }
       return {
         ...state,
         pages: [...pages, emptyGridPayload()],
@@ -48,13 +54,19 @@ function reducer(state: State, action: Action): State {
   }
 }
 
+/** 与 `wheelNext` 分支一致：能否前进/在末页新建下一页（末页为空则为 false）。 */
+export function canWheelNextPage(pages: GridPayload[], activePageIndex: number): boolean {
+  if (pages.length === 0) return false;
+  if (activePageIndex < pages.length - 1) return true;
+  const current = pages[activePageIndex];
+  return (current?.items.length ?? 0) > 0;
+}
+
 export function useMultiPageGridPersistence(fallback: MultiPageGridState) {
-  const [state, dispatch] = useReducer(reducer, {
+  const [state, dispatch] = useReducer(multiPageGridReducer, {
     ...fallback,
     isHydrated: false,
   } as State);
-
-  const hydratedForSave = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -62,7 +74,6 @@ export function useMultiPageGridPersistence(fallback: MultiPageGridState) {
       const loaded = await loadMultiPageGridState(fallback);
       if (cancelled) return;
       dispatch({ type: "hydrate", payload: loaded });
-      hydratedForSave.current = true;
     })();
     return () => {
       cancelled = true;
