@@ -40,7 +40,8 @@ function migrateEnvelope<T>(raw: PersistedEnvelope<unknown> | null): PersistedEn
   return null;
 }
 
-function isValidGridPayload(value: unknown): value is GridPayload {
+/** 供内置 `defaultGrid.json` 与持久化载荷共用同一套形状校验。 */
+export function isValidGridPayload(value: unknown): value is GridPayload {
   if (!value || typeof value !== "object") return false;
   const payload = value as GridPayload;
   return Array.isArray(payload.items) && typeof payload.showLabels === "boolean";
