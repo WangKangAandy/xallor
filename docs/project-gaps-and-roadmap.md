@@ -33,6 +33,7 @@
 
 - **外链资源（面向未来 / 弱网与扩展环境）**：背景图仍走 Unsplash、favicon 走第三方服务；在弱网或 CSP 收紧时可能不稳定。已用 [`RemoteBackgroundImage`](../src/app/components/feedback/RemoteBackgroundImage.tsx) 对**首页背景**做失败降级；其余可继续：**本地化或渐变兜底**、保持 **Favicon 多源链**；可独立里程碑。
 - **错误与加载（基线已落地，可随功能扩展）**：展示层提供 [`RemoteContentPlaceholder`](../src/app/components/feedback/RemoteContentPlaceholder.tsx)（加载 / 失败 / 成功）；`storage/repository` 仅数据与校验（见文件头注释），**不**渲染占位组件。未来天气等 API 接入时包一层 `phase` 即可。
+- **多桌面网格挂载策略（未做，后续迭代）**：当前 [`MultiDesktopStrip`](../src/app/components/MultiDesktopStrip.tsx) 对每一页都挂载完整 [`DesktopGrid`](../src/app/components/DesktopGrid.tsx)（各含 `DndProvider`）；页数已由 [`MAX_DESKTOP_PAGES`](../src/app/storage/multiPageLimits.ts) 限制。计划在条带层改为 **「访问过则缓存」**：已访问过的页保留实例（隐藏未激活页），未访问页用占位撑布局，在**少重复 mount、保留页内临时状态**与**内存占用**之间折中；**不**采用「仅挂载当前页」以免反复切页时体验过糙。实现时机另排，不阻塞当前主线。
 
 ### 低（多在上架或接真实数据时）
 
