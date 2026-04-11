@@ -3,6 +3,7 @@
  * 加载中 / 失败 / 空状态由 React 展示层统一处理（例如 `src/app/components/feedback/RemoteContentPlaceholder.tsx`）。
  */
 import { readStorageKey, writeStorageKey, getOrCreateDeviceId } from "./adapter";
+import { MAX_DESKTOP_PAGES } from "./multiPageLimits";
 import { newPageId } from "./pageIds";
 import {
   ANONYMOUS_USER_ID,
@@ -92,10 +93,16 @@ export function isValidMultiPageGridState(value: unknown): value is MultiPageGri
 }
 
 function clampMultiPageGridState(state: MultiPageGridState): MultiPageGridState {
-  const last = Math.max(0, state.pages.length - 1);
+  let { pages, activePageIndex } = state;
+  if (pages.length > MAX_DESKTOP_PAGES) {
+    pages = pages.slice(0, MAX_DESKTOP_PAGES);
+    activePageIndex = Math.min(activePageIndex, pages.length - 1);
+  }
+  const last = Math.max(0, pages.length - 1);
   return {
     ...state,
-    activePageIndex: Math.min(Math.max(0, state.activePageIndex), last),
+    pages,
+    activePageIndex: Math.min(Math.max(0, activePageIndex), last),
   };
 }
 

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { MAX_DESKTOP_PAGES } from "../storage/multiPageLimits";
 import { canWheelNextPage, multiPageGridReducer } from "./useMultiPageGridPersistence";
 
 const siteItem = {
@@ -23,6 +24,24 @@ describe("canWheelNextPage", () => {
         0,
       ),
     ).toBe(true);
+  });
+
+  it("should_be_false_when_at_max_pages_on_last_with_items", () => {
+    const pages = Array.from({ length: MAX_DESKTOP_PAGES }, (_, i) => ({
+      items: [siteItem],
+      showLabels: true,
+      pageId: `p${i}`,
+    }));
+    expect(canWheelNextPage(pages, MAX_DESKTOP_PAGES - 1)).toBe(false);
+  });
+
+  it("should_allow_next_slide_when_max_pages_but_not_on_last", () => {
+    const pages = Array.from({ length: MAX_DESKTOP_PAGES }, (_, i) => ({
+      items: [siteItem],
+      showLabels: true,
+      pageId: `p${i}`,
+    }));
+    expect(canWheelNextPage(pages, MAX_DESKTOP_PAGES - 2)).toBe(true);
   });
 });
 
@@ -91,5 +110,21 @@ describe("multiPageGridReducer wheelNext", () => {
     expect(next.pages[1].items.length).toBe(0);
     expect(typeof next.pages[1].pageId).toBe("string");
     expect(next.pages[1].pageId.length).toBeGreaterThan(0);
+  });
+
+  it("should_not_append_when_already_at_max_pages", () => {
+    const pages = Array.from({ length: MAX_DESKTOP_PAGES }, (_, i) => ({
+      items: [siteItem],
+      showLabels: true,
+      pageId: `p${i}`,
+    }));
+    const state = {
+      pages,
+      activePageIndex: MAX_DESKTOP_PAGES - 1,
+      isHydrated: true,
+    };
+    const next = multiPageGridReducer(state, { type: "wheelNext" });
+    expect(next.pages.length).toBe(MAX_DESKTOP_PAGES);
+    expect(next.activePageIndex).toBe(MAX_DESKTOP_PAGES - 1);
   });
 });

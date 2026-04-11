@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useReducer } from "react";
 import type { GridItemType } from "./desktopGridTypes";
 import type { GridPagePayload, MultiPageGridState } from "../storage/types";
+import { MAX_DESKTOP_PAGES } from "../storage/multiPageLimits";
 import { loadMultiPageGridState, saveMultiPageGridState } from "../storage/repository";
 import { emptyGridPagePayload } from "./desktopGridInitialItems";
 
@@ -41,6 +42,9 @@ export function multiPageGridReducer(state: State, action: Action): State {
       if (!current || current.items.length === 0) {
         return state;
       }
+      if (pages.length >= MAX_DESKTOP_PAGES) {
+        return state;
+      }
       return {
         ...state,
         pages: [...pages, emptyGridPagePayload()],
@@ -57,12 +61,13 @@ export function multiPageGridReducer(state: State, action: Action): State {
   }
 }
 
-/** 与 `wheelNext` 分支一致：能否前进/在末页新建下一页（末页为空则为 false）。 */
+/** 与 `wheelNext` 分支一致：能否前进/在末页新建下一页（末页为空或已达页数上限则为 false）。 */
 export function canWheelNextPage(pages: GridPagePayload[], activePageIndex: number): boolean {
   if (pages.length === 0) return false;
   if (activePageIndex < pages.length - 1) return true;
   const current = pages[activePageIndex];
-  return (current?.items.length ?? 0) > 0;
+  if ((current?.items.length ?? 0) === 0) return false;
+  return pages.length < MAX_DESKTOP_PAGES;
 }
 
 /**
