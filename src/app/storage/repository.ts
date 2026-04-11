@@ -1,3 +1,7 @@
+/**
+ * 持久化读写：只处理序列化数据与校验，不渲染 UI。
+ * 加载中 / 失败 / 空状态由 React 展示层统一处理（例如 `src/app/components/feedback/RemoteContentPlaceholder.tsx`）。
+ */
 import { readStorageKey, writeStorageKey, getOrCreateDeviceId } from "./adapter";
 import {
   ANONYMOUS_USER_ID,

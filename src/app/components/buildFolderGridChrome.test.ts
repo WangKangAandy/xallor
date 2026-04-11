@@ -13,6 +13,8 @@ describe("buildFolderGridChrome", () => {
       id: "f1",
       type: "folder" as const,
       name: "Test",
+      colorFrom: "#e0e7ff",
+      colorTo: "#c7d2fe",
       shape: { cols: 1, rows: 1 },
       sites: [
         { name: "a", url: "https://a.com", domain: "a.com" },

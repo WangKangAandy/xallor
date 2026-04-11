@@ -1,4 +1,4 @@
-import type { ReactNode, RefObject } from "react";
+import type { ReactNode, Ref, RefObject } from "react";
 import { motion } from "motion/react";
 import { DesktopGridResizeChrome } from "./DesktopGridResizeChrome";
 import type { FolderResizeHandle } from "./useFolderResize";
@@ -32,7 +32,7 @@ export function GridItemCardFrame({
 
   return (
     <motion.div
-      ref={ref}
+      ref={ref as Ref<HTMLDivElement>}
       layout="position"
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity, scale: isMergeTarget ? 1.05 : 1 }}

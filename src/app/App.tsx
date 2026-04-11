@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { DEFAULT_NEW_TAB_BACKGROUND_URL, RemoteBackgroundImage } from "./components/feedback";
 
 const SearchBar = lazy(async () => {
   const m = await import("./components/SearchBar");
@@ -43,14 +44,9 @@ export default function App() {
   return (
     <div className="min-h-screen w-full relative overflow-hidden">
       {/* 层级：背景无 z；主内容列见下方 z-10。全页装饰/宠物层请避开侧栏 z-30 与文件夹弹层 z-[100]，见 desktopGridLayers.ts */}
-      {/* Background */}
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{
-          backgroundImage:
-            'url(https://images.unsplash.com/photo-1507525428034-b723cf961d3e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdW5ueSUyMGJlYWNoJTIwaXNsYW5kJTIwY2xlYXIlMjBza3l8ZW58MHx8fHwxNjk2NTQ3OTM3fDA&ixlib=rb-4.1.0&q=80&w=1920)',
-        }}
-      >
+      {/* Background：外链图失败时由 RemoteBackgroundImage 降级为渐变，见 components/feedback */}
+      <div className="absolute inset-0">
+        <RemoteBackgroundImage src={DEFAULT_NEW_TAB_BACKGROUND_URL} />
         <div className="absolute inset-0 bg-gradient-to-b from-orange-50/10 via-blue-50/10 to-blue-200/20 backdrop-blur-[1px]" />
       </div>
 
