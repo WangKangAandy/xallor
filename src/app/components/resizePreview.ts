@@ -1,4 +1,4 @@
-import { GRID_CELL_SIZE, GRID_GAP } from "./DesktopGridTypes";
+import { GRID_CELL_SIZE, GRID_GAP } from "./desktopGridConstants";
 
 function spanToPixels(span: number): number {
   return span * GRID_CELL_SIZE + (span - 1) * GRID_GAP;

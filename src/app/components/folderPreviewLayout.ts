@@ -1,4 +1,5 @@
-import { GRID_CELL_SIZE, GRID_GAP, GRID_STEP, type GridShape } from "./DesktopGridTypes";
+import type { GridShape } from "./desktopGridTypes";
+import { GRID_CELL_SIZE, GRID_GAP, GRID_STEP } from "./desktopGridConstants";
 import { constrainFolderShapeForSiteCount } from "./folderResizeRules";
 import { shapeToPixels } from "./resizePreview";
 
@@ -160,7 +161,7 @@ export function computeFolderContentLayout(params: {
   const innerW = Math.max(0, viewportWidth - 2 * contentPadding);
   const innerH = Math.max(0, viewportHeight - 2 * contentPadding);
 
-  let iconSize = baseIconSize;
+  let iconSize: number = baseIconSize;
 
   for (let attempt = 0; attempt < 32; attempt++) {
     const horizontalGap = cols <= 1 ? 0 : computeAdaptiveGap({ viewport: innerW, slots: cols, iconSize, minGap, maxGap });

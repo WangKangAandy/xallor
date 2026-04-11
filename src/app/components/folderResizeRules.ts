@@ -1,4 +1,5 @@
-import { GRID_STEP, GridShape } from "./DesktopGridTypes";
+import type { GridShape } from "./desktopGridTypes";
+import { GRID_STEP } from "./desktopGridConstants";
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(value, max));

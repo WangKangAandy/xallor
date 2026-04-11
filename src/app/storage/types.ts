@@ -1,4 +1,4 @@
-import { GridItemType } from "../components/DesktopGridTypes";
+import type { GridItemType } from "../components/desktopGridTypes";
 
 export const STORAGE_VERSION = 1;
 export const ANONYMOUS_USER_ID = "anonymous";

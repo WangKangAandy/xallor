@@ -11,11 +11,11 @@
 
 | 领域 | 选型 |
 |------|------|
-| 运行时 | React 18（`package.json` 中为 peer，需已安装） |
+| 运行时 | React 18（`react` / `react-dom` 已在 `dependencies` 中固定版本） |
 | 构建 | Vite 6、`@vitejs/plugin-react` |
 | 样式 | Tailwind CSS 4（`@tailwindcss/vite` 插件）、全局样式在 `src/styles/` |
-| UI 组件 | `src/app/components/ui/`：Radix UI + `class-variance-authority` + `tailwind-merge`（`cn` 工具），风格接近 shadcn |
-| 其他依赖 | MUI / Emotion、Motion、Recharts、react-dnd 等（按功能按需使用，勿在未使用时批量删除） |
+| UI 组件 | 业务以 Tailwind 为主；**不再内置**整包 shadcn/`src/app/components/ui`（已移除未引用代码以减负；需要对话框等时再按需 `npx shadcn@latest add …` 或从 git 历史恢复）。 |
+| 其他依赖 | Motion、react-dnd、lucide-react 等；新增重型库前评估体积与是否懒加载。 |
 
 **重要**：[`vite.config.ts`](vite.config.ts) 中注释说明 **React 与 Tailwind 两个插件均为必需**，即使当前未大量使用 Tailwind 也不要移除。
 
@@ -34,19 +34,19 @@ src/
     App.tsx                # 页面壳与主布局
     components/            # 业务组件（桌面网格、侧栏、搜索等）
       figma/               # 与导出相关的辅助（如 ImageWithFallback）
-      ui/                  # 可复用基础组件（按钮、对话框等）
+      shared/              # 如 FaviconIcon 等共享小组件
   styles/
     index.css              # 聚合 fonts / tailwind / theme
     tailwind.css, theme.css, fonts.css
 ```
 
-新增功能时：优先在 `src/app/components/` 下按职责拆文件；通用控件放在 `ui/` 并沿用现有 `cn` + Radix 模式。
+新增功能时：优先在 `src/app/components/` 下按职责拆文件；通用控件可放 `shared/` 或独立文件，按需引入 Radix 等而非整目录拷贝。
 
 ## 编码约定
 
 - **组件**：函数组件；与现有文件一致地使用双引号或单引号（当前混用，新代码跟随邻近文件）。
 - **样式**：优先 Tailwind 类名；主题变量在 `src/styles/theme.css` 与 Tailwind 配置链路中。
-- **类型**：仓库根目录可能无 `tsconfig.json`（依赖 Vite/编辑器推断）；新增 `.ts`/`.tsx` 时保持与周围文件一致的模块解析方式。
+- **类型**：根目录 [`tsconfig.json`](tsconfig.json) 已启用 `strict`；新增 `.ts`/`.tsx` 时保持与周围文件一致的模块解析方式。
 - **图片与外链**：注意 `App.tsx` 等处的 Unsplash 等外部 URL；替换资源时考虑版权与加载失败（可参考 `figma/ImageWithFallback.tsx`）。
 
 ## 常用命令
@@ -59,15 +59,11 @@ npm run build  # 产出 dist/
 
 若根目录 [`package.json`](package.json) 中 `dev`/`build` 使用 `node ./node_modules/vite/bin/vite.js`，这是在部分环境下 **`node_modules/.bin` 未正确生成** 时的兼容写法；若本机 `vite` 命令可用，也可按需改回 `"dev": "vite"`。
 
-**peer 依赖**：若运行时报错找不到 `react` / `react-dom`，请安装与 peer 一致的版本，例如：
-
-```bash
-npm install react@18.3.1 react-dom@18.3.1
-```
+若克隆后缺少 `node_modules`，执行 `npm install` 即可装齐 `react` / `react-dom`。
 
 ## 给代理的操作原则
 
-- 改动范围尽量贴合需求；不随意删除 `ui/` 下未使用的组件（可能为设计系统预留）。
+- 改动范围尽量贴合需求；删除大段依赖或生成代码前确认无引用并跑通 `npm run typecheck` / `npm run build`。
 - 修改构建配置前阅读 [`vite.config.ts`](vite.config.ts) 中的注释与别名。
 - 不要编辑本文件来替代 README；用户向外的「如何运行」仍以 [README.md](README.md) 为准。
 - 对于排查出的高频/经典问题，简洁记录到 `docs/notes/`，便于后续复盘与排错复用。
