@@ -66,7 +66,8 @@ export function normalizeMultiPageGridPayload(raw: unknown): MultiPageGridState 
   if (!raw || typeof raw !== "object") return null;
   const o = raw as { pages?: unknown[]; activePageIndex?: number };
   if (!Array.isArray(o.pages) || o.pages.length === 0) return null;
-  if (!Number.isInteger(o.activePageIndex) || o.activePageIndex < 0 || o.activePageIndex >= o.pages.length) {
+  const ai = o.activePageIndex;
+  if (ai === undefined || !Number.isInteger(ai) || ai < 0 || ai >= o.pages.length) {
     return null;
   }
   const seen = new Set<string>();
@@ -79,7 +80,7 @@ export function normalizeMultiPageGridPayload(raw: unknown): MultiPageGridState 
     seen.add(pageId);
     pages.push({ items: ext.items, showLabels: ext.showLabels, pageId });
   }
-  return { pages, activePageIndex: o.activePageIndex };
+  return { pages, activePageIndex: ai };
 }
 
 export function isValidMultiPageGridState(value: unknown): value is MultiPageGridState {

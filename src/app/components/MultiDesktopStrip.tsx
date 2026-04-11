@@ -58,7 +58,7 @@ export function MultiDesktopStrip() {
           transitionDuration: `${DESKTOP_SLIDE_MS}ms`,
         }}
       >
-        {pages.map((page, i) => (
+        {pages.map((page) => (
           <div
             key={page.pageId}
             className="box-border flex shrink-0 justify-center px-0"
