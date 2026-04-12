@@ -9,7 +9,7 @@ type GridAddSlotCellProps = {
 };
 
 /**
- * 网格末尾「空位」：悬停整块区域时在占位图标区域右下角渐显毛玻璃「+」，点击打开添加模块。
+ * 网格末尾「空位」：默认完全不可见（不占视觉），悬停整块格时再渐显占位与右下角「+」。
  * 与站点卡片区分开，不占用 `DesktopGridItem` / DnD 链路。
  */
 export function GridAddSlotCell({ onOpenAdd }: GridAddSlotCellProps) {
@@ -35,7 +35,7 @@ export function GridAddSlotCell({ onOpenAdd }: GridAddSlotCellProps) {
           <GlassSurface
             variant="tile"
             rounded="none"
-            className="flex h-full w-full items-center justify-center !rounded-[28px] border border-white/25 bg-white/5 opacity-60 transition-opacity duration-300 group-hover/add-slot:opacity-100 group-hover/add-slot:bg-white/15"
+            className="flex h-full w-full items-center justify-center !rounded-[28px] border border-white/25 bg-white/5 opacity-0 transition-opacity duration-300 ease-out group-hover/add-slot:opacity-100 group-hover/add-slot:bg-white/15"
           >
             <span className="sr-only">新图标空位</span>
           </GlassSurface>

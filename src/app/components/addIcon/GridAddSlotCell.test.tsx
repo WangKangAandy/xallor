@@ -12,4 +12,13 @@ describe("GridAddSlotCell", () => {
     expect(html).toContain("glass-grid-add-affordance");
     expect(html).toContain("添加图标");
   });
+
+  /**
+   * 目的：占位毛玻璃默认 opacity-0，非悬停时完全不可见，避免「幽灵框」。
+   */
+  it("should_hide_placeholder_tile_until_hover_via_opacity_zero", () => {
+    const html = renderToStaticMarkup(<GridAddSlotCell onOpenAdd={() => {}} />);
+    expect(html).toContain("opacity-0");
+    expect(html).not.toContain("opacity-60");
+  });
 });
