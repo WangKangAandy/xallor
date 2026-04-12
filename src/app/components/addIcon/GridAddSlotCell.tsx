@@ -9,11 +9,11 @@ type GridAddSlotCellProps = {
 };
 
 /**
- * 网格末尾「空位」：默认完全不可见（不占视觉），悬停整块格时再渐显占位与右下角「+」。
+ * 网格末尾「空位」：默认完全不可见；悬停整块格时渐显毛玻璃占位，**中央「+」** 与下方「添加」文案。
  * 与站点卡片区分开，不占用 `DesktopGridItem` / DnD 链路。
  */
 export function GridAddSlotCell({ onOpenAdd }: GridAddSlotCellProps) {
-  const handlePlus = (e: MouseEvent<HTMLButtonElement>) => {
+  const handleClick = (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
     onOpenAdd();
@@ -31,29 +31,20 @@ export function GridAddSlotCell({ onOpenAdd }: GridAddSlotCellProps) {
       className="relative flex items-center justify-center pointer-events-auto group/add-slot"
     >
       <div className="relative flex flex-col items-center">
-        <div className="relative h-[88px] w-[88px] shrink-0">
-          <GlassSurface
-            variant="tile"
-            rounded="none"
-            className="flex h-full w-full items-center justify-center !rounded-[28px] border border-white/25 bg-white/5 opacity-0 transition-opacity duration-300 ease-out group-hover/add-slot:opacity-100 group-hover/add-slot:bg-white/15"
-          >
-            <span className="sr-only">新图标空位</span>
-          </GlassSurface>
+        <GlassSurface
+          variant="tile"
+          rounded="none"
+          className="!rounded-[28px] border border-white/25 bg-white/5 p-0 opacity-0 transition-opacity duration-300 ease-out group-hover/add-slot:opacity-100 group-hover/add-slot:bg-white/15"
+        >
           <button
             type="button"
             aria-label="添加图标"
-            className={[
-              "glass-grid-add-affordance absolute right-0 bottom-0 z-[15] flex h-7 w-7 items-center justify-center rounded-lg text-white/95",
-              "opacity-0 translate-y-0.5 pointer-events-none transition-[opacity,transform] duration-300 ease-out",
-              "group-hover/add-slot:opacity-100 group-hover/add-slot:translate-y-0 group-hover/add-slot:pointer-events-auto",
-              "hover:brightness-110 active:scale-95",
-              "shadow-sm",
-            ].join(" ")}
-            onClick={handlePlus}
+            className="flex h-[88px] w-[88px] shrink-0 items-center justify-center rounded-[28px] text-white/95 outline-none transition-transform hover:brightness-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
+            onClick={handleClick}
           >
-            <Plus className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden />
+            <Plus className="h-9 w-9" strokeWidth={2} aria-hidden />
           </button>
-        </div>
+        </GlassSurface>
         <span
           className="pointer-events-none absolute -bottom-7 left-1/2 max-w-[100px] -translate-x-1/2 whitespace-nowrap text-[13px] font-medium text-white/95 opacity-0 shadow-sm transition-opacity duration-300 group-hover/add-slot:opacity-100"
           style={{ textShadow: "0 1px 4px rgba(0,0,0,0.4)" }}

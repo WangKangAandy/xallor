@@ -9,8 +9,9 @@ describe("GridAddSlotCell", () => {
   it("should_render_add_slot_with_group_hover_and_affordance_class_when_used", () => {
     const html = renderToStaticMarkup(<GridAddSlotCell onOpenAdd={() => {}} />);
     expect(html).toContain("group/add-slot");
-    expect(html).toContain("glass-grid-add-affordance");
     expect(html).toContain("添加图标");
+    expect(html).toContain("justify-center");
+    expect(html).toContain("items-center");
   });
 
   /**
