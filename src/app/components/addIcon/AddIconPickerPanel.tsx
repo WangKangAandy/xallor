@@ -1,14 +1,29 @@
 import { ADD_ICON_PICKER_FILTERS, type AddIconPickerFilter } from "./addIconPickerConstants";
+import type { AddIconCatalogEntry } from "./addIconCatalog";
+import { AddIconPickerGrid } from "./AddIconPickerGrid";
 
 type AddIconPickerPanelProps = {
   pickerFilter: AddIconPickerFilter;
   onPickerFilterChange: (f: AddIconPickerFilter) => void;
+  searchQuery: string;
+  onSearchQueryChange: (q: string) => void;
+  filteredEntries: AddIconCatalogEntry[];
+  selectedId: string | null;
+  onSelectId: (id: string) => void;
 };
 
 /**
- * 左栏：搜索、类型筛选、可滚动列表区（主区域，占宽大于右侧）。
+ * 左栏：搜索、类型筛选、图标网格（主区域）。
  */
-export function AddIconPickerPanel({ pickerFilter, onPickerFilterChange }: AddIconPickerPanelProps) {
+export function AddIconPickerPanel({
+  pickerFilter,
+  onPickerFilterChange,
+  searchQuery,
+  onSearchQueryChange,
+  filteredEntries,
+  selectedId,
+  onSelectId,
+}: AddIconPickerPanelProps) {
   return (
     <aside className="flex min-h-[220px] min-w-0 flex-1 flex-col border-white/25 sm:min-h-0 sm:border-r">
       <div className="flex flex-col gap-3 p-4">
@@ -18,10 +33,11 @@ export function AddIconPickerPanel({ pickerFilter, onPickerFilterChange }: AddIc
           </span>
           <input
             type="search"
-            placeholder="搜索"
+            placeholder="搜索名称或域名"
+            value={searchQuery}
+            onChange={(e) => onSearchQueryChange(e.target.value)}
             className="min-w-0 flex-1 bg-transparent text-sm text-white/95 placeholder:text-white/45 outline-none"
-            readOnly
-            tabIndex={-1}
+            autoComplete="off"
           />
         </div>
         <div className="flex flex-wrap gap-1.5" role="tablist" aria-label="列表类型">
@@ -45,13 +61,7 @@ export function AddIconPickerPanel({ pickerFilter, onPickerFilterChange }: AddIc
         </div>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
-        <div className="rounded-xl border border-dashed border-white/35 bg-white/8 p-6 text-center text-xs leading-relaxed text-white/65">
-          <p className="font-medium text-white/85">左侧列表占位</p>
-          <p className="mt-2">
-            当前筛选：<span className="text-white/90">{pickerFilter}</span>
-          </p>
-          <p className="mt-2 text-[11px] text-white/50">此处将接入站点 / 组件图标网格（含选中态）。</p>
-        </div>
+        <AddIconPickerGrid entries={filteredEntries} selectedId={selectedId} onSelectId={onSelectId} />
       </div>
     </aside>
   );
