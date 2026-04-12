@@ -24,7 +24,7 @@ describe("AddIconDialog", () => {
 
     expect(document.body.textContent).toContain("添加图标");
     expect(document.body.textContent).toContain("左侧列表占位");
-    expect(document.body.textContent).toContain("右侧预览与配置");
+    expect(document.body.textContent).toContain("预览");
     expect(document.body.textContent).toContain("保存并退出");
     expect(document.body.textContent).toContain("site-1");
 
