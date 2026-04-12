@@ -23,8 +23,6 @@ export interface DesktopGridItemProps {
   onRename?: (id: string, newName: string) => void;
   /** 右键菜单等：从当前页移除该图标。 */
   onDeleteItem?: (id: string) => void;
-  /** 站点卡片：打开「添加图标」模块时带上上下文站点 id（由 DesktopGrid 注入）。 */
-  onRequestAddSite?: (siteId: string) => void;
 }
 
 export function DesktopGridItem(props: DesktopGridItemProps) {
@@ -41,7 +39,6 @@ export function DesktopGridItem(props: DesktopGridItemProps) {
     showLabels,
     onRename,
     onDeleteItem,
-    onRequestAddSite,
   } = props;
 
   const shared = {
@@ -55,15 +52,7 @@ export function DesktopGridItem(props: DesktopGridItemProps) {
 
   if (item.type === "site") {
     return (
-      <GridSiteCard
-        item={item}
-        index={index}
-        showLabels={showLabels}
-        onRename={onRename}
-        onDeleteItem={onDeleteItem}
-        onRequestAddSite={onRequestAddSite}
-        {...shared}
-      />
+      <GridSiteCard item={item} index={index} showLabels={showLabels} onRename={onRename} onDeleteItem={onDeleteItem} {...shared} />
     );
   }
   if (item.type === "folder") {

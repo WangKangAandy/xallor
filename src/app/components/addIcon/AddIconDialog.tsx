@@ -131,7 +131,9 @@ export function AddIconDialog({ open, onOpenChange, contextSiteId }: AddIconDial
             </p>
             {contextSiteId ? (
               <p className="mt-2 text-xs text-white/55">上下文站点 id（预留）：{contextSiteId}</p>
-            ) : null}
+            ) : (
+              <p className="mt-2 text-xs text-white/55">入口：网格末尾「添加」空位</p>
+            )}
           </div>
         </div>
       </GlassSurface>

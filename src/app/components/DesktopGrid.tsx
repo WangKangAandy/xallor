@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { DndProvider, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { AddIconDialog } from "./addIcon";
+import { AddIconDialog, GridAddSlotCell } from "./addIcon";
 import { DesktopGridItem } from "./DesktopGridItem";
 import { DesktopGridFolderPortal } from "./DesktopGridFolderPortal";
 import type { GridItemType, GridShape, FolderItem } from "./desktopGridTypes";
@@ -39,8 +39,7 @@ export function DesktopGrid({ items, setItems, showLabels, isHydrated }: Desktop
 
   const [openFolderId, setOpenFolderId] = useState<string | null>(null);
   const [isFolderDragging, setIsFolderDragging] = useState(false);
-  /** 单例「添加图标」弹层上下文：触发添加的站点项 id。 */
-  const [addIconContextSiteId, setAddIconContextSiteId] = useState<string | null>(null);
+  const [addIconOpen, setAddIconOpen] = useState(false);
 
   const handleRename = useCallback(
     (id: string, newName: string) => {
@@ -129,19 +128,13 @@ export function DesktopGrid({ items, setItems, showLabels, isHydrated }: Desktop
                 showLabels={showLabels}
                 onRename={handleRename}
                 onDeleteItem={handleDeleteItem}
-                onRequestAddSite={(siteId) => setAddIconContextSiteId(siteId)}
               />
             ))}
+          {isHydrated ? <GridAddSlotCell onOpenAdd={() => setAddIconOpen(true)} /> : null}
         </div>
       </GridDropZone>
 
-      <AddIconDialog
-        open={addIconContextSiteId !== null}
-        onOpenChange={(open) => {
-          if (!open) setAddIconContextSiteId(null);
-        }}
-        contextSiteId={addIconContextSiteId}
-      />
+      <AddIconDialog open={addIconOpen} onOpenChange={setAddIconOpen} contextSiteId={null} />
 
       {openFolder && (
         <DesktopGridFolderPortal

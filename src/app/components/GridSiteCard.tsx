@@ -9,19 +9,9 @@ export type GridSiteCardProps = GridItemCardSharedCallbacks & {
   showLabels?: boolean;
   onRename?: (id: string, newName: string) => void;
   onDeleteItem?: (id: string) => void;
-  /** 由 DesktopGrid 统一挂载 AddIconDialog，此处只上报站点 id。 */
-  onRequestAddSite?: (siteId: string) => void;
 };
 
-export function GridSiteCard({
-  item,
-  index,
-  showLabels = true,
-  onRename,
-  onDeleteItem,
-  onRequestAddSite,
-  ...callbacks
-}: GridSiteCardProps) {
+export function GridSiteCard({ item, index, showLabels = true, onRename, onDeleteItem, ...callbacks }: GridSiteCardProps) {
   const shell = useGridItemCard(item, index, callbacks);
 
   return (
@@ -31,8 +21,6 @@ export function GridSiteCard({
         isMergeTarget={callbacks.isMergeTarget}
         showLabels={showLabels}
         onRename={(newName) => onRename?.(item.id, newName)}
-        onRequestAdd={onRequestAddSite ? () => onRequestAddSite(item.id) : undefined}
-        suppressAddAffordance={shell.isDragging}
       />
     </GridItemCardFrame>
   );
