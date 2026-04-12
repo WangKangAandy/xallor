@@ -8,7 +8,7 @@ import { AddIconDialog } from "./AddIconDialog";
 
 describe("AddIconDialog", () => {
   /**
-   * 目的：弹层打开时须将标题与「网址导航」壳渲染进 document，供后续接卡片网格；关闭时不残留节点。
+   * 目的：弹层打开时渲染左右分栏壳与底栏按钮；关闭时不残留节点。
    */
   it("should_mount_dialog_shell_in_body_when_open_and_remove_when_closed", () => {
     const container = document.createElement("div");
@@ -22,7 +22,10 @@ describe("AddIconDialog", () => {
       );
     });
 
-    expect(document.body.textContent).toContain("网址导航");
+    expect(document.body.textContent).toContain("添加图标");
+    expect(document.body.textContent).toContain("左侧列表占位");
+    expect(document.body.textContent).toContain("右侧预览与配置");
+    expect(document.body.textContent).toContain("保存并退出");
     expect(document.body.textContent).toContain("site-1");
 
     act(() => {

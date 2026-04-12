@@ -1,2 +1,6 @@
-export { AddIconDialog, type AddIconDialogProps, type AddIconDialogTab } from "./AddIconDialog";
+export {
+  AddIconDialog,
+  type AddIconDialogProps,
+  type AddIconPickerFilter,
+} from "./AddIconDialog";
 export { GridAddSlotCell } from "./GridAddSlotCell";
