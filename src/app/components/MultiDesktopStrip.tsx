@@ -88,7 +88,7 @@ export function MultiDesktopStrip() {
                 : { y: 14, opacity: 0, transition: { type: "spring", stiffness: 400, damping: 34 } }
             }
             transition={stripTransition}
-            className="pointer-events-none absolute bottom-3 left-1/2 z-[5] flex -translate-x-1/2 gap-1.5 rounded-full bg-black/25 px-2.5 py-1.5 text-[10px] text-white/85 shadow-lg backdrop-blur-md"
+            className="pointer-events-none absolute bottom-3 left-1/2 z-[5] flex -translate-x-1/2 gap-1.5 rounded-full glass-surface-strip px-2.5 py-1.5 text-[10px] text-white/85"
             aria-hidden
           >
             <div className="flex gap-1.5">

@@ -32,7 +32,7 @@ export function FaviconIcon({
   if (idx >= candidates.length) {
     return (
       <div
-        className={`flex items-center justify-center font-bold text-gray-700 shadow-sm bg-white/40 ${fallbackClassName}`}
+        className={`flex items-center justify-center font-bold text-gray-700 shadow-sm glass-favicon-fallback ${fallbackClassName}`}
         style={{ width: size, height: size, borderRadius: size * 0.25, fontSize: size * 0.45, ...style }}
       >
         {name.charAt(0).toUpperCase()}

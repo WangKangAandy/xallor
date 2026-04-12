@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, KeyboardEvent } from 'react';
 import { ChevronRight, Plus, X, Check } from 'lucide-react';
 import { loadSearchPayload, saveSearchPayload } from '../storage/repository';
 import { FaviconIcon } from './shared/FaviconIcon';
+import { GlassSurface } from './shared/GlassSurface';
 
 interface SearchEngine {
   id: string;
@@ -46,30 +47,30 @@ function AddEngineForm({ onAdd, onCancel }: AddEngineFormProps) {
         placeholder="名称 (e.g. Bing)"
         value={name}
         onChange={e => setName(e.target.value)}
-        className="w-full text-xs bg-white/40 border border-white/50 rounded-lg px-2.5 py-1.5 outline-none placeholder-gray-400 text-gray-700"
+        className="w-full text-xs glass-input-fill rounded-lg px-2.5 py-1.5 outline-none placeholder-gray-400 text-gray-700"
       />
       <input
         placeholder="域名 (e.g. bing.com)"
         value={domain}
         onChange={e => setDomain(e.target.value)}
-        className="w-full text-xs bg-white/40 border border-white/50 rounded-lg px-2.5 py-1.5 outline-none placeholder-gray-400 text-gray-700"
+        className="w-full text-xs glass-input-fill rounded-lg px-2.5 py-1.5 outline-none placeholder-gray-400 text-gray-700"
       />
       <input
         placeholder="搜索URL (以 %s 代替关键词)"
         value={url}
         onChange={e => setUrl(e.target.value)}
-        className="w-full text-xs bg-white/40 border border-white/50 rounded-lg px-2.5 py-1.5 outline-none placeholder-gray-400 text-gray-700"
+        className="w-full text-xs glass-input-fill rounded-lg px-2.5 py-1.5 outline-none placeholder-gray-400 text-gray-700"
       />
       <div className="flex gap-2 pt-1">
         <button
           onClick={handleSubmit}
-          className="flex-1 flex items-center justify-center gap-1 text-xs bg-white/50 hover:bg-white/70 rounded-lg py-1.5 text-gray-700 transition-all"
+          className="flex-1 flex items-center justify-center gap-1 text-xs glass-add-engine-btn-confirm rounded-lg py-1.5 text-gray-700"
         >
           <Check className="w-3 h-3" /> 确认
         </button>
         <button
           onClick={onCancel}
-          className="flex-1 flex items-center justify-center gap-1 text-xs bg-white/30 hover:bg-white/50 rounded-lg py-1.5 text-gray-500 transition-all"
+          className="flex-1 flex items-center justify-center gap-1 text-xs glass-add-engine-btn-cancel rounded-lg py-1.5 text-gray-500"
         >
           <X className="w-3 h-3" /> 取消
         </button>
@@ -152,7 +153,7 @@ export function SearchBar() {
   return (
     <div className="w-full max-w-2xl relative" ref={containerRef}>
       {/* Search Input Row */}
-      <div className="backdrop-blur-md bg-white/40 rounded-full px-5 py-4 shadow-lg border border-white/50 flex items-center gap-3">
+      <GlassSurface variant="bar" rounded="full" className="flex w-full items-center gap-3 px-5 py-4">
         {/* Engine Selector Trigger */}
         <button
           onClick={() => { setIsOpen(v => !v); setShowAddForm(false); }}
@@ -195,12 +196,14 @@ export function SearchBar() {
           placeholder={`用 ${selected.name} 搜索…`}
           className="flex-1 bg-transparent outline-none placeholder-gray-400 text-gray-800 min-w-0"
         />
-      </div>
+      </GlassSurface>
 
       {/* Dropdown Panel */}
       {isOpen && (
-        <div
-          className="absolute left-0 top-full mt-3 z-50 backdrop-blur-xl bg-white/50 border border-white/50 rounded-2xl shadow-2xl overflow-hidden min-w-[140px] max-w-[240px]"
+        <GlassSurface
+          variant="default"
+          rounded="2xl"
+          className="absolute left-0 top-full z-50 mt-3 min-w-[140px] max-w-[240px] overflow-hidden shadow-2xl"
         >
           {/* Engine List */}
           <div className="p-2 space-y-0.5">
@@ -249,7 +252,7 @@ export function SearchBar() {
               </button>
             )}
           </div>
-        </div>
+        </GlassSurface>
       )}
     </div>
   );

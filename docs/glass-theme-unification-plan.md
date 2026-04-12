@@ -24,6 +24,14 @@
 
 **原则**：避免同时维护「变量文件 + GlassSurface 内写死两套值」——迁移期可二选一为主，迁移完成后以变量 + 组件为准。
 
+## 进度（维护时更新）
+
+| 阶段 | 状态 | 说明 |
+|------|------|------|
+| B token + `GlassSurface` 变体 | **已落地** | `:root` 与 `@layer components` 中 `.glass-surface-*`、`.glass-scrim`；`GlassSurface` 支持 `variant` / `rounded`（含 `none`、`full`）。 |
+| C 高流量迁移 | **已落地** | 含：`MultiDesktopStrip` 指示条、`RemoteContentPlaceholder`、`App` Suspense 骨架与全页渐变 veil、`DesktopGridItemWidgetBody` 懒加载骨架、`SearchBar` 添加引擎表单（输入/按钮 token）、`FaviconIcon` 占位、`folderPreview` 预览格；此前已接：`GridItemContextMenu`、`DesktopGridFolderPortal`、`SearchBar` 主行与下拉、`DesktopGridItemSiteBody`、`Sidebar`、`WeatherCard`。 |
+| D 暗色 | 未做 | 见上文。 |
+
 ## 分阶段执行（建议顺序）
 
 ### 阶段 A：盘点（半日～1 日）

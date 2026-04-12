@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { DEFAULT_NEW_TAB_BACKGROUND_URL, RemoteBackgroundImage } from "./components/feedback";
+import { GlassSurface } from "./components/shared/GlassSurface";
 
 const SearchBar = lazy(async () => {
   const m = await import("./components/SearchBar");
@@ -18,12 +19,14 @@ const Sidebar = lazy(async () => {
 
 function MultiDesktopFallback() {
   return (
-    <div
-      className="w-full min-h-[320px] max-w-[1200px] xl:max-w-[1280px] mx-auto flex items-center justify-center rounded-3xl border border-white/20 bg-white/5 text-white/70 text-sm backdrop-blur-sm"
+    <GlassSurface
+      variant="fallbackPanel"
+      rounded="3xl"
+      className="w-full min-h-[320px] max-w-[1200px] xl:max-w-[1280px] mx-auto flex items-center justify-center text-white/70 text-sm"
       aria-hidden
     >
       加载桌面…
-    </div>
+    </GlassSurface>
   );
 }
 
@@ -33,8 +36,10 @@ function SidebarFallback() {
 
 function SearchBarFallback() {
   return (
-    <div
-      className="w-full max-w-[640px] xl:max-w-[680px] 2xl:max-w-[720px] h-14 rounded-full border border-white/25 bg-white/10 backdrop-blur-sm animate-pulse"
+    <GlassSurface
+      variant="fallbackBar"
+      rounded="full"
+      className="w-full max-w-[640px] xl:max-w-[680px] 2xl:max-w-[720px] h-14 animate-pulse"
       aria-hidden
     />
   );
@@ -47,7 +52,12 @@ export default function App() {
       {/* Background：外链图失败时由 RemoteBackgroundImage 降级为渐变，见 components/feedback */}
       <div className="absolute inset-0">
         <RemoteBackgroundImage src={DEFAULT_NEW_TAB_BACKGROUND_URL} />
-        <div className="absolute inset-0 bg-gradient-to-b from-orange-50/10 via-blue-50/10 to-blue-200/20 backdrop-blur-[1px]" />
+        <GlassSurface
+          variant="pageVeil"
+          rounded="none"
+          className="absolute inset-0 bg-gradient-to-b from-orange-50/10 via-blue-50/10 to-blue-200/20"
+          aria-hidden
+        />
       </div>
 
       <Suspense fallback={<SidebarFallback />}>

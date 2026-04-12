@@ -1,5 +1,6 @@
 import type { SiteItem } from "./desktopGridTypes";
 import { EditableLabel, Favicon } from "./DesktopGridItemPrimitives";
+import { GlassSurface } from "./shared/GlassSurface";
 
 export function DesktopGridItemSiteBody({
   item,
@@ -17,24 +18,18 @@ export function DesktopGridItemSiteBody({
       onClick={() => window.open(item.site.url, "_blank")}
       className="relative flex flex-col items-center justify-center w-full h-full pointer-events-auto cursor-pointer group/site"
     >
-      <div
-        style={{
-          width: 88,
-          height: 88,
-          borderRadius: 28,
-          backdropFilter: "blur(10px)",
-          background: "rgba(255,255,255,0.4)",
-          border: isMergeTarget ? "3px solid #3b82f6" : "1px solid rgba(255,255,255,0.7)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          boxShadow: isMergeTarget ? "0 0 24px rgba(59, 130, 246, 0.6)" : "0 4px 20px rgba(0,0,0,0.06)",
-          transition: "transform 0.2s",
-        }}
-        className="group-hover/site:scale-[1.03] group-hover/site:bg-white/60 group-active/site:scale-95"
+      <GlassSurface
+        variant="tile"
+        rounded="none"
+        className="flex h-[88px] w-[88px] items-center justify-center !rounded-[28px] transition-[transform] duration-200 group-hover/site:scale-[1.03] group-hover/site:bg-white/60 group-active/site:scale-95"
+        style={
+          isMergeTarget
+            ? { border: "3px solid #3b82f6", boxShadow: "0 0 24px rgba(59, 130, 246, 0.6)" }
+            : undefined
+        }
       >
         <Favicon domain={item.site.domain} name={item.site.name} size={52} />
-      </div>
+      </GlassSurface>
       <EditableLabel
         initialName={item.site.name}
         onRename={onRename}

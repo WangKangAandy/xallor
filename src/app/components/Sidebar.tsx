@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { LayoutDashboard, Star, Clock, User, Settings, type LucideIcon } from 'lucide-react';
+import { GlassSurface } from './shared/GlassSurface';
 
 interface MenuItem {
   Icon: LucideIcon;
@@ -45,8 +46,10 @@ export function Sidebar() {
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
-        <div
-          className="backdrop-blur-md bg-white/20 rounded-3xl p-3 shadow-lg border border-white/40"
+        <GlassSurface
+          variant="sidebar"
+          rounded="3xl"
+          className="p-3"
           style={{
             transform: hovered ? 'translateX(12px)' : 'translateX(-62px)',
             opacity: hovered ? 1 : 0,
@@ -68,7 +71,7 @@ export function Sidebar() {
               </button>
             ))}
           </div>
-        </div>
+        </GlassSurface>
       </div>
     </>
   );

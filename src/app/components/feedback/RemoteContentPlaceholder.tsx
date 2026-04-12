@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { GlassSurface } from "../shared/GlassSurface";
 
 export type RemoteContentPhase = "loading" | "error" | "ready";
 
@@ -13,8 +14,8 @@ type RemoteContentPlaceholderProps = {
   className?: string;
 };
 
-const shell =
-  "flex min-h-[120px] w-full flex-col items-center justify-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-4 py-6 text-center text-sm text-white/80 backdrop-blur-sm";
+const shellLayout =
+  "flex min-h-[120px] w-full flex-col items-center justify-center gap-2 px-4 py-6 text-center text-sm text-white/80";
 
 /**
  * 异步数据（未来 API、外链资源元数据等）的统一占位：加载中 / 失败 / 成功。
@@ -31,27 +32,33 @@ export function RemoteContentPlaceholder({
 }: RemoteContentPlaceholderProps) {
   if (phase === "loading") {
     return (
-      <div className={`${shell} animate-pulse ${className}`} role="status" aria-busy="true">
+      <GlassSurface
+        variant="placeholder"
+        rounded="2xl"
+        className={`${shellLayout} animate-pulse ${className}`}
+        role="status"
+        aria-busy="true"
+      >
         <span>{loadingLabel}</span>
-      </div>
+      </GlassSurface>
     );
   }
 
   if (phase === "error") {
     return (
-      <div className={`${shell} ${className}`} role="alert">
+      <GlassSurface variant="placeholder" rounded="2xl" className={`${shellLayout} ${className}`} role="alert">
         <span className="font-medium text-white/90">{errorTitle}</span>
         {errorHint ? <span className="text-xs text-white/60">{errorHint}</span> : null}
         {onRetry ? (
           <button
             type="button"
             onClick={onRetry}
-            className="mt-1 rounded-lg border border-white/30 bg-white/10 px-3 py-1.5 text-xs text-white/90 hover:bg-white/20"
+            className="glass-placeholder-retry mt-1 rounded-lg px-3 py-1.5 text-xs text-white/90"
           >
             重试
           </button>
         ) : null}
-      </div>
+      </GlassSurface>
     );
   }
 

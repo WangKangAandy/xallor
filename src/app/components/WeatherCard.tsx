@@ -1,8 +1,13 @@
 import { Cloud, Sun, CloudRain, CloudSun } from 'lucide-react';
+import { GlassSurface } from './shared/GlassSurface';
 
 export function WeatherCard() {
   return (
-    <div className="backdrop-blur-md bg-white/40 rounded-[36px] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.06)] border border-white/60 w-full h-full flex flex-col justify-between transition-transform duration-200 hover:bg-white/50 cursor-pointer group">
+    <GlassSurface
+      variant="card"
+      rounded="none"
+      className="group flex h-full w-full cursor-pointer flex-col justify-between rounded-[36px] p-8 transition-transform duration-200 hover:bg-white/50"
+    >
       <div className="flex items-start justify-between">
         <div>
           <p className="text-base text-gray-700 mb-2 font-medium">Tokyo, Japan</p>
@@ -36,6 +41,6 @@ export function WeatherCard() {
           </div>
         ))}
       </div>
-    </div>
+    </GlassSurface>
   );
 }

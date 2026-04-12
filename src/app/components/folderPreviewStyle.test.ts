@@ -29,5 +29,18 @@ describe("buildFolderPreviewItemStyle", () => {
     expect(style.opacity).toBe(0);
     expect(style.aspectRatio).toBe("1 / 1");
   });
+
+  /**
+   * 目的：底色/阴影/悬停已迁至 `theme.css` 的 `.glass-folder-preview-tile`，内联 style 不再写 background，避免与类优先级冲突。
+   */
+  it("should_not_inline_background_or_box_shadow_when_tokens_own_visuals", () => {
+    const style = buildFolderPreviewItemStyle({
+      maxIconSize: 48,
+      innerBorderRadius: 16,
+      isDragging: false,
+    });
+    expect(style.background).toBeUndefined();
+    expect(style.boxShadow).toBeUndefined();
+  });
 });
 

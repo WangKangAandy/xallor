@@ -39,6 +39,99 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /**
+   * 毛玻璃 token（与 GlassSurface、docs/glass-theme-unification-plan.md 一致）。
+   * 调整全局玻璃质感时优先改此处；无 backdrop-filter 时用 *-no-support 略更不透明以保证可读性。
+   */
+  --glass-border-color: rgb(255 255 255 / 0.55);
+  --glass-bg: rgb(255 255 255 / 0.45);
+  --glass-bg-no-support: rgb(255 255 255 / 0.72);
+  --glass-shadow: 0 12px 40px -8px rgb(0 0 0 / 0.14);
+  --glass-blur: 24px;
+
+  --glass-panel-bg: rgb(255 255 255 / 0.7);
+  --glass-panel-bg-no-support: rgb(255 255 255 / 0.92);
+  --glass-panel-border: rgb(255 255 255 / 0.8);
+  --glass-panel-shadow: 0 32px 64px -12px rgb(0 0 0 / 0.2);
+  --glass-panel-blur: 64px;
+
+  --glass-bar-bg: rgb(255 255 255 / 0.4);
+  --glass-bar-bg-no-support: rgb(255 255 255 / 0.88);
+  --glass-bar-border: rgb(255 255 255 / 0.5);
+  --glass-bar-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.06);
+  --glass-bar-blur: 12px;
+
+  --glass-tile-bg: rgb(255 255 255 / 0.4);
+  --glass-tile-bg-no-support: rgb(255 255 255 / 0.88);
+  --glass-tile-border: rgb(255 255 255 / 0.7);
+  --glass-tile-shadow: 0 4px 20px rgb(0 0 0 / 0.06);
+  --glass-tile-blur: 10px;
+
+  --glass-sidebar-bg: rgb(255 255 255 / 0.2);
+  --glass-sidebar-bg-no-support: rgb(255 255 255 / 0.92);
+  --glass-sidebar-border: rgb(255 255 255 / 0.4);
+  --glass-sidebar-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.06);
+  --glass-sidebar-blur: 12px;
+
+  --glass-card-bg: rgb(255 255 255 / 0.4);
+  --glass-card-bg-no-support: rgb(255 255 255 / 0.9);
+  --glass-card-border: rgb(255 255 255 / 0.6);
+  --glass-card-shadow: 0 8px 32px rgb(0 0 0 / 0.06);
+  --glass-card-blur: 12px;
+
+  --glass-scrim-bg: rgb(0 0 0 / 0.2);
+  --glass-scrim-blur: 40px;
+
+  /** 多桌面底部指示条（深色半透明条） */
+  --glass-strip-bg: rgb(0 0 0 / 0.25);
+  --glass-strip-blur: 12px;
+  --glass-strip-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  /** RemoteContentPlaceholder 外壳 */
+  --glass-placeholder-border: rgb(255 255 255 / 0.2);
+  --glass-placeholder-bg: rgb(255 255 255 / 0.1);
+  --glass-placeholder-bg-no-support: rgb(255 255 255 / 0.88);
+  --glass-placeholder-blur: 8px;
+
+  --glass-placeholder-retry-border: rgb(255 255 255 / 0.3);
+  --glass-placeholder-retry-bg: rgb(255 255 255 / 0.1);
+  --glass-placeholder-retry-hover: rgb(255 255 255 / 0.2);
+
+  /** App Suspense 骨架 */
+  --glass-app-fallback-panel-border: rgb(255 255 255 / 0.2);
+  --glass-app-fallback-panel-bg: rgb(255 255 255 / 0.05);
+  --glass-app-fallback-panel-bg-no-support: rgb(255 255 255 / 0.9);
+  --glass-app-fallback-panel-blur: 8px;
+
+  --glass-app-fallback-bar-border: rgb(255 255 255 / 0.25);
+  --glass-app-fallback-bar-bg: rgb(255 255 255 / 0.1);
+  --glass-app-fallback-bar-bg-no-support: rgb(255 255 255 / 0.93);
+  --glass-app-fallback-bar-blur: 8px;
+
+  /** 天气卡片 lazy fallback */
+  --glass-widget-skeleton-bg: rgb(255 255 255 / 0.25);
+  --glass-widget-skeleton-bg-no-support: rgb(255 255 255 / 0.9);
+  --glass-widget-skeleton-blur: 8px;
+
+  /** 搜索栏内联表单（无 backdrop，仅半透明填色，与迁移前一致） */
+  --glass-input-fill-bg: rgb(255 255 255 / 0.4);
+  --glass-input-fill-border: rgb(255 255 255 / 0.5);
+
+  --glass-add-engine-btn-confirm-bg: rgb(255 255 255 / 0.5);
+  --glass-add-engine-btn-confirm-hover: rgb(255 255 255 / 0.7);
+  --glass-add-engine-btn-cancel-bg: rgb(255 255 255 / 0.3);
+  --glass-add-engine-btn-cancel-hover: rgb(255 255 255 / 0.5);
+
+  --glass-favicon-fallback-bg: rgb(255 255 255 / 0.4);
+
+  /** 文件夹网格内预览格（buildFolderPreviewItemStyle） */
+  --glass-folder-preview-bg: rgb(255 255 255 / 0.5);
+  --glass-folder-preview-hover-bg: rgb(255 255 255 / 0.8);
+  --glass-folder-preview-shadow: 0 2px 12px rgb(0 0 0 / 0.06);
+
+  /** App 背景渐变上的极轻模糊 */
+  --glass-page-veil-blur: 1px;
 }
 
 .dark {
@@ -117,6 +210,198 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer components {
+  .glass-surface-default {
+    border: 1px solid var(--glass-border-color);
+    background-color: var(--glass-bg-no-support);
+    box-shadow: var(--glass-shadow);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+  }
+  @supports (backdrop-filter: blur(2px)) {
+    .glass-surface-default {
+      background-color: var(--glass-bg);
+    }
+  }
+
+  .glass-surface-panel {
+    border: 1px solid var(--glass-panel-border);
+    background-color: var(--glass-panel-bg-no-support);
+    box-shadow: var(--glass-panel-shadow);
+    backdrop-filter: blur(var(--glass-panel-blur));
+    -webkit-backdrop-filter: blur(var(--glass-panel-blur));
+  }
+  @supports (backdrop-filter: blur(2px)) {
+    .glass-surface-panel {
+      background-color: var(--glass-panel-bg);
+    }
+  }
+
+  .glass-surface-bar {
+    border: 1px solid var(--glass-bar-border);
+    background-color: var(--glass-bar-bg-no-support);
+    box-shadow: var(--glass-bar-shadow);
+    backdrop-filter: blur(var(--glass-bar-blur));
+    -webkit-backdrop-filter: blur(var(--glass-bar-blur));
+  }
+  @supports (backdrop-filter: blur(2px)) {
+    .glass-surface-bar {
+      background-color: var(--glass-bar-bg);
+    }
+  }
+
+  .glass-surface-tile {
+    border: 1px solid var(--glass-tile-border);
+    background-color: var(--glass-tile-bg-no-support);
+    box-shadow: var(--glass-tile-shadow);
+    backdrop-filter: blur(var(--glass-tile-blur));
+    -webkit-backdrop-filter: blur(var(--glass-tile-blur));
+  }
+  @supports (backdrop-filter: blur(2px)) {
+    .glass-surface-tile {
+      background-color: var(--glass-tile-bg);
+    }
+  }
+
+  .glass-surface-sidebar {
+    border: 1px solid var(--glass-sidebar-border);
+    background-color: var(--glass-sidebar-bg-no-support);
+    box-shadow: var(--glass-sidebar-shadow);
+    backdrop-filter: blur(var(--glass-sidebar-blur));
+    -webkit-backdrop-filter: blur(var(--glass-sidebar-blur));
+  }
+  @supports (backdrop-filter: blur(2px)) {
+    .glass-surface-sidebar {
+      background-color: var(--glass-sidebar-bg);
+    }
+  }
+
+  .glass-surface-card {
+    border: 1px solid var(--glass-card-border);
+    background-color: var(--glass-card-bg-no-support);
+    box-shadow: var(--glass-card-shadow);
+    backdrop-filter: blur(var(--glass-card-blur));
+    -webkit-backdrop-filter: blur(var(--glass-card-blur));
+  }
+  @supports (backdrop-filter: blur(2px)) {
+    .glass-surface-card {
+      background-color: var(--glass-card-bg);
+    }
+  }
+
+  /** 全屏文件夹等：遮罩 + 背景模糊，不含面板本体。 */
+  .glass-scrim {
+    background-color: var(--glass-scrim-bg);
+    backdrop-filter: blur(var(--glass-scrim-blur));
+    -webkit-backdrop-filter: blur(var(--glass-scrim-blur));
+  }
+
+  .glass-surface-strip {
+    background-color: var(--glass-strip-bg);
+    box-shadow: var(--glass-strip-shadow);
+    backdrop-filter: blur(var(--glass-strip-blur));
+    -webkit-backdrop-filter: blur(var(--glass-strip-blur));
+  }
+
+  .glass-surface-placeholder {
+    border: 1px solid var(--glass-placeholder-border);
+    background-color: var(--glass-placeholder-bg-no-support);
+    backdrop-filter: blur(var(--glass-placeholder-blur));
+    -webkit-backdrop-filter: blur(var(--glass-placeholder-blur));
+  }
+  @supports (backdrop-filter: blur(2px)) {
+    .glass-surface-placeholder {
+      background-color: var(--glass-placeholder-bg);
+    }
+  }
+
+  .glass-placeholder-retry {
+    border: 1px solid var(--glass-placeholder-retry-border);
+    background-color: var(--glass-placeholder-retry-bg);
+  }
+  .glass-placeholder-retry:hover {
+    background-color: var(--glass-placeholder-retry-hover);
+  }
+
+  .glass-app-fallback-panel {
+    border: 1px solid var(--glass-app-fallback-panel-border);
+    background-color: var(--glass-app-fallback-panel-bg-no-support);
+    backdrop-filter: blur(var(--glass-app-fallback-panel-blur));
+    -webkit-backdrop-filter: blur(var(--glass-app-fallback-panel-blur));
+  }
+  @supports (backdrop-filter: blur(2px)) {
+    .glass-app-fallback-panel {
+      background-color: var(--glass-app-fallback-panel-bg);
+    }
+  }
+
+  .glass-app-fallback-bar {
+    border: 1px solid var(--glass-app-fallback-bar-border);
+    background-color: var(--glass-app-fallback-bar-bg-no-support);
+    backdrop-filter: blur(var(--glass-app-fallback-bar-blur));
+    -webkit-backdrop-filter: blur(var(--glass-app-fallback-bar-blur));
+  }
+  @supports (backdrop-filter: blur(2px)) {
+    .glass-app-fallback-bar {
+      background-color: var(--glass-app-fallback-bar-bg);
+    }
+  }
+
+  .glass-widget-skeleton {
+    background-color: var(--glass-widget-skeleton-bg-no-support);
+    backdrop-filter: blur(var(--glass-widget-skeleton-blur));
+    -webkit-backdrop-filter: blur(var(--glass-widget-skeleton-blur));
+  }
+  @supports (backdrop-filter: blur(2px)) {
+    .glass-widget-skeleton {
+      background-color: var(--glass-widget-skeleton-bg);
+    }
+  }
+
+  .glass-input-fill {
+    background-color: var(--glass-input-fill-bg);
+    border: 1px solid var(--glass-input-fill-border);
+  }
+
+  .glass-add-engine-btn-confirm {
+    background-color: var(--glass-add-engine-btn-confirm-bg);
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+  .glass-add-engine-btn-confirm:hover {
+    background-color: var(--glass-add-engine-btn-confirm-hover);
+  }
+
+  .glass-add-engine-btn-cancel {
+    background-color: var(--glass-add-engine-btn-cancel-bg);
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+  .glass-add-engine-btn-cancel:hover {
+    background-color: var(--glass-add-engine-btn-cancel-hover);
+  }
+
+  .glass-favicon-fallback {
+    background-color: var(--glass-favicon-fallback-bg);
+  }
+
+  .glass-folder-preview-tile {
+    background-color: var(--glass-folder-preview-bg);
+    box-shadow: var(--glass-folder-preview-shadow);
+    transition: background-color 0.2s;
+  }
+  .glass-folder-preview-tile:hover {
+    background-color: var(--glass-folder-preview-hover-bg);
+  }
+
+  .glass-page-veil {
+    backdrop-filter: blur(var(--glass-page-veil-blur));
+    -webkit-backdrop-filter: blur(var(--glass-page-veil-blur));
+  }
 }
 
 @layer base {

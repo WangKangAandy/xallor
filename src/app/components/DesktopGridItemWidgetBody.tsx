@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { GlassSurface } from "./shared/GlassSurface";
 
 const WeatherCard = lazy(async () => {
   const m = await import("./WeatherCard");
@@ -11,8 +12,10 @@ export function DesktopGridItemWidgetBody({ widgetType }: { widgetType: "weather
       <div className="w-full h-full overflow-hidden pointer-events-auto shadow-sm" style={{ borderRadius: 36 }}>
         <Suspense
           fallback={
-            <div
-              className="w-full h-full min-h-[120px] animate-pulse rounded-[36px] bg-white/25 backdrop-blur-sm"
+            <GlassSurface
+              variant="widgetSkeleton"
+              rounded="none"
+              className="w-full h-full min-h-[120px] animate-pulse rounded-[36px]"
               aria-hidden
             />
           }

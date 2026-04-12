@@ -30,7 +30,7 @@ export function DesktopGridFolderPreviewItem({
         window.open(site.url, "_blank");
       }}
       style={buildFolderPreviewItemStyle({ maxIconSize, innerBorderRadius, isDragging })}
-      className="hover:bg-white/80 cursor-grab active:cursor-grabbing"
+      className="glass-folder-preview-tile cursor-grab active:cursor-grabbing"
     >
       <div ref={dragPreview}>
         <Favicon domain={site.domain} name={site.name} size={faviconSize} />
