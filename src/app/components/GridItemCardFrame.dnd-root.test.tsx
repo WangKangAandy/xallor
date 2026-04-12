@@ -60,4 +60,39 @@ describe("GridItemCardFrame", () => {
 
     root.unmount();
   });
+
+  /**
+   * 目的：挂载右键删除能力时仍须保证 DnD ref 落在外层原生 div（与 motion/Portal 并存）。
+   */
+  it("should_keep_dnd_ref_on_outer_div_when_context_menu_props_provided", () => {
+    host = document.createElement("div");
+    document.body.appendChild(host);
+    const ref = createRef<HTMLDivElement>();
+    const root = createRoot(host);
+    act(() => {
+      root.render(
+        <GridItemCardFrame
+          ref={ref}
+          gridColumn="span 1"
+          gridRow="span 1"
+          renderSize={{ width: 80, height: 80 }}
+          zIndex={2}
+          opacity={1}
+          isMergeTarget={false}
+          isDragging={false}
+          showResizeChrome={false}
+          folderResize={folderResizeStub}
+          itemId="x-1"
+          onDeleteItem={vi.fn()}
+        >
+          <span>tile</span>
+        </GridItemCardFrame>,
+      );
+    });
+
+    expect(ref.current?.tagName).toBe("DIV");
+    expect(ref.current?.style.gridColumn).toBe("span 1");
+
+    root.unmount();
+  });
 });

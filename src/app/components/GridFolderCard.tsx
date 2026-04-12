@@ -10,9 +10,10 @@ export type GridFolderCardProps = GridItemCardSharedCallbacks & {
   showLabels?: boolean;
   onRename?: (id: string, newName: string) => void;
   onOpenFolder?: (id: string) => void;
+  onDeleteItem?: (id: string) => void;
 };
 
-export function GridFolderCard({ item, index, showLabels = true, onRename, onOpenFolder, ...callbacks }: GridFolderCardProps) {
+export function GridFolderCard({ item, index, showLabels = true, onRename, onOpenFolder, onDeleteItem, ...callbacks }: GridFolderCardProps) {
   const shell = useGridItemCard(item, index, callbacks);
   const { renderSize, folderResize } = shell;
   const { resizePreview, activeResizeDir, resizeFolderPending, resizeFolderStartRef } = folderResize;
@@ -27,7 +28,7 @@ export function GridFolderCard({ item, index, showLabels = true, onRename, onOpe
   });
 
   return (
-    <GridItemCardFrame {...shell}>
+    <GridItemCardFrame {...shell} itemId={item.id} onDeleteItem={onDeleteItem}>
       <DesktopGridItemFolderBody
         item={item}
         isMergeTarget={callbacks.isMergeTarget}

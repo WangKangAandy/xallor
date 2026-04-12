@@ -6,6 +6,7 @@ import { DesktopGridFolderPortal } from "./DesktopGridFolderPortal";
 import type { GridItemType, GridShape, FolderItem } from "./desktopGridTypes";
 import type { GridDnDDragItem } from "./desktopGridDnDTypes";
 import { GRID_CELL_SIZE, GRID_GAP } from "./desktopGridConstants";
+import { removeGridItemById } from "./desktopGridItemActions";
 import { useGridDnD } from "./useGridDnD";
 
 export type DesktopGridProps = {
@@ -81,6 +82,14 @@ export function DesktopGrid({ items, setItems, showLabels, isHydrated }: Desktop
     [setItems],
   );
 
+  const handleDeleteItem = useCallback(
+    (id: string) => {
+      setItems((prev) => removeGridItemById(prev, id));
+      setOpenFolderId((cur) => (cur === id ? null : cur));
+    },
+    [setItems],
+  );
+
   const openFolder = openFolderId ? (items.find((i) => i.id === openFolderId) as FolderItem | undefined) : undefined;
 
   // 网格项 z-index 数值见 desktopGridLayers.ts（DesktopGridItem inline style）
@@ -116,6 +125,7 @@ export function DesktopGrid({ items, setItems, showLabels, isHydrated }: Desktop
                 onOpenFolder={(id) => setOpenFolderId(id)}
                 showLabels={showLabels}
                 onRename={handleRename}
+                onDeleteItem={handleDeleteItem}
               />
             ))}
         </div>

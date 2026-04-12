@@ -9,6 +9,7 @@
  * - 网格卡片：见下方数值（DesktopGridItem 用 inline style）
  * - 卡片内缩放高亮层：z-40～z-50（DesktopGridResizeChrome）
  * - 搜索下拉等：z-50
+ * - 网格项右键菜单：z-[60]（GridItemContextMenu，见 Z_GRID_CONTEXT_MENU）
  * - 文件夹全屏弹层：z-[100]（DesktopGridFolderPortal）
  * - 预留全页装饰/宠物：建议在 50～90 或 200+，避免与弹层/侧栏冲突。
  */
@@ -19,3 +20,5 @@ export const Z_GRID_ITEM_BASE = 10;
 export const Z_GRID_ITEM_MERGE_TARGET = 20;
 /** 正在拖拽的源格。 */
 export const Z_GRID_ITEM_DRAGGING = 30;
+/** 网格卡片右键菜单（须低于文件夹弹层 z-[100]）。 */
+export const Z_GRID_CONTEXT_MENU = 60;

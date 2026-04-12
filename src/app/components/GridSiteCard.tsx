@@ -8,13 +8,14 @@ export type GridSiteCardProps = GridItemCardSharedCallbacks & {
   index: number;
   showLabels?: boolean;
   onRename?: (id: string, newName: string) => void;
+  onDeleteItem?: (id: string) => void;
 };
 
-export function GridSiteCard({ item, index, showLabels = true, onRename, ...callbacks }: GridSiteCardProps) {
+export function GridSiteCard({ item, index, showLabels = true, onRename, onDeleteItem, ...callbacks }: GridSiteCardProps) {
   const shell = useGridItemCard(item, index, callbacks);
 
   return (
-    <GridItemCardFrame {...shell}>
+    <GridItemCardFrame {...shell} itemId={item.id} onDeleteItem={onDeleteItem}>
       <DesktopGridItemSiteBody
         item={item}
         isMergeTarget={callbacks.isMergeTarget}

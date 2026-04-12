@@ -21,11 +21,25 @@ export interface DesktopGridItemProps {
   index: number;
   showLabels?: boolean;
   onRename?: (id: string, newName: string) => void;
+  /** 右键菜单等：从当前页移除该图标。 */
+  onDeleteItem?: (id: string) => void;
 }
 
 export function DesktopGridItem(props: DesktopGridItemProps) {
-  const { item, index, onReorder, onHoverMergeIntent, onClearMergeIntent, onDropItem, isMergeTarget, onResize, onOpenFolder, showLabels, onRename } =
-    props;
+  const {
+    item,
+    index,
+    onReorder,
+    onHoverMergeIntent,
+    onClearMergeIntent,
+    onDropItem,
+    isMergeTarget,
+    onResize,
+    onOpenFolder,
+    showLabels,
+    onRename,
+    onDeleteItem,
+  } = props;
 
   const shared = {
     onReorder,
@@ -37,12 +51,22 @@ export function DesktopGridItem(props: DesktopGridItemProps) {
   };
 
   if (item.type === "site") {
-    return <GridSiteCard item={item} index={index} showLabels={showLabels} onRename={onRename} {...shared} />;
+    return (
+      <GridSiteCard item={item} index={index} showLabels={showLabels} onRename={onRename} onDeleteItem={onDeleteItem} {...shared} />
+    );
   }
   if (item.type === "folder") {
     return (
-      <GridFolderCard item={item} index={index} showLabels={showLabels} onRename={onRename} onOpenFolder={onOpenFolder} {...shared} />
+      <GridFolderCard
+        item={item}
+        index={index}
+        showLabels={showLabels}
+        onRename={onRename}
+        onOpenFolder={onOpenFolder}
+        onDeleteItem={onDeleteItem}
+        {...shared}
+      />
     );
   }
-  return <GridWidgetCard item={item} index={index} {...shared} />;
+  return <GridWidgetCard item={item} index={index} onDeleteItem={onDeleteItem} {...shared} />;
 }

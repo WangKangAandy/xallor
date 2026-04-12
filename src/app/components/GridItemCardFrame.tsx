@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
-import { forwardRef } from "react";
+import { forwardRef, Fragment } from "react";
 import { motion } from "motion/react";
 import { DesktopGridResizeChrome } from "./DesktopGridResizeChrome";
 import type { FolderResizeHandle } from "./useFolderResize";
+import { useGridItemContextMenu } from "./useGridItemContextMenu";
 
 export type GridItemCardFrameProps = {
   gridColumn: string;
@@ -14,6 +15,9 @@ export type GridItemCardFrameProps = {
   isDragging: boolean;
   showResizeChrome: boolean;
   folderResize: FolderResizeHandle;
+  /** 与 {@link onDeleteItem} 同时提供时启用右键菜单。 */
+  itemId?: string;
+  onDeleteItem?: (id: string) => void;
   children: ReactNode;
 };
 
@@ -23,6 +27,7 @@ export type GridItemCardFrameProps = {
  * `beginDrag` 无法建立、浏览器表现为完全拖不动（无半透明预览）。
  *
  * 使用 `forwardRef`：在 React 18 中 `ref` 不是普通 props，`{...shell}` 里的 ref 只会传给 `forwardRef` 组件。
+ * 右键菜单的 `onContextMenu` 挂在外层同一 div 上，与 DnD 宿主一致，避免在 motion 子层拦截。
  */
 export const GridItemCardFrame = forwardRef<HTMLDivElement, GridItemCardFrameProps>(function GridItemCardFrame(
   {
@@ -35,44 +40,51 @@ export const GridItemCardFrame = forwardRef<HTMLDivElement, GridItemCardFramePro
     isDragging,
     showResizeChrome,
     folderResize,
+    itemId,
+    onDeleteItem,
     children,
   },
   ref,
 ) {
   const { isBorderHovered, setIsBorderHovered, isResizing, startResize } = folderResize;
+  const { onContextMenu, portal } = useGridItemContextMenu(itemId ?? "", onDeleteItem);
 
   return (
-    <div
-      ref={ref}
-      style={{
-        gridColumn,
-        gridRow,
-        width: renderSize.width,
-        height: renderSize.height,
-        zIndex,
-        cursor: isDragging ? "grabbing" : "grab",
-      }}
-      className="relative group flex items-center justify-center"
-    >
-      <motion.div
-        layout="position"
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity, scale: isMergeTarget ? 1.05 : 1 }}
-        exit={{ opacity: 0, scale: 0.5 }}
-        transition={{ type: "spring", stiffness: 320, damping: 28 }}
-        className="relative flex h-full w-full items-center justify-center"
+    <Fragment>
+      <div
+        ref={ref}
+        onContextMenu={onContextMenu}
+        style={{
+          gridColumn,
+          gridRow,
+          width: renderSize.width,
+          height: renderSize.height,
+          zIndex,
+          cursor: isDragging ? "grabbing" : "grab",
+        }}
+        className="relative group flex items-center justify-center"
       >
-        {showResizeChrome && (
-          <DesktopGridResizeChrome
-            isDragging={isDragging}
-            isBorderHovered={isBorderHovered}
-            isResizing={isResizing}
-            setIsBorderHovered={setIsBorderHovered}
-            startResize={startResize}
-          />
-        )}
-        {children}
-      </motion.div>
-    </div>
+        <motion.div
+          layout="position"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity, scale: isMergeTarget ? 1.05 : 1 }}
+          exit={{ opacity: 0, scale: 0.5 }}
+          transition={{ type: "spring", stiffness: 320, damping: 28 }}
+          className="relative flex h-full w-full items-center justify-center"
+        >
+          {showResizeChrome && (
+            <DesktopGridResizeChrome
+              isDragging={isDragging}
+              isBorderHovered={isBorderHovered}
+              isResizing={isResizing}
+              setIsBorderHovered={setIsBorderHovered}
+              startResize={startResize}
+            />
+          )}
+          {children}
+        </motion.div>
+      </div>
+      {portal}
+    </Fragment>
   );
 });
