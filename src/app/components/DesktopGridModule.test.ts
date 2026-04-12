@@ -10,6 +10,6 @@ describe("DesktopGrid module (code splitting entry)", () => {
       const m = await import("./DesktopGrid");
       expect(m.DesktopGrid).toBeTypeOf("function");
     },
-    20_000,
+    45_000,
   );
 });

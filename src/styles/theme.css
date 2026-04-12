@@ -402,6 +402,20 @@
     backdrop-filter: blur(var(--glass-page-veil-blur));
     -webkit-backdrop-filter: blur(var(--glass-page-veil-blur));
   }
+
+  /** 站点图标右下角「添加」角标（与 tile 同 token，尺寸由组件上 Tailwind 控制） */
+  .glass-site-add-affordance {
+    border: 1px solid var(--glass-tile-border);
+    background-color: var(--glass-tile-bg-no-support);
+    box-shadow: 0 2px 10px rgb(0 0 0 / 0.1);
+    backdrop-filter: blur(var(--glass-tile-blur));
+    -webkit-backdrop-filter: blur(var(--glass-tile-blur));
+  }
+  @supports (backdrop-filter: blur(2px)) {
+    .glass-site-add-affordance {
+      background-color: var(--glass-tile-bg);
+    }
+  }
 }
 
 @layer base {

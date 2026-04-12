@@ -11,6 +11,7 @@
  * - 搜索下拉等：z-50
  * - 网格项右键菜单：z-[60]（GridItemContextMenu，见 Z_GRID_CONTEXT_MENU）
  * - 文件夹全屏弹层：z-[100]（DesktopGridFolderPortal）
+ * - 「添加图标」模块弹层：z-[110]（{@link Z_ADD_ICON_DIALOG}），高于文件夹与右键菜单。
  * - 预留全页装饰/宠物：建议在 50～90 或 200+，避免与弹层/侧栏冲突。
  */
 
@@ -22,3 +23,5 @@ export const Z_GRID_ITEM_MERGE_TARGET = 20;
 export const Z_GRID_ITEM_DRAGGING = 30;
 /** 网格卡片右键菜单（须低于文件夹弹层 z-[100]）。 */
 export const Z_GRID_CONTEXT_MENU = 60;
+/** 添加图标 / 网址导航模块（须高于文件夹弹层与右键菜单）。 */
+export const Z_ADD_ICON_DIALOG = 110;
