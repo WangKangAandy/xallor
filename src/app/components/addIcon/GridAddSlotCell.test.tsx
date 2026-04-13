@@ -23,4 +23,13 @@ describe("GridAddSlotCell", () => {
     expect(html).toContain("opacity-0");
     expect(html).not.toContain("opacity-60");
   });
+
+  /**
+   * 目的：空页面首个入口场景应默认可见，避免用户不知道从何添加第一个图标。
+   */
+  it("should_render_add_slot_visible_when_always_visible_enabled", () => {
+    const html = renderToStaticMarkup(<GridAddSlotCell onOpenAdd={() => {}} alwaysVisible />);
+    expect(html).toContain("opacity-100");
+    expect(html).not.toContain("opacity-0");
+  });
 });

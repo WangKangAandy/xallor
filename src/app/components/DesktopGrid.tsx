@@ -117,6 +117,7 @@ export function DesktopGrid({ items, setItems, showLabels, isHydrated }: Desktop
   );
 
   const openFolder = openFolderId ? (items.find((i) => i.id === openFolderId) as FolderItem | undefined) : undefined;
+  const isEmptyGrid = items.length === 0;
 
   // 网格项 z-index 数值见 desktopGridLayers.ts（DesktopGridItem inline style）
   return (
@@ -125,7 +126,9 @@ export function DesktopGrid({ items, setItems, showLabels, isHydrated }: Desktop
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: `repeat(auto-fit, ${GRID_CELL_SIZE}px)`,
+            // auto-fill 会保留空轨道，单个图标也会落在首行左起第一格；
+            // auto-fit 在元素很少时会折叠空列，导致第一个图标被整体居中。
+            gridTemplateColumns: `repeat(auto-fill, ${GRID_CELL_SIZE}px)`,
             gridAutoRows: `${GRID_CELL_SIZE}px`,
             gap: `${GRID_GAP}px`,
             justifyContent: "center",
@@ -154,7 +157,7 @@ export function DesktopGrid({ items, setItems, showLabels, isHydrated }: Desktop
                 onDeleteItem={handleDeleteItem}
               />
             ))}
-          {isHydrated ? <GridAddSlotCell onOpenAdd={() => setAddIconOpen(true)} /> : null}
+          {isHydrated ? <GridAddSlotCell onOpenAdd={() => setAddIconOpen(true)} alwaysVisible={isEmptyGrid} /> : null}
         </div>
       </GridDropZone>
 

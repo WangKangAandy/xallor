@@ -6,13 +6,15 @@ import { GlassSurface } from "../shared/GlassSurface";
 
 type GridAddSlotCellProps = {
   onOpenAdd: () => void;
+  /** 空页面首屏时默认可见，作为“添加第一个图标”的明确入口。 */
+  alwaysVisible?: boolean;
 };
 
 /**
  * 网格末尾「空位」：默认完全不可见；悬停整块格时渐显毛玻璃占位与中央「+」（`aria-label` 说明用途）。
  * 与站点卡片区分开，不占用 `DesktopGridItem` / DnD 链路。
  */
-export function GridAddSlotCell({ onOpenAdd }: GridAddSlotCellProps) {
+export function GridAddSlotCell({ onOpenAdd, alwaysVisible = false }: GridAddSlotCellProps) {
   const handleClick = (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -33,7 +35,11 @@ export function GridAddSlotCell({ onOpenAdd }: GridAddSlotCellProps) {
       <GlassSurface
         variant="tile"
         rounded="none"
-        className="!rounded-[28px] border border-white/25 bg-white/5 p-0 opacity-0 transition-opacity duration-300 ease-out group-hover/add-slot:opacity-100 group-hover/add-slot:bg-white/15"
+        className={`!rounded-[28px] border border-white/25 p-0 transition-opacity duration-300 ease-out ${
+          alwaysVisible
+            ? "bg-white/12 opacity-100"
+            : "bg-white/5 opacity-0 group-hover/add-slot:bg-white/15 group-hover/add-slot:opacity-100"
+        }`}
       >
         <button
           type="button"
