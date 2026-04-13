@@ -1,13 +1,24 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FaviconIcon } from "./shared/FaviconIcon";
 
-export function Favicon({ domain, name, size = 44 }: { domain: string; name: string; size?: number }) {
+export function Favicon({
+  domain,
+  name,
+  size = 44,
+  iconClassName = "",
+}: {
+  domain: string;
+  name: string;
+  size?: number;
+  /** 追加在 FaviconIcon 上（如反色 `brightness-0 invert`）。 */
+  iconClassName?: string;
+}) {
   return (
     <FaviconIcon
       domain={domain}
       name={name}
       size={size}
-      className="object-contain drop-shadow-sm"
+      className={`object-contain drop-shadow-sm ${iconClassName}`.trim()}
       style={{ borderRadius: size * 0.2 }}
     />
   );

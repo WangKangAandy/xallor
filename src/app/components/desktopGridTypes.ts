@@ -2,6 +2,8 @@ export interface Site {
   name: string;
   domain: string;
   url: string;
+  /** 与「添加图标」预览一致：0 彩色 / 1 反色 / 2 小图 / 3 占位；缺省为 0 */
+  iconVariant?: 0 | 1 | 2 | 3;
 }
 
 export type GridShape = { cols: number; rows: number };

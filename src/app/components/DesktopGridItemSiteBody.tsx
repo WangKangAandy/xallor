@@ -13,6 +13,11 @@ export function DesktopGridItemSiteBody({
   showLabels: boolean;
   onRename: (newName: string) => void;
 }) {
+  const v = item.site.iconVariant ?? 0;
+  const invert = v === 1;
+  const small = v === 2;
+  const placeholder = v === 3;
+
   return (
     <div
       onClick={() => window.open(item.site.url, "_blank")}
@@ -21,14 +26,29 @@ export function DesktopGridItemSiteBody({
       <GlassSurface
         variant="tile"
         rounded="none"
-        className="flex h-[88px] w-[88px] items-center justify-center !rounded-[28px] transition-[transform] duration-200 group-hover/site:scale-[1.03] group-hover/site:bg-white/60 group-active/site:scale-95"
+        className={
+          invert
+            ? "flex h-[88px] w-[88px] items-center justify-center !rounded-[28px] !bg-gray-900/92 transition-[transform] duration-200 group-hover/site:scale-[1.03] group-hover/site:!bg-gray-900 group-active/site:scale-95"
+            : "flex h-[88px] w-[88px] items-center justify-center !rounded-[28px] transition-[transform] duration-200 group-hover/site:scale-[1.03] group-hover/site:bg-white/60 group-active/site:scale-95"
+        }
         style={
           isMergeTarget
             ? { border: "3px solid #3b82f6", boxShadow: "0 0 24px rgba(59, 130, 246, 0.6)" }
             : undefined
         }
       >
-        <Favicon domain={item.site.domain} name={item.site.name} size={52} />
+        {placeholder ? (
+          <span className="text-[26px] font-medium leading-none text-gray-500" aria-hidden>
+            ···
+          </span>
+        ) : (
+          <Favicon
+            domain={item.site.domain}
+            name={item.site.name}
+            size={small ? 44 : 52}
+            iconClassName={invert ? "brightness-0 invert drop-shadow-none" : ""}
+          />
+        )}
       </GlassSurface>
       <EditableLabel
         initialName={item.site.name}

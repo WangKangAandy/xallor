@@ -1,10 +1,10 @@
 import React, { useCallback, useState } from "react";
 import { DndProvider, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { AddIconDialog, GridAddSlotCell } from "./addIcon";
+import { AddIconDialog, GridAddSlotCell, type AddIconSubmitPayload } from "./addIcon";
 import { DesktopGridItem } from "./DesktopGridItem";
 import { DesktopGridFolderPortal } from "./DesktopGridFolderPortal";
-import type { GridItemType, GridShape, FolderItem } from "./desktopGridTypes";
+import type { GridItemType, GridShape, FolderItem, SiteItem, WidgetItem } from "./desktopGridTypes";
 import type { GridDnDDragItem } from "./desktopGridDnDTypes";
 import { GRID_CELL_SIZE, GRID_GAP } from "./desktopGridConstants";
 import { removeGridItemById } from "./desktopGridItemActions";
@@ -92,6 +92,30 @@ export function DesktopGrid({ items, setItems, showLabels, isHydrated }: Desktop
     [setItems],
   );
 
+  const handleConfirmAddFromPicker = useCallback(
+    (payload: AddIconSubmitPayload) => {
+      setItems((prev) => {
+        if (payload.kind === "site") {
+          const siteItem: SiteItem = {
+            id: `site-${Date.now()}`,
+            type: "site",
+            shape: { cols: 1, rows: 1 },
+            site: payload.site,
+          };
+          return [...prev, siteItem];
+        }
+        const w: WidgetItem = {
+          id: `widget-${Date.now()}`,
+          type: "widget",
+          widgetType: payload.widgetType,
+          shape: { cols: 2, rows: 2 },
+        };
+        return [...prev, w];
+      });
+    },
+    [setItems],
+  );
+
   const openFolder = openFolderId ? (items.find((i) => i.id === openFolderId) as FolderItem | undefined) : undefined;
 
   // 网格项 z-index 数值见 desktopGridLayers.ts（DesktopGridItem inline style）
@@ -134,7 +158,12 @@ export function DesktopGrid({ items, setItems, showLabels, isHydrated }: Desktop
         </div>
       </GridDropZone>
 
-      <AddIconDialog open={addIconOpen} onOpenChange={setAddIconOpen} contextSiteId={null} />
+      <AddIconDialog
+        open={addIconOpen}
+        onOpenChange={setAddIconOpen}
+        contextSiteId={null}
+        onConfirmAdd={handleConfirmAddFromPicker}
+      />
 
       {openFolder && (
         <DesktopGridFolderPortal

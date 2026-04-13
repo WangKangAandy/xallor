@@ -4,24 +4,26 @@ import { GlassSurface } from "../shared/GlassSurface";
 import { Z_ADD_ICON_DIALOG } from "../desktopGridLayers";
 import { ADD_ICON_CATALOG, filterAddIconCatalog } from "./addIconCatalog";
 import type { AddIconPickerFilter } from "./addIconPickerConstants";
-import { AddIconDialogFooter } from "./AddIconDialogFooter";
-import { AddIconDialogHeader } from "./AddIconDialogHeader";
 import { AddIconPickerPanel } from "./AddIconPickerPanel";
 import { AddIconPreviewPanel } from "./AddIconPreviewPanel";
+import type { AddIconSubmitPayload } from "./addIconSubmitPayload";
 
 export type { AddIconPickerFilter } from "./addIconPickerConstants";
+export type { AddIconSubmitPayload } from "./addIconSubmitPayload";
 
 export type AddIconDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** 触发添加入口的站点项 id；后续用于「插入到该图标旁」等逻辑。 */
   contextSiteId: string | null;
+  /** 确认添加：写入当前桌面网格等；未传则仅关闭弹层（旧行为）。 */
+  onConfirmAdd?: (payload: AddIconSubmitPayload) => void;
 };
 
 /**
- * 「添加图标」模块：左栏主选区 + 右栏窄预览 + 底栏；目录数据见 `addIconCatalog.ts`。
+ * 「添加图标」模块：无顶栏标题；左栏分区 + 右栏预览（含关闭）；目录见 `addIconCatalog.ts`。
  */
-export function AddIconDialog({ open, onOpenChange, contextSiteId }: AddIconDialogProps) {
+export function AddIconDialog({ open, onOpenChange, contextSiteId, onConfirmAdd }: AddIconDialogProps) {
   const titleId = useId();
   const [pickerFilter, setPickerFilter] = useState<AddIconPickerFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -67,9 +69,21 @@ export function AddIconDialog({ open, onOpenChange, contextSiteId }: AddIconDial
     return null;
   }
 
+  const handleClose = () => onOpenChange(false);
+
+  const handleAdd = (payload: AddIconSubmitPayload) => {
+    onConfirmAdd?.(payload);
+    handleClose();
+  };
+
+  const handleContinueAdding = (payload: AddIconSubmitPayload) => {
+    onConfirmAdd?.(payload);
+    setSelectedCatalogId(null);
+  };
+
   return createPortal(
     <div
-      className="fixed inset-0 flex items-center justify-center p-3 sm:p-5"
+      className="fixed inset-0 flex items-center justify-center p-3 sm:p-4"
       style={{ zIndex: Z_ADD_ICON_DIALOG }}
       role="presentation"
     >
@@ -77,7 +91,7 @@ export function AddIconDialog({ open, onOpenChange, contextSiteId }: AddIconDial
         type="button"
         aria-label="关闭"
         className="absolute inset-0 bg-black/35 backdrop-blur-[2px] transition-opacity"
-        onClick={() => onOpenChange(false)}
+        onClick={handleClose}
       />
       <GlassSurface
         variant="panel"
@@ -85,11 +99,13 @@ export function AddIconDialog({ open, onOpenChange, contextSiteId }: AddIconDial
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative z-[1] flex w-full max-w-6xl flex-col overflow-hidden shadow-2xl min-h-[min(560px,88vh)] max-h-[min(880px,96vh)]"
+        className="relative z-[1] flex h-[min(640px,calc(100dvh-1.5rem))] max-h-[min(640px,calc(100dvh-1.5rem))] w-full max-w-5xl flex-col overflow-hidden shadow-2xl"
       >
-        <AddIconDialogHeader titleId={titleId} onClose={() => onOpenChange(false)} />
+        <span id={titleId} className="sr-only">
+          添加图标
+        </span>
 
-        <div className="flex min-h-0 flex-1 flex-col sm:min-h-[min(480px,72vh)] lg:min-h-[min(520px,75vh)] sm:flex-row">
+        <div className="flex min-h-0 flex-1 flex-col sm:flex-row">
           <AddIconPickerPanel
             pickerFilter={pickerFilter}
             onPickerFilterChange={setPickerFilter}
@@ -99,13 +115,15 @@ export function AddIconDialog({ open, onOpenChange, contextSiteId }: AddIconDial
             selectedId={selectedCatalogId}
             onSelectId={setSelectedCatalogId}
           />
-          <AddIconPreviewPanel selected={selectedEntry} contextSiteId={contextSiteId} />
+          <AddIconPreviewPanel
+            selected={selectedEntry}
+            contextSiteId={contextSiteId}
+            onClose={handleClose}
+            onCancel={handleClose}
+            onAdd={handleAdd}
+            onContinueAdding={handleContinueAdding}
+          />
         </div>
-
-        <AddIconDialogFooter
-          onSaveAndExit={() => onOpenChange(false)}
-          onSaveAndContinue={() => onOpenChange(false)}
-        />
       </GlassSurface>
     </div>,
     document.body,

@@ -51,6 +51,20 @@ export const ADD_ICON_CATALOG: AddIconCatalogEntry[] = [
     url: "https://notion.so",
   },
   {
+    kind: "site",
+    id: "cat-site-x",
+    name: "X",
+    domain: "x.com",
+    url: "https://x.com",
+  },
+  {
+    kind: "site",
+    id: "cat-site-bilibili",
+    name: "哔哩哔哩",
+    domain: "bilibili.com",
+    url: "https://bilibili.com",
+  },
+  {
     kind: "component",
     id: "cat-widget-weather",
     name: "天气",
