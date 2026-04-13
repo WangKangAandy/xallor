@@ -5,12 +5,13 @@ type AddIconPickerGridProps = {
   entries: AddIconCatalogEntry[];
   selectedId: string | null;
   onSelectId: (id: string) => void;
-  /** 站点：每行最多 5 列，多出的换行；组件：略宽格。 */
+/** 站点：高密度多列；组件：减少列数以获得更宽卡片。 */
   gridVariant: "site" | "component";
 };
 
 const SITE_GRID = "grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5";
-const COMPONENT_GRID = "grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5";
+// 组件与站点使用同一列宽基准，保证「站点边长 = 组件宽度」。
+const COMPONENT_GRID = SITE_GRID;
 
 /**
  * 分区内的图标列表（listbox）。

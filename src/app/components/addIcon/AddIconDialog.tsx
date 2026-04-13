@@ -102,7 +102,7 @@ export function AddIconDialog({ open, onOpenChange, contextSiteId, onConfirmAdd 
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative z-[1] flex h-[min(640px,calc(100dvh-1.5rem))] max-h-[min(640px,calc(100dvh-1.5rem))] w-full max-w-5xl flex-col overflow-hidden shadow-2xl"
+        className="relative z-[1] flex h-[min(680px,calc(100dvh-1.5rem))] max-h-[min(680px,calc(100dvh-1.5rem))] w-full max-w-[min(1400px,92vw)] flex-col overflow-hidden shadow-2xl"
       >
         <span id={titleId} className="sr-only">
           添加图标

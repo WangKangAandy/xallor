@@ -61,7 +61,8 @@ export function AddIconPickerTile({ entry, selected, onSelect }: AddIconPickerTi
       onClick={onSelect}
       className={[
         tileBase,
-        "flex min-h-[3.5rem] w-full min-w-0 flex-row items-center gap-2 rounded-xl p-2 sm:min-h-[3.75rem] sm:gap-2.5 sm:p-2.5",
+        // 组件保持与站点同列宽基准，但使用更宽的横向卡片比例（接近设计稿观感）。
+        "flex h-[4.5rem] w-full min-w-0 flex-row items-center gap-2 rounded-xl p-2 sm:h-[4.75rem] sm:gap-2.5 sm:p-2.5",
         selected ? selectedSurface : idleSurface,
       ].join(" ")}
     >
