@@ -31,7 +31,11 @@ export type GlassSurfaceVariant =
   /** 文件夹内站点预览格 */
   | "folderPreviewTile"
   /** 全页渐变装饰层上的极轻 backdrop-blur */
-  | "pageVeil";
+  | "pageVeil"
+  /** 桌面网格：单站点小格（与 gridPanel 成对） */
+  | "gridTile"
+  /** 桌面网格：文件夹大卡、天气等大组件 */
+  | "gridPanel";
 
 const VARIANT_CLASS: Record<GlassSurfaceVariant, string> = {
   default: "glass-surface-default",
@@ -47,6 +51,8 @@ const VARIANT_CLASS: Record<GlassSurfaceVariant, string> = {
   widgetSkeleton: "glass-widget-skeleton",
   folderPreviewTile: "glass-folder-preview-tile",
   pageVeil: "glass-page-veil",
+  gridTile: "glass-surface-grid-tile",
+  gridPanel: "glass-surface-grid-panel",
 };
 
 export type GlassSurfaceProps = ComponentPropsWithoutRef<"div"> & {

@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { GridDesktopCardSurface } from "./GridDesktopCardSurface";
 import { GlassSurface } from "./shared/GlassSurface";
 
 const WeatherCard = lazy(async () => {
@@ -9,20 +10,24 @@ const WeatherCard = lazy(async () => {
 export function DesktopGridItemWidgetBody({ widgetType }: { widgetType: "weather" | "calendar" }) {
   if (widgetType === "weather") {
     return (
-      <div className="w-full h-full overflow-hidden pointer-events-auto shadow-sm" style={{ borderRadius: 36 }}>
+      <GridDesktopCardSurface
+        variant="panel"
+        className="pointer-events-auto h-full w-full overflow-hidden shadow-sm transition-colors group hover:bg-white/50"
+      >
         <Suspense
           fallback={
             <GlassSurface
               variant="widgetSkeleton"
               rounded="none"
-              className="w-full h-full min-h-[120px] animate-pulse rounded-[36px]"
+              className="h-full min-h-[120px] w-full animate-pulse rounded-none"
+              style={{ borderRadius: "var(--grid-panel-radius)" }}
               aria-hidden
             />
           }
         >
           <WeatherCard />
         </Suspense>
-      </div>
+      </GridDesktopCardSurface>
     );
   }
   return null;

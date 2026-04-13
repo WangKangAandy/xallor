@@ -1,13 +1,9 @@
 import { Cloud, Sun, CloudRain, CloudSun } from 'lucide-react';
-import { GlassSurface } from './shared/GlassSurface';
 
+/** 外层表面由 {@link DesktopGridItemWidgetBody} 的 gridPanel 壳提供 */
 export function WeatherCard() {
   return (
-    <GlassSurface
-      variant="card"
-      rounded="none"
-      className="group flex h-full w-full cursor-pointer flex-col justify-between rounded-[36px] p-8 transition-transform duration-200 hover:bg-white/50"
-    >
+    <div className="flex h-full w-full cursor-pointer flex-col justify-between p-8 transition-transform duration-200">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-base text-gray-700 mb-2 font-medium">Tokyo, Japan</p>
@@ -41,6 +37,6 @@ export function WeatherCard() {
           </div>
         ))}
       </div>
-    </GlassSurface>
+    </div>
   );
 }

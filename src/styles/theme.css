@@ -130,6 +130,31 @@
   --glass-folder-preview-hover-bg: rgb(255 255 255 / 0.8);
   --glass-folder-preview-shadow: 0 2px 12px rgb(0 0 0 / 0.06);
 
+  /**
+   * 桌面网格统一表面：gridTile（站点）/ gridPanel（文件夹大卡、天气等）。
+   * 见 docs/grid-desktop-card-unification-plan.md、GridDesktopCardSurface。
+   */
+  --grid-tile-radius: 28px;
+  --grid-panel-radius: 36px;
+  --grid-label-offset-y: 28px;
+
+  --grid-tile-bg: rgb(255 255 255 / 0.4);
+  --grid-tile-bg-no-support: rgb(255 255 255 / 0.88);
+  --grid-tile-border: rgb(255 255 255 / 0.7);
+  --grid-tile-shadow: 0 4px 20px rgb(0 0 0 / 0.06);
+  --grid-tile-blur: 10px;
+
+  --grid-panel-bg: rgb(255 255 255 / 0.35);
+  --grid-panel-bg-no-support: rgb(255 255 255 / 0.92);
+  --grid-panel-border: rgb(255 255 255 / 0.65);
+  --grid-panel-shadow: 0 8px 32px rgb(0 0 0 / 0.06);
+  --grid-panel-blur: 16px;
+
+  /** 合并目标高亮（DnD merge，GridDesktopCardSurface）；深色在 .dark 内覆盖 */
+  --grid-merge-border-width: 3px;
+  --grid-merge-border-color: #3b82f6;
+  --grid-merge-shadow: 0 0 24px rgba(59, 130, 246, 0.6);
+
   /** App 背景渐变上的极轻模糊 */
   --glass-page-veil-blur: 1px;
 }
@@ -169,6 +194,9 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
+
+  --grid-merge-border-color: #93c5fd;
+  --grid-merge-shadow: 0 0 28px rgba(147, 197, 253, 0.5);
 }
 
 @theme inline {
@@ -288,6 +316,35 @@
   @supports (backdrop-filter: blur(2px)) {
     .glass-surface-card {
       background-color: var(--glass-card-bg);
+    }
+  }
+
+  .glass-surface-grid-tile {
+    border-radius: var(--grid-tile-radius);
+    border: 1px solid var(--grid-tile-border);
+    background-color: var(--grid-tile-bg-no-support);
+    box-shadow: var(--grid-tile-shadow);
+    backdrop-filter: blur(var(--grid-tile-blur));
+    -webkit-backdrop-filter: blur(var(--grid-tile-blur));
+  }
+  @supports (backdrop-filter: blur(2px)) {
+    .glass-surface-grid-tile {
+      background-color: var(--grid-tile-bg);
+    }
+  }
+
+  .glass-surface-grid-panel {
+    border-radius: var(--grid-panel-radius);
+    border: 1px solid var(--grid-panel-border);
+    background-color: var(--grid-panel-bg-no-support);
+    box-shadow: var(--grid-panel-shadow);
+    backdrop-filter: blur(var(--grid-panel-blur));
+    -webkit-backdrop-filter: blur(var(--grid-panel-blur));
+    transition: transform 0.2s;
+  }
+  @supports (backdrop-filter: blur(2px)) {
+    .glass-surface-grid-panel {
+      background-color: var(--grid-panel-bg);
     }
   }
 
