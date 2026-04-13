@@ -13,7 +13,6 @@ type AddIconPreviewPanelProps = {
   selected: AddIconCatalogEntry | null;
   contextSiteId: string | null;
   onClose: () => void;
-  onCancel: () => void;
   /** 添加当前选中项并关闭（名称/网址/图标由面板内草稿与选项决定）。 */
   onAdd: (payload: AddIconSubmitPayload) => void;
   /** 添加后保留弹层并清空左侧选择。 */
@@ -122,7 +121,6 @@ export function AddIconPreviewPanel({
   selected,
   contextSiteId: _contextSiteId,
   onClose,
-  onCancel,
   onAdd,
   onContinueAdding,
 }: AddIconPreviewPanelProps) {
@@ -373,15 +371,8 @@ export function AddIconPreviewPanel({
             )}
           </div>
 
-          <div className="shrink-0 border-t border-gray-100/80 px-4 py-2.5">
+          <div className="shrink-0 px-4 py-2.5">
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
-              <button
-                type="button"
-                className="rounded-xl border border-gray-200/90 bg-white px-3 py-2 text-sm font-medium text-gray-800 shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:bg-gray-50/90"
-                onClick={onCancel}
-              >
-                取消
-              </button>
               <button
                 type="button"
                 disabled={!canSubmit}
@@ -393,7 +384,7 @@ export function AddIconPreviewPanel({
               <button
                 type="button"
                 disabled={!canSubmit}
-                className="rounded-xl bg-[#2b82f6] px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-45"
+                className="rounded-xl border border-gray-200/90 bg-white px-3 py-2 text-sm font-medium text-gray-800 shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:bg-gray-50/90 disabled:cursor-not-allowed disabled:opacity-45"
                 onClick={handleContinueClick}
               >
                 继续添加

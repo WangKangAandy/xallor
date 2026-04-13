@@ -25,7 +25,6 @@ describe("AddIconDialog", () => {
     expect(document.body.textContent).toContain("添加图标");
     expect(document.body.textContent).toContain("GitHub");
     expect(document.body.textContent).toContain("预览");
-    expect(document.body.textContent).toContain("取消");
     expect(document.body.textContent).toContain("添加");
     expect(document.body.textContent).toContain("继续添加");
 
@@ -91,4 +90,46 @@ describe("AddIconDialog", () => {
   });
 
   it.todo("should_insert_new_item_near_context_site_when_context_site_id_provided");
+
+  /**
+   * 目的：输入 URL 时自动生成站点候选并进入右侧预览，支持直接添加。
+   * 前置：在左侧搜索框输入 URL-like 文本（例如 www.baidu.com）。
+   * 预期：右侧出现该站点名称与网址，并且搜索框仅保留一个手动清除按钮。
+   */
+  it("should_generate_quick_site_preview_when_url_like_query_input", async () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    act(() => {
+      root.render(
+        <AddIconDialog open onOpenChange={() => {}} contextSiteId={null} />,
+      );
+    });
+
+    const searchInput = document.querySelector('input[placeholder*="搜索站点或输入网址"]') as HTMLInputElement | null;
+    expect(searchInput).not.toBeNull();
+    expect(searchInput?.type).toBe("text");
+
+    act(() => {
+      if (searchInput) {
+        const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+        setter?.call(searchInput, "www.baidu.com");
+        searchInput.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(document.body.textContent).toContain("Baidu");
+    expect(document.body.textContent).toContain("www.baidu.com");
+    expect(document.querySelectorAll('button[aria-label="清除搜索"]')).toHaveLength(1);
+
+    act(() => {
+      root.unmount();
+    });
+    document.body.removeChild(container);
+  });
 });

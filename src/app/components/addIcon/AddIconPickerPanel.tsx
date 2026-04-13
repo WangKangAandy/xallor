@@ -40,7 +40,7 @@ export function AddIconPickerPanel({
         <div className="flex items-center gap-2 rounded-2xl border border-gray-100/90 bg-white/85 px-3 py-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
           <Search className="h-4 w-4 shrink-0 text-gray-400" aria-hidden />
           <input
-            type="search"
+            type="text"
             placeholder="搜索站点或输入网址（如：github.com）"
             value={searchQuery}
             onChange={(e) => onSearchQueryChange(e.target.value)}

@@ -1,14 +1,12 @@
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId } from "react";
 import { createPortal } from "react-dom";
 import { GlassSurface } from "../shared/GlassSurface";
 import { Z_ADD_ICON_DIALOG } from "../desktopGridLayers";
-import { ADD_ICON_CATALOG, filterAddIconCatalog } from "./addIconCatalog";
-import type { AddIconPickerFilter } from "./addIconPickerConstants";
 import { AddIconPickerPanel } from "./AddIconPickerPanel";
 import { AddIconPreviewPanel } from "./AddIconPreviewPanel";
 import type { AddIconSubmitPayload } from "./addIconSubmitPayload";
+import { useAddIconCatalogModel } from "./useAddIconCatalogModel";
 
-export type { AddIconPickerFilter } from "./addIconPickerConstants";
 export type { AddIconSubmitPayload } from "./addIconSubmitPayload";
 
 export type AddIconDialogProps = {
@@ -28,19 +26,17 @@ export type AddIconDialogProps = {
  */
 export function AddIconDialog({ open, onOpenChange, contextSiteId, onConfirmAdd }: AddIconDialogProps) {
   const titleId = useId();
-  const [pickerFilter, setPickerFilter] = useState<AddIconPickerFilter>("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCatalogId, setSelectedCatalogId] = useState<string | null>(null);
-
-  const filteredEntries = useMemo(
-    () => filterAddIconCatalog(ADD_ICON_CATALOG, pickerFilter, searchQuery),
-    [pickerFilter, searchQuery],
-  );
-
-  const selectedEntry = useMemo(
-    () => ADD_ICON_CATALOG.find((e) => e.id === selectedCatalogId) ?? null,
-    [selectedCatalogId],
-  );
+  const {
+    pickerFilter,
+    setPickerFilter,
+    searchQuery,
+    setSearchQuery,
+    selectedCatalogId,
+    setSelectedCatalogId,
+    filteredEntries,
+    selectedEntry,
+    resetForOpen,
+  } = useAddIconCatalogModel();
 
   useEffect(() => {
     if (!open) return;
@@ -51,22 +47,29 @@ export function AddIconDialog({ open, onOpenChange, contextSiteId, onConfirmAdd 
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onOpenChange]);
 
+  useEffect(() => {
+    if (!open || typeof document === "undefined") return;
+    const { body } = document;
+    const prevOverflow = body.style.overflow;
+    const prevOverflowX = body.style.overflowX;
+    const prevOverflowY = body.style.overflowY;
+    // 弹层打开时锁定页面滚动，避免底层容器偶发横向溢出导致顶部出现横向滚动条。
+    body.style.overflow = "hidden";
+    body.style.overflowX = "hidden";
+    body.style.overflowY = "hidden";
+    return () => {
+      body.style.overflow = prevOverflow;
+      body.style.overflowX = prevOverflowX;
+      body.style.overflowY = prevOverflowY;
+    };
+  }, [open]);
+
   /** 打开时重置选择，避免上次残留。 */
   useEffect(() => {
     if (open) {
-      setSelectedCatalogId(null);
-      setSearchQuery("");
-      setPickerFilter("all");
+      resetForOpen();
     }
-  }, [open]);
-
-  /** 当前选中项不在筛选结果内时清空选择。 */
-  useEffect(() => {
-    if (!selectedCatalogId) return;
-    if (!filteredEntries.some((e) => e.id === selectedCatalogId)) {
-      setSelectedCatalogId(null);
-    }
-  }, [filteredEntries, selectedCatalogId]);
+  }, [open, resetForOpen]);
 
   if (!open || typeof document === "undefined") {
     return null;
@@ -86,7 +89,7 @@ export function AddIconDialog({ open, onOpenChange, contextSiteId, onConfirmAdd 
 
   return createPortal(
     <div
-      className="fixed inset-0 flex items-center justify-center p-3 sm:p-4"
+      className="fixed inset-0 flex items-center justify-center overflow-x-hidden p-3 sm:p-4"
       style={{ zIndex: Z_ADD_ICON_DIALOG }}
       role="presentation"
     >
@@ -122,7 +125,6 @@ export function AddIconDialog({ open, onOpenChange, contextSiteId, onConfirmAdd 
             selected={selectedEntry}
             contextSiteId={contextSiteId}
             onClose={handleClose}
-            onCancel={handleClose}
             onAdd={handleAdd}
             onContinueAdding={handleContinueAdding}
           />
