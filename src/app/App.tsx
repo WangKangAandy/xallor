@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { DEFAULT_NEW_TAB_BACKGROUND_URL, RemoteBackgroundImage } from "./components/feedback";
 import { GlassSurface } from "./components/shared/GlassSurface";
+import { useRestModeController } from "./useRestModeController";
 
 const SearchBar = lazy(async () => {
   const m = await import("./components/SearchBar");
@@ -46,8 +47,13 @@ function SearchBarFallback() {
 }
 
 export default function App() {
+  const { isResting, handleDoubleClickCapture } = useRestModeController();
+
   return (
-    <div className="min-h-screen w-full relative overflow-hidden">
+    <div
+      className="min-h-screen w-full relative overflow-hidden select-none"
+      onDoubleClickCapture={handleDoubleClickCapture}
+    >
       {/* 层级：背景无 z；主内容列见下方 z-10。全页装饰/宠物层请避开侧栏 z-30 与文件夹弹层 z-[100]，见 desktopGridLayers.ts */}
       {/* Background：外链图失败时由 RemoteBackgroundImage 降级为渐变，见 components/feedback */}
       <div className="absolute inset-0">
@@ -60,28 +66,45 @@ export default function App() {
         />
       </div>
 
-      <Suspense fallback={<SidebarFallback />}>
-        <Sidebar />
-      </Suspense>
+      <div className={`transition-all duration-700 ${isResting ? "opacity-0 -translate-x-2 pointer-events-none" : "opacity-100 translate-x-0 delay-150"}`}>
+        <Suspense fallback={<SidebarFallback />}>
+          <Sidebar />
+        </Suspense>
+      </div>
 
       {/* Main Content — z-10：搜索 + 桌面网格栈 */}
-      <div className="relative z-10 flex flex-col items-center pt-[15vh] px-8 md:px-16 xl:px-24 w-full h-screen overflow-y-auto pb-32">
+      <div
+        className={`relative z-10 flex flex-col items-center pt-[15vh] px-8 md:px-16 xl:px-24 w-full h-screen overflow-y-auto pb-32 transition-all duration-700 ${
+          isResting ? "opacity-0 scale-[0.985] pointer-events-none" : "opacity-100 scale-100"
+        }`}
+      >
         <div className="w-full flex flex-col items-center transition-all duration-700 xl:scale-[1.02] 2xl:scale-[1.05] xl:origin-top flex-1">
           {/* Search Bar */}
-          <div className="w-full max-w-[640px] xl:max-w-[680px] 2xl:max-w-[720px] mb-12 flex justify-center flex-shrink-0 transition-all duration-500">
+          <div
+            className={`w-full max-w-[640px] xl:max-w-[680px] 2xl:max-w-[720px] mb-12 flex justify-center flex-shrink-0 transition-all duration-700 ${
+              isResting ? "opacity-0 -translate-y-2" : "opacity-100 translate-y-0 delay-75"
+            }`}
+          >
             <Suspense fallback={<SearchBarFallback />}>
               <SearchBar />
             </Suspense>
           </div>
 
           {/* 多桌面条带（纵向滚轮切页）；单页时与原先单网格一致 */}
-          <div className="w-full flex-1 flex min-h-0 justify-center max-w-[1200px] xl:max-w-[1280px] transition-all duration-500">
+          <div
+            className={`w-full flex-1 flex min-h-0 justify-center max-w-[1200px] xl:max-w-[1280px] transition-all duration-700 ${
+              isResting ? "opacity-0 translate-y-2" : "opacity-100 translate-y-0 delay-150"
+            }`}
+          >
             <Suspense fallback={<MultiDesktopFallback />}>
               <MultiDesktopStrip />
             </Suspense>
           </div>
         </div>
       </div>
+
+      {/* 可扩展保留层：未来电子宠物等可放在该层并在小憩状态保持可见/可交互。 */}
+      <div className="pointer-events-none absolute inset-0 z-20" aria-hidden />
     </div>
   );
 }
