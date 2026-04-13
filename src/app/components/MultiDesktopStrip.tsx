@@ -18,8 +18,17 @@ const FALLBACK: MultiPageGridState = {
  * 指示条与滚轮逻辑见 `useDesktopPageIndicator`、`useDesktopStripWheel`。
  */
 export function MultiDesktopStrip() {
-  const { pages, activePageIndex, isHydrated, setPageItems, goNextPage, goPrevPage } =
-    useMultiPageGridPersistence(FALLBACK);
+  const {
+    pages,
+    activePageIndex,
+    isHydrated,
+    setPageItems,
+    setPageWidgetLayout,
+    setPageAutoCompactEnabled,
+    setPageConflictStrategy,
+    goNextPage,
+    goPrevPage,
+  } = useMultiPageGridPersistence(FALLBACK);
 
   const {
     showDotsPill,
@@ -70,6 +79,10 @@ export function MultiDesktopStrip() {
                 setItems={(u) => setPageItems(page.pageId, u)}
                 showLabels={page.showLabels}
                 isHydrated={isHydrated}
+                widgetLayout={page.widgetLayout}
+                onChangeWidgetLayout={(layout) => setPageWidgetLayout(page.pageId, layout)}
+                onToggleAutoCompact={(enabled) => setPageAutoCompactEnabled(page.pageId, enabled)}
+                onChangeConflictStrategy={(strategy) => setPageConflictStrategy(page.pageId, strategy)}
               />
             </div>
           </div>

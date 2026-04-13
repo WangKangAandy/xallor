@@ -1,11 +1,12 @@
 import type { Site } from "../desktopGridTypes";
+import type { AddableWidgetType } from "../widgets/addableWidgetTypes";
 
 /** 与预览面板「图标」四档一致；写入网格 `site.iconVariant`（可选）。 */
 export type SiteIconVariantId = 0 | 1 | 2 | 3;
 
 export type AddIconSubmitPayload =
   | { kind: "site"; site: Site }
-  | { kind: "component"; widgetType: "weather" | "calendar" };
+  | { kind: "component"; widgetType: AddableWidgetType };
 
 export function safeDomainFromUrl(urlStr: string, fallbackDomain: string): string {
   const trimmed = urlStr.trim();

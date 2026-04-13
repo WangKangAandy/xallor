@@ -1,4 +1,5 @@
 import type { AddIconPickerFilter } from "./addIconPickerConstants";
+import { ADDABLE_WIDGET_TYPES, type AddableWidgetType } from "../widgets/addableWidgetTypes";
 
 /** 可添加的站点（来自内置目录，后续可换 API）。 */
 export type AddIconCatalogSite = {
@@ -15,12 +16,31 @@ export type AddIconCatalogComponent = {
   id: string;
   name: string;
   subtitle: string;
-  widgetType: "weather" | "calendar";
+  widgetType: AddableWidgetType;
 };
 
 export type AddIconCatalogEntry = AddIconCatalogSite | AddIconCatalogComponent;
 
 /** 内置演示目录（与图二「左栏网格」对应，仅占位数据）。 */
+const ADD_ICON_COMPONENT_META: Record<AddableWidgetType, { id: string; name: string; subtitle: string }> = {
+  weather: {
+    id: "cat-widget-weather",
+    name: "天气",
+    subtitle: "实时天气",
+  },
+  calendar: {
+    id: "cat-widget-calendar",
+    name: "日历",
+    subtitle: "月视图",
+  },
+};
+
+const ADD_ICON_COMPONENT_CATALOG: AddIconCatalogComponent[] = ADDABLE_WIDGET_TYPES.map((widgetType) => ({
+  kind: "component",
+  widgetType,
+  ...ADD_ICON_COMPONENT_META[widgetType],
+}));
+
 export const ADD_ICON_CATALOG: AddIconCatalogEntry[] = [
   {
     kind: "site",
@@ -64,20 +84,7 @@ export const ADD_ICON_CATALOG: AddIconCatalogEntry[] = [
     domain: "bilibili.com",
     url: "https://bilibili.com",
   },
-  {
-    kind: "component",
-    id: "cat-widget-weather",
-    name: "天气",
-    subtitle: "实时天气",
-    widgetType: "weather",
-  },
-  {
-    kind: "component",
-    id: "cat-widget-calendar",
-    name: "日历",
-    subtitle: "月视图",
-    widgetType: "calendar",
-  },
+  ...ADD_ICON_COMPONENT_CATALOG,
 ];
 
 function matchesFilter(entry: AddIconCatalogEntry, filter: AddIconPickerFilter): boolean {

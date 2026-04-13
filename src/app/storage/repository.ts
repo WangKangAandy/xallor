@@ -5,6 +5,8 @@
 import { readStorageKey, writeStorageKey, getOrCreateDeviceId } from "./adapter";
 import { MAX_DESKTOP_PAGES } from "./multiPageLimits";
 import { newPageId } from "./pageIds";
+import { isValidWidgetLayout, resolveCompactionStrategy, resolveConflictStrategy } from "../components/widgets/layoutSchema";
+import { migrateLegacyItemsToWidgetLayout } from "../components/widgets/layoutMigration";
 import {
   ANONYMOUS_USER_ID,
   GridPayload,
@@ -55,8 +57,25 @@ export function isValidGridPayload(value: unknown): value is GridPayload {
 
 export function isValidGridPagePayload(value: unknown): value is GridPagePayload {
   if (!isValidGridPayload(value)) return false;
-  const p = value as GridPayload & { pageId?: unknown };
-  return typeof p.pageId === "string" && p.pageId.length > 0;
+  const p = value as GridPayload & { pageId?: unknown; widgetLayout?: unknown };
+  if (typeof p.pageId !== "string" || p.pageId.length === 0) return false;
+  if (p.widgetLayout === undefined) return true;
+  const l = p.widgetLayout as {
+    widgets?: unknown;
+    layout?: unknown;
+    autoCompactEnabled?: unknown;
+    compactionStrategy?: unknown;
+    conflictStrategy?: unknown;
+  };
+  return (
+    Array.isArray(l.widgets) &&
+    Array.isArray(l.layout) &&
+    l.widgets.every((id) => typeof id === "string") &&
+    l.layout.every((entry) => isValidWidgetLayout(entry)) &&
+    (l.autoCompactEnabled === undefined || typeof l.autoCompactEnabled === "boolean") &&
+    (l.compactionStrategy === undefined || l.compactionStrategy === "compact" || l.compactionStrategy === "no-compact") &&
+    (l.conflictStrategy === undefined || l.conflictStrategy === "swap" || l.conflictStrategy === "reject" || l.conflictStrategy === "eject")
+  );
 }
 
 /**
@@ -74,11 +93,15 @@ export function normalizeMultiPageGridPayload(raw: unknown): MultiPageGridState 
   const pages: GridPagePayload[] = [];
   for (const p of o.pages) {
     if (!isValidGridPayload(p)) return null;
-    const ext = p as GridPayload & { pageId?: unknown };
+    const ext = p as GridPayload & { pageId?: unknown; widgetLayout?: unknown };
     let pageId = typeof ext.pageId === "string" && ext.pageId.length > 0 ? ext.pageId : newPageId();
     while (seen.has(pageId)) pageId = newPageId();
     seen.add(pageId);
-    pages.push({ items: ext.items, showLabels: ext.showLabels, pageId });
+    const page: GridPagePayload = { items: ext.items, showLabels: ext.showLabels, pageId };
+    if ((ext as GridPagePayload).widgetLayout !== undefined) {
+      page.widgetLayout = (ext as GridPagePayload).widgetLayout;
+    }
+    pages.push(page);
   }
   return { pages, activePageIndex: ai };
 }
@@ -104,6 +127,23 @@ function clampMultiPageGridState(state: MultiPageGridState): MultiPageGridState 
     ...state,
     pages,
     activePageIndex: Math.min(Math.max(0, activePageIndex), last),
+  };
+}
+
+function ensureWidgetLayoutOnPage(page: GridPagePayload): GridPagePayload {
+  if (page.widgetLayout && isValidGridPagePayload(page)) {
+    return {
+      ...page,
+      widgetLayout: {
+        ...page.widgetLayout,
+        compactionStrategy: resolveCompactionStrategy(page.widgetLayout),
+        conflictStrategy: resolveConflictStrategy(page.widgetLayout),
+      },
+    };
+  }
+  return {
+    ...page,
+    widgetLayout: migrateLegacyItemsToWidgetLayout(page.items),
   };
 }
 
@@ -152,23 +192,35 @@ export async function loadMultiPageGridState(fallback: MultiPageGridState): Prom
   const envMulti = migrateEnvelope<MultiPageGridState>(rawMulti);
   if (envMulti?.payload !== undefined && envMulti.payload !== null) {
     const normalized = normalizeMultiPageGridPayload(envMulti.payload);
-    if (normalized) return clampMultiPageGridState(normalized);
+    if (normalized) {
+      return clampMultiPageGridState({
+        ...normalized,
+        pages: normalized.pages.map((p) => ensureWidgetLayoutOnPage(p)),
+      });
+    }
   }
 
   const rawLegacy = await readStorageKey<PersistedEnvelope<unknown>>(GRID_KEY);
   const envLegacy = migrateEnvelope<GridPayload>(rawLegacy);
   if (envLegacy && isValidGridPayload(envLegacy.payload)) {
+    const page: GridPagePayload = { ...envLegacy.payload, pageId: newPageId() };
     return {
-      pages: [{ ...envLegacy.payload, pageId: newPageId() }],
+      pages: [ensureWidgetLayoutOnPage(page)],
       activePageIndex: 0,
     };
   }
 
-  return fallback;
+  return {
+    ...fallback,
+    pages: fallback.pages.map((p) => ensureWidgetLayoutOnPage(p)),
+  };
 }
 
 export async function saveMultiPageGridState(state: MultiPageGridState): Promise<void> {
-  const safe = clampMultiPageGridState(state);
+  const safe = clampMultiPageGridState({
+    ...state,
+    pages: state.pages.map((p) => ensureWidgetLayoutOnPage(p)),
+  });
   if (!isValidMultiPageGridState(safe)) return;
   await writeStorageKey(MULTIPAGE_GRID_KEY, createEnvelope(safe));
 }

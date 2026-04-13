@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useReducer } from "react";
 import type { GridItemType } from "./desktopGridTypes";
 import type { GridPagePayload, MultiPageGridState } from "../storage/types";
+import { type WidgetCompactionStrategy, type WidgetPageLayoutState } from "./widgets/layoutSchema";
 import { MAX_DESKTOP_PAGES } from "../storage/multiPageLimits";
 import { loadMultiPageGridState, saveMultiPageGridState } from "../storage/repository";
 import { emptyGridPagePayload } from "./desktopGridInitialItems";
@@ -12,8 +13,32 @@ type State = MultiPageGridState & { isHydrated: boolean };
 type Action =
   | { type: "hydrate"; payload: MultiPageGridState }
   | { type: "updateItems"; pageId: string; updater: React.SetStateAction<GridItemType[]> }
+  | { type: "setPageWidgetLayout"; pageId: string; layout: WidgetPageLayoutState }
+  | { type: "setPageCompactionStrategy"; pageId: string; strategy: WidgetCompactionStrategy }
+  | { type: "setPageConflictStrategy"; pageId: string; strategy: "swap" | "reject" | "eject" }
   | { type: "wheelNext" }
   | { type: "wheelPrev" };
+
+function syncWidgetLayoutMetadata(
+  page: GridPagePayload,
+  nextItems: GridItemType[],
+): GridPagePayload {
+  if (!page.widgetLayout) {
+    return { ...page, items: nextItems };
+  }
+  const itemIdSet = new Set(nextItems.map((item) => item.id));
+  return {
+    ...page,
+    items: nextItems,
+    widgetLayout: {
+      ...page.widgetLayout,
+      // 单路径模式下，渲染与交互以 items 为唯一真相；widgets 仅做元数据镜像。
+      widgets: nextItems.map((item) => item.id),
+      // 清理已删除项的残留 layout 元数据，避免持久化脏引用。
+      layout: page.widgetLayout.layout.filter((entry) => itemIdSet.has(entry.id)),
+    },
+  };
+}
 
 /** 导出供单元测试覆盖「空页不叠新页」等行为。 */
 export function multiPageGridReducer(state: State, action: Action): State {
@@ -27,7 +52,46 @@ export function multiPageGridReducer(state: State, action: Action): State {
         if (p.pageId !== pageId) return p;
         touched = true;
         const nextItems = typeof updater === "function" ? updater(p.items) : updater;
-        return { ...p, items: nextItems };
+        return syncWidgetLayoutMetadata(p, nextItems);
+      });
+      if (!touched) return state;
+      return { ...state, pages };
+    }
+    case "setPageWidgetLayout": {
+      const { pageId, layout } = action;
+      let touched = false;
+      const pages = state.pages.map((p) => {
+        if (p.pageId !== pageId) return p;
+        touched = true;
+        return { ...p, widgetLayout: layout };
+      });
+      if (!touched) return state;
+      return { ...state, pages };
+    }
+    case "setPageCompactionStrategy": {
+      const { pageId, strategy } = action;
+      let touched = false;
+      const pages = state.pages.map((p) => {
+        if (p.pageId !== pageId) return p;
+        touched = true;
+        const nextLayout = p.widgetLayout
+          ? { ...p.widgetLayout, compactionStrategy: strategy, autoCompactEnabled: strategy === "compact" }
+          : { widgets: [], layout: [], compactionStrategy: strategy, autoCompactEnabled: strategy === "compact" };
+        return { ...p, widgetLayout: nextLayout };
+      });
+      if (!touched) return state;
+      return { ...state, pages };
+    }
+    case "setPageConflictStrategy": {
+      const { pageId, strategy } = action;
+      let touched = false;
+      const pages = state.pages.map((p) => {
+        if (p.pageId !== pageId) return p;
+        touched = true;
+        const nextLayout = p.widgetLayout
+          ? { ...p.widgetLayout, conflictStrategy: strategy }
+          : { widgets: [], layout: [], conflictStrategy: strategy };
+        return { ...p, widgetLayout: nextLayout };
       });
       if (!touched) return state;
       return { ...state, pages };
@@ -71,6 +135,13 @@ export function canWheelNextPage(pages: GridPagePayload[], activePageIndex: numb
 }
 
 /**
+ * 阶段 B 并存能力：按 pageId 提供布局语义索引，供上层逐步接入而不改现有渲染链路。
+ */
+export function buildPageWidgetLayoutIndex(pages: GridPagePayload[]): Record<string, WidgetPageLayoutState | undefined> {
+  return Object.fromEntries(pages.map((p) => [p.pageId, p.widgetLayout]));
+}
+
+/**
  * @param fallback 须为**稳定引用**（如模块级常量）；若每次 render 传入新对象会重复触发 hydrate。
  */
 export function useMultiPageGridPersistence(fallback: MultiPageGridState) {
@@ -92,6 +163,7 @@ export function useMultiPageGridPersistence(fallback: MultiPageGridState) {
   }, [fallback]);
 
   const { pages, activePageIndex, isHydrated } = state;
+  const widgetLayoutsByPageId = buildPageWidgetLayoutIndex(pages);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -104,16 +176,34 @@ export function useMultiPageGridPersistence(fallback: MultiPageGridState) {
   const setPageItems = useCallback((pageId: string, updater: React.SetStateAction<GridItemType[]>) => {
     dispatch({ type: "updateItems", pageId, updater });
   }, []);
+  const setPageWidgetLayout = useCallback((pageId: string, layout: WidgetPageLayoutState) => {
+    dispatch({ type: "setPageWidgetLayout", pageId, layout });
+  }, []);
+  const setPageAutoCompactEnabled = useCallback((pageId: string, enabled: boolean) => {
+    dispatch({
+      type: "setPageCompactionStrategy",
+      pageId,
+      strategy: enabled ? "compact" : "no-compact",
+    });
+  }, []);
+  const setPageConflictStrategy = useCallback((pageId: string, strategy: "swap" | "reject" | "eject") => {
+    dispatch({ type: "setPageConflictStrategy", pageId, strategy });
+  }, []);
 
   const goNextPage = useCallback(() => dispatch({ type: "wheelNext" }), []);
   const goPrevPage = useCallback(() => dispatch({ type: "wheelPrev" }), []);
 
   return {
     pages,
+    widgetLayoutsByPageId,
     activePageIndex,
     isHydrated,
     setPageItems,
+    setPageWidgetLayout,
+    setPageAutoCompactEnabled,
+    setPageConflictStrategy,
     goNextPage,
     goPrevPage,
+    getPageWidgetLayout: (pageId: string) => widgetLayoutsByPageId[pageId],
   };
 }

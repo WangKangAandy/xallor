@@ -1,3 +1,5 @@
+import type { AddableWidgetType } from "./widgets/addableWidgetTypes";
+
 export interface Site {
   name: string;
   domain: string;
@@ -28,7 +30,7 @@ export interface FolderItem extends BaseItem {
 
 export interface WidgetItem extends BaseItem {
   type: "widget";
-  widgetType: "weather" | "calendar";
+  widgetType: AddableWidgetType;
 }
 
 export type GridItemType = SiteItem | FolderItem | WidgetItem;

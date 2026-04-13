@@ -14,7 +14,10 @@ export type { AddIconSubmitPayload } from "./addIconSubmitPayload";
 export type AddIconDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** 触发添加入口的站点项 id；后续用于「插入到该图标旁」等逻辑。 */
+  /**
+   * 触发添加入口的站点项 id。
+   * TODO(stage A): 在 createWidgetFromCatalogEntry / 插入策略中消费该值，支持“插入到某项旁边”。
+   */
   contextSiteId: string | null;
   /** 确认添加：写入当前桌面网格等；未传则仅关闭弹层（旧行为）。 */
   onConfirmAdd?: (payload: AddIconSubmitPayload) => void;

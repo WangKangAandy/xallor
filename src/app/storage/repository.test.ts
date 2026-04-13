@@ -152,6 +152,8 @@ describe("storage repository", () => {
     expect(result.pages[0].items).toEqual([]);
     expect(result.pages[0].showLabels).toBe(false);
     expect(typeof result.pages[0].pageId).toBe("string");
+    expect(result.pages[0].widgetLayout).toBeDefined();
+    expect(result.pages[0].widgetLayout!.widgets).toEqual([]);
     expect(result.activePageIndex).toBe(0);
   });
 
@@ -177,6 +179,108 @@ describe("storage repository", () => {
     const result = await loadMultiPageGridState(fallback);
     expect(result.pages.length).toBe(MAX_DESKTOP_PAGES);
     expect(result.activePageIndex).toBe(5);
+    expect(result.pages.every((p) => p.widgetLayout !== undefined)).toBe(true);
+  });
+
+  /**
+   * 目的：当存量多页数据缺少 `widgetLayout` 时，读取应按 items 自动补齐并持久化一致语义。
+   */
+  it("should_fill_widget_layout_from_items_when_layout_missing_in_multipage_payload", async () => {
+    readStorageKeyMock.mockImplementation(async (key: string) => {
+      if (key === "xallor_multipage_grid_v1") {
+        return {
+          version: 1,
+          payload: {
+            pages: [
+              {
+                items: [
+                  {
+                    id: "s-1",
+                    type: "site" as const,
+                    shape: { cols: 1, rows: 1 },
+                    site: { name: "GitHub", domain: "github.com", url: "https://github.com" },
+                  },
+                ],
+                showLabels: true,
+                pageId: "p-1",
+              },
+            ],
+            activePageIndex: 0,
+          },
+        };
+      }
+      return null;
+    });
+    const fallback = { pages: [{ items: [], showLabels: true, pageId: "fb" }], activePageIndex: 0 };
+    const result = await loadMultiPageGridState(fallback);
+    expect(result.pages[0].widgetLayout).toBeDefined();
+    expect(result.pages[0].widgetLayout!.widgets).toEqual(["s-1"]);
+    expect(result.pages[0].widgetLayout!.layout[0].id).toBe("s-1");
+  });
+
+  /**
+   * 目的：布局策略开关需可持久化；关闭自动补位后，读取结果应保留 false。
+   */
+  it("should_preserve_widget_layout_auto_compact_switch_when_loading", async () => {
+    readStorageKeyMock.mockImplementation(async (key: string) => {
+      if (key === "xallor_multipage_grid_v1") {
+        return {
+          version: 1,
+          payload: {
+            pages: [
+              {
+                items: [],
+                showLabels: true,
+                pageId: "p-1",
+                widgetLayout: {
+                  widgets: [],
+                  layout: [],
+                  autoCompactEnabled: false,
+                },
+              },
+            ],
+            activePageIndex: 0,
+          },
+        };
+      }
+      return null;
+    });
+    const fallback = { pages: [{ items: [], showLabels: true, pageId: "fb" }], activePageIndex: 0 };
+    const result = await loadMultiPageGridState(fallback);
+    expect(result.pages[0].widgetLayout?.autoCompactEnabled).toBe(false);
+    expect(result.pages[0].widgetLayout?.compactionStrategy).toBe("no-compact");
+  });
+
+  /**
+   * 目的：冲突策略应能被读取并标准化，避免旧数据缺省导致运行时策略不确定。
+   */
+  it("should_preserve_widget_layout_conflict_strategy_when_loading", async () => {
+    readStorageKeyMock.mockImplementation(async (key: string) => {
+      if (key === "xallor_multipage_grid_v1") {
+        return {
+          version: 1,
+          payload: {
+            pages: [
+              {
+                items: [],
+                showLabels: true,
+                pageId: "p-1",
+                widgetLayout: {
+                  widgets: [],
+                  layout: [],
+                  conflictStrategy: "swap",
+                },
+              },
+            ],
+            activePageIndex: 0,
+          },
+        };
+      }
+      return null;
+    });
+    const fallback = { pages: [{ items: [], showLabels: true, pageId: "fb" }], activePageIndex: 0 };
+    const result = await loadMultiPageGridState(fallback);
+    expect(result.pages[0].widgetLayout?.conflictStrategy).toBe("swap");
   });
 
   /**
@@ -212,6 +316,50 @@ describe("storage repository", () => {
     const call = writeStorageKeyMock.mock.calls.find((c) => c[0] === "xallor_multipage_grid_v1");
     expect(call).toBeDefined();
     expect(call![1]).toMatchObject({ version: 1, payload: state });
+  });
+
+  /**
+   * 目的：模拟 RGL 拖拽后布局写回并刷新页面，需保证 widgetLayout 坐标可完整持久化并按原值加载。
+   */
+  it("should_restore_widget_layout_positions_after_save_and_reload", async () => {
+    const state = {
+      pages: [
+        {
+          items: [
+            {
+              id: "s1",
+              type: "site" as const,
+              shape: { cols: 1, rows: 1 },
+              site: { name: "Site1", domain: "s1.com", url: "https://s1.com" },
+            },
+          ],
+          showLabels: true,
+          pageId: "p1",
+          widgetLayout: {
+            widgets: ["s1"],
+            layout: [{ id: "s1", x: 3, y: 2, w: 1, h: 1, mode: "floating" as const, resizable: false }],
+            compactionStrategy: "compact" as const,
+            conflictStrategy: "eject" as const,
+          },
+        },
+      ],
+      activePageIndex: 0,
+    };
+
+    await saveMultiPageGridState(state);
+    const savedEnvelope = writeStorageKeyMock.mock.calls.find((c) => c[0] === "xallor_multipage_grid_v1")?.[1];
+    expect(savedEnvelope).toBeDefined();
+
+    readStorageKeyMock.mockImplementation(async (key: string) => {
+      if (key === "xallor_multipage_grid_v1") {
+        return savedEnvelope;
+      }
+      return null;
+    });
+
+    const fallback = { pages: [{ items: [], showLabels: true, pageId: "fb" }], activePageIndex: 0 };
+    const loaded = await loadMultiPageGridState(fallback);
+    expect(loaded.pages[0].widgetLayout?.layout[0]).toMatchObject({ id: "s1", x: 3, y: 2, w: 1, h: 1 });
   });
 
   it("should_persist_search_payload_with_envelope_metadata", async () => {

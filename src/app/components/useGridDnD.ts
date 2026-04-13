@@ -2,8 +2,14 @@ import { useCallback, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import type { FolderItem, GridItemType, SiteItem } from "./desktopGridTypes";
 import type { GridDnDDragItem } from "./desktopGridDnDTypes";
+import type { WidgetCompactionStrategy, WidgetConflictStrategy } from "./widgets/layoutSchema";
 
 export type MergeIntent = { targetId: string; draggedId: string };
+type ReorderPolicy = {
+  compactionStrategy: WidgetCompactionStrategy;
+  conflictStrategy: WidgetConflictStrategy;
+  pinnedItemIds?: Set<string>;
+};
 
 /** 与 hover 离开单元格时「清除合并意图」逻辑一致；供单测与 hook 共用。 */
 export function resolveMergeIntentAfterClear(prev: MergeIntent | null, id?: string): MergeIntent | null {
@@ -21,9 +27,42 @@ export function reorderGridItems(items: GridItemType[], draggedId: string, hover
   return next;
 }
 
-export function useGridDnD(setItems: Dispatch<SetStateAction<GridItemType[]>>) {
+export function reorderGridItemsByPolicy(
+  items: GridItemType[],
+  draggedId: string,
+  hoverId: string,
+  policy: ReorderPolicy,
+): GridItemType[] {
+  if (policy.compactionStrategy === "no-compact") return items;
+  const pinnedIds = policy.pinnedItemIds ?? new Set<string>();
+  if (pinnedIds.has(draggedId) || pinnedIds.has(hoverId)) {
+    return items;
+  }
+  if (policy.conflictStrategy === "reject") return items;
+  if (policy.conflictStrategy === "swap") {
+    const dragIdx = items.findIndex((i) => i.id === draggedId);
+    const hoverIdx = items.findIndex((i) => i.id === hoverId);
+    if (dragIdx === -1 || hoverIdx === -1 || dragIdx === hoverIdx) return items;
+    const next = [...items];
+    [next[dragIdx], next[hoverIdx]] = [next[hoverIdx], next[dragIdx]];
+    return next;
+  }
+  return reorderGridItems(items, draggedId, hoverId);
+}
+
+export function useGridDnD(
+  setItems: Dispatch<SetStateAction<GridItemType[]>>,
+  options?: {
+    compactionStrategy?: WidgetCompactionStrategy;
+    conflictStrategy?: WidgetConflictStrategy;
+    pinnedItemIds?: Set<string>;
+  },
+) {
   const [mergeIntent, setMergeIntentState] = useState<MergeIntent | null>(null);
   const mergeIntentRef = useRef<MergeIntent | null>(null);
+  const compactionStrategy = options?.compactionStrategy ?? "compact";
+  const conflictStrategy = options?.conflictStrategy ?? "eject";
+  const pinnedItemIds = options?.pinnedItemIds;
 
   const setMergeIntent = useCallback((intent: MergeIntent | null) => {
     mergeIntentRef.current = intent;
@@ -32,9 +71,11 @@ export function useGridDnD(setItems: Dispatch<SetStateAction<GridItemType[]>>) {
 
   const handleReorder = useCallback(
     (draggedId: string, hoverId: string) => {
-      setItems((prev) => reorderGridItems(prev, draggedId, hoverId));
+      setItems((prev) =>
+        reorderGridItemsByPolicy(prev, draggedId, hoverId, { compactionStrategy, conflictStrategy, pinnedItemIds }),
+      );
     },
-    [setItems],
+    [setItems, compactionStrategy, conflictStrategy, pinnedItemIds],
   );
 
   const handleHoverMergeIntent = useCallback(
