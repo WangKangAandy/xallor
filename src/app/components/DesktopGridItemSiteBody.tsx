@@ -6,11 +6,15 @@ import { GridItemLabel } from "./GridItemLabel";
 export function DesktopGridItemSiteBody({
   item,
   isMergeTarget,
+  isArrangeMode,
+  isArrangeSelected,
   showLabels,
   onRename,
 }: {
   item: SiteItem;
   isMergeTarget: boolean;
+  isArrangeMode: boolean;
+  isArrangeSelected: boolean;
   showLabels: boolean;
   onRename: (newName: string) => void;
 }) {
@@ -31,6 +35,13 @@ export function DesktopGridItemSiteBody({
           invert
             ? "flex h-[88px] w-[88px] items-center justify-center !bg-gray-900/92 transition-[transform] duration-200 group-hover/site:scale-[1.03] group-hover/site:!bg-gray-900 group-active/site:scale-95"
             : "flex h-[88px] w-[88px] items-center justify-center transition-[transform] duration-200 group-hover/site:scale-[1.03] group-hover/site:bg-white/60 group-active/site:scale-95"
+        }
+        style={
+          isArrangeMode && isArrangeSelected
+            ? {
+                boxShadow: "inset 0 0 0 2px rgba(59,130,246,0.95), inset 0 0 0 3px rgba(255,255,255,0.2)",
+              }
+            : undefined
         }
       >
         {placeholder ? (

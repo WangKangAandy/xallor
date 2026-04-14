@@ -24,6 +24,8 @@ export type FolderTileChrome = {
 export function DesktopGridItemFolderBody({
   item,
   isMergeTarget,
+  isArrangeMode,
+  isArrangeSelected,
   showLabels,
   chrome,
   onRename,
@@ -31,6 +33,8 @@ export function DesktopGridItemFolderBody({
 }: {
   item: FolderItem;
   isMergeTarget: boolean;
+  isArrangeMode: boolean;
+  isArrangeSelected: boolean;
   showLabels: boolean;
   chrome: FolderTileChrome;
   onRename: (newName: string) => void;
@@ -58,6 +62,13 @@ export function DesktopGridItemFolderBody({
       variant="panel"
       isMergeTarget={isMergeTarget}
       className="group/folder relative flex h-full w-full cursor-pointer flex-col overflow-hidden"
+      style={
+        isArrangeMode && isArrangeSelected
+          ? {
+              boxShadow: "inset 0 0 0 2px rgba(59,130,246,0.95), inset 0 0 0 3px rgba(255,255,255,0.2)",
+            }
+          : undefined
+      }
       onClick={(e) => {
         e.stopPropagation();
         onOpenFolder();

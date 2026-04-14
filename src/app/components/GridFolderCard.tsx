@@ -11,6 +11,10 @@ export type GridFolderCardProps = GridItemCardSharedCallbacks & {
   onRename?: (id: string, newName: string) => void;
   onOpenFolder?: (id: string) => void;
   onDeleteItem?: (id: string) => void;
+  onEnterArrangeMode?: () => void;
+  isArrangeMode?: boolean;
+  isArrangeSelected?: boolean;
+  onArrangeToggleSelect?: () => void;
 };
 
 export function GridFolderCard({ item, index, showLabels = true, onRename, onOpenFolder, onDeleteItem, ...callbacks }: GridFolderCardProps) {
@@ -28,10 +32,19 @@ export function GridFolderCard({ item, index, showLabels = true, onRename, onOpe
   });
 
   return (
-    <GridItemCardFrame {...shell} itemId={item.id} onDeleteItem={onDeleteItem}>
+    <GridItemCardFrame
+      {...shell}
+      itemId={item.id}
+      onDeleteItem={onDeleteItem}
+      isArrangeMode={callbacks.isArrangeMode}
+      isArrangeSelected={callbacks.isArrangeSelected}
+      onArrangeToggleSelect={callbacks.onArrangeToggleSelect}
+    >
       <DesktopGridItemFolderBody
         item={item}
         isMergeTarget={callbacks.isMergeTarget}
+        isArrangeMode={Boolean(callbacks.isArrangeMode)}
+        isArrangeSelected={Boolean(callbacks.isArrangeSelected)}
         showLabels={showLabels}
         chrome={folderChrome}
         onRename={(newName) => onRename?.(item.id, newName)}

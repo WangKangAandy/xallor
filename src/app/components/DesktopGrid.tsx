@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DndProvider, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { AddIconDialog, GridAddSlotCell, type AddIconSubmitPayload } from "./addIcon";
@@ -7,9 +7,13 @@ import { DesktopGridFolderPortal } from "./DesktopGridFolderPortal";
 import type { GridItemType, GridShape, FolderItem } from "./desktopGridTypes";
 import type { GridDnDDragItem } from "./desktopGridDnDTypes";
 import { GRID_CELL_SIZE, GRID_GAP } from "./desktopGridConstants";
-import { removeGridItemById } from "./desktopGridItemActions";
+import { removeGridItemById, removeSiteFromFolderByUrl } from "./desktopGridItemActions";
 import { useGridDnD } from "./useGridDnD";
 import { createGridItemFromAddPayload } from "./widgets/createGridItemFromAddPayload";
+import { useArrangeSession } from "./arrange/useArrangeSession";
+import { createFolderSiteArrangeId } from "./arrange/arrangeItemIds";
+import { buildSelectionRect, intersectsRect, rectFromDomRect } from "./arrange/selectionMath";
+import { useGridBackgroundContextMenu } from "./useGridBackgroundContextMenu";
 import {
   resolveCompactionStrategy,
   resolveConflictStrategy,
@@ -18,6 +22,7 @@ import {
 } from "./widgets/layoutSchema";
 
 export type DesktopGridProps = {
+  pageId?: string;
   items: GridItemType[];
   setItems: React.Dispatch<React.SetStateAction<GridItemType[]>>;
   showLabels: boolean;
@@ -29,7 +34,15 @@ export type DesktopGridProps = {
   onChangeConflictStrategy?: (strategy: WidgetConflictStrategy) => void;
 };
 
-function GridDropZone({ onDropEmpty, children }: { onDropEmpty: (item: unknown) => void; children: React.ReactNode }) {
+function GridDropZone({
+  onDropEmpty,
+  onPointerDown,
+  children,
+}: {
+  onDropEmpty: (item: unknown) => void;
+  onPointerDown?: React.PointerEventHandler<HTMLDivElement>;
+  children: React.ReactNode;
+}) {
   const [, drop] = useDrop({
     accept: "ITEM",
     drop: (item, monitor) => {
@@ -39,13 +52,14 @@ function GridDropZone({ onDropEmpty, children }: { onDropEmpty: (item: unknown) 
   });
 
   return (
-    <div ref={drop} className="w-full h-full min-h-[500px]">
+    <div data-testid="desktop-grid-dropzone" ref={drop} onPointerDown={onPointerDown} className="w-full h-full min-h-[500px]">
       {children}
     </div>
   );
 }
 
 export function DesktopGrid({
+  pageId,
   items,
   setItems,
   showLabels,
@@ -55,6 +69,7 @@ export function DesktopGrid({
   onToggleAutoCompact,
   onChangeConflictStrategy,
 }: DesktopGridProps) {
+  const arrangeSession = useArrangeSession();
   const pinnedItemIds = useMemo(
     () => new Set((widgetLayout?.layout ?? []).filter((entry) => entry.mode === "pinned").map((entry) => entry.id)),
     [widgetLayout],
@@ -70,6 +85,7 @@ export function DesktopGrid({
   const [openFolderId, setOpenFolderId] = useState<string | null>(null);
   const [isFolderDragging, setIsFolderDragging] = useState(false);
   const [addIconOpen, setAddIconOpen] = useState(false);
+  const gridRef = useRef<HTMLDivElement | null>(null);
 
   const handleRename = useCallback(
     (id: string, newName: string) => {
@@ -106,6 +122,12 @@ export function DesktopGrid({
     },
     [setItems],
   );
+  const handleDeleteInnerItem = useCallback(
+    (folderId: string, siteUrl: string) => {
+      setItems((prev) => removeSiteFromFolderByUrl(prev, folderId, siteUrl));
+    },
+    [setItems],
+  );
 
   const handleResize = useCallback(
     (id: string, newShape: GridShape) => {
@@ -133,13 +155,121 @@ export function DesktopGrid({
   );
 
   const openFolder = openFolderId ? (items.find((i) => i.id === openFolderId) as FolderItem | undefined) : undefined;
+  const getFolderChildArrangeIds = useCallback((folder: FolderItem) => {
+    return folder.sites.map((site) => createFolderSiteArrangeId(folder.id, site.url));
+  }, []);
+  const isFolderFullySelected = useCallback(
+    (folder: FolderItem) => {
+      const childIds = getFolderChildArrangeIds(folder);
+      if (childIds.length === 0) return false;
+      return childIds.every((id) => arrangeSession.state.selectedIds.has(id));
+    },
+    [arrangeSession.state.selectedIds, getFolderChildArrangeIds],
+  );
+  const toggleFolderArrangeSelection = useCallback(
+    (folder: FolderItem) => {
+      const childIds = getFolderChildArrangeIds(folder);
+      const shouldSelectAll = !childIds.every((id) => arrangeSession.state.selectedIds.has(id));
+      arrangeSession.setManySelected(childIds, shouldSelectAll);
+    },
+    [arrangeSession, arrangeSession.state.selectedIds, getFolderChildArrangeIds],
+  );
   const isEmptyGrid = items.length === 0;
+  const findItemById = useCallback((id: string) => items.find((item) => item.id === id), [items]);
+  const getSelectableIdsFromGridItem = useCallback(
+    (gridItemId: string) => {
+      const item = findItemById(gridItemId);
+      if (!item) return [] as string[];
+      if (item.type !== "folder") return [item.id];
+      return item.sites.map((site) => createFolderSiteArrangeId(item.id, site.url));
+    },
+    [findItemById],
+  );
+  const collectHitSelectionIds = useCallback(
+    (selection: ReturnType<typeof buildSelectionRect>) => {
+      const root = gridRef.current;
+      if (!root) return [] as string[];
+      const hitSet = new Set<string>();
+      const elements = root.querySelectorAll<HTMLElement>("[data-grid-item-id]");
+      elements.forEach((el) => {
+        const id = el.dataset.gridItemId;
+        if (!id) return;
+        const cardRect = rectFromDomRect(el.getBoundingClientRect());
+        if (!intersectsRect(selection, cardRect)) return;
+        getSelectableIdsFromGridItem(id).forEach((selectId) => hitSet.add(selectId));
+      });
+      return Array.from(hitSet);
+    },
+    [getSelectableIdsFromGridItem],
+  );
+  const handleGridBackgroundPointerDown = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (arrangeSession.state.isArrangeMode) return;
+      if (event.button !== 0) return;
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+      if (target.closest("[data-grid-item-id]")) return;
+      if (target.closest("button,a,input,textarea,[contenteditable='true']")) return;
+
+      const start = { x: event.clientX, y: event.clientY };
+      arrangeSession.setSelecting(true);
+      arrangeSession.setSelectionRect({ x: start.x, y: start.y, w: 0, h: 0 });
+
+      const onPointerMove = (moveEvent: PointerEvent) => {
+        const current = { x: moveEvent.clientX, y: moveEvent.clientY };
+        const selection = buildSelectionRect(start, current);
+        arrangeSession.setSelectionRect({
+          x: selection.left,
+          y: selection.top,
+          w: selection.right - selection.left,
+          h: selection.bottom - selection.top,
+        });
+      };
+      const onPointerUp = (upEvent: PointerEvent) => {
+        const end = { x: upEvent.clientX, y: upEvent.clientY };
+        const selection = buildSelectionRect(start, end);
+        const hitIds = collectHitSelectionIds(selection);
+        if (hitIds.length > 0) {
+          arrangeSession.enterArrangeMode(pageId ?? "__single_page__");
+          arrangeSession.setManySelected(hitIds, true);
+        }
+        arrangeSession.setSelectionRect(null);
+        arrangeSession.setSelecting(false);
+        window.removeEventListener("pointermove", onPointerMove);
+        window.removeEventListener("pointerup", onPointerUp);
+      };
+      window.addEventListener("pointermove", onPointerMove);
+      window.addEventListener("pointerup", onPointerUp);
+    },
+    [arrangeSession, collectHitSelectionIds, pageId],
+  );
+  const handleEnterArrangeMode = useCallback(() => {
+    arrangeSession.enterArrangeMode(pageId ?? "__single_page__");
+  }, [arrangeSession, pageId]);
+  const handleExitArrangeMode = useCallback(() => {
+    arrangeSession.exitArrangeMode();
+  }, [arrangeSession]);
+  useEffect(() => {
+    if (!arrangeSession.state.isArrangeMode) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      arrangeSession.exitArrangeMode();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [arrangeSession, arrangeSession.state.isArrangeMode]);
+  const { onContextMenu: onBackgroundContextMenu, portal: backgroundMenuPortal } =
+    useGridBackgroundContextMenu(handleEnterArrangeMode);
   // 网格项 z-index 数值见 desktopGridLayers.ts（DesktopGridItem inline style）
   return (
     <DndProvider backend={HTML5Backend}>
-      <GridDropZone onDropEmpty={(item) => handleDropItem(item as GridDnDDragItem, "GRID_END", false)}>
+      <GridDropZone
+        onDropEmpty={(item) => handleDropItem(item as GridDnDDragItem, "GRID_END", false)}
+        onPointerDown={handleGridBackgroundPointerDown}
+      >
         <div className="flex w-full flex-col gap-3">
-          <div className="flex w-full items-center justify-end">
+          <div className="relative flex w-full items-center justify-end">
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -162,8 +292,20 @@ export function DesktopGrid({
                 {conflictStrategy === "eject" ? "挤出" : conflictStrategy === "swap" ? "交换" : "拒绝"}
               </button>
             </div>
+            {arrangeSession.state.isArrangeMode ? (
+              <button
+                type="button"
+                aria-label="退出整理模式"
+                title="退出整理模式（Esc）"
+                className="absolute right-0 top-0 z-[2] flex h-7 w-7 items-center justify-center rounded-full border border-white/70 bg-black/25 text-sm text-white transition hover:bg-black/40"
+                onClick={handleExitArrangeMode}
+              >
+                ×
+              </button>
+            ) : null}
           </div>
           <div
+            onContextMenu={onBackgroundContextMenu}
             style={{
               paddingBottom: "100px",
               width: "100%",
@@ -173,6 +315,7 @@ export function DesktopGrid({
           >
             <div className="flex justify-center">
               <div
+                ref={gridRef}
                 style={{
                   display: "grid",
                   width: "100%",
@@ -200,6 +343,16 @@ export function DesktopGrid({
                       showLabels={showLabels}
                       onRename={handleRename}
                       onDeleteItem={handleDeleteItem}
+                      onEnterArrangeMode={handleEnterArrangeMode}
+                      isArrangeMode={arrangeSession.state.isArrangeMode}
+                      isArrangeSelected={
+                        item.type === "folder"
+                          ? isFolderFullySelected(item)
+                          : arrangeSession.state.selectedIds.has(item.id)
+                      }
+                      onArrangeToggleSelect={() =>
+                        item.type === "folder" ? toggleFolderArrangeSelection(item) : arrangeSession.toggleSelect(item.id)
+                      }
                     />
                   ))}
                 {isHydrated ? <GridAddSlotCell onOpenAdd={() => setAddIconOpen(true)} alwaysVisible={isEmptyGrid} /> : null}
@@ -224,6 +377,14 @@ export function DesktopGrid({
           onClose={() => setOpenFolderId(null)}
           onRenameFolder={(newName) => handleRename(openFolder.id, newName)}
           onRenameInnerSite={(siteUrl, newName) => handleRenameInnerItem(openFolder.id, siteUrl, newName)}
+          isArrangeMode={arrangeSession.state.isArrangeMode}
+          isArrangeSelected={(siteUrl) =>
+            arrangeSession.state.selectedIds.has(createFolderSiteArrangeId(openFolder.id, siteUrl))
+          }
+          onArrangeToggleSelect={(siteUrl) =>
+            arrangeSession.toggleSelect(createFolderSiteArrangeId(openFolder.id, siteUrl))
+          }
+          onDeleteInnerSite={(siteUrl) => handleDeleteInnerItem(openFolder.id, siteUrl)}
           onInnerDragStart={() => setIsFolderDragging(true)}
           onInnerDragEnd={() => {
             setIsFolderDragging(false);
@@ -231,6 +392,7 @@ export function DesktopGrid({
           }}
         />
       )}
+      {backgroundMenuPortal}
     </DndProvider>
   );
 }

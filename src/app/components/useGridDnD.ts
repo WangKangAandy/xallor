@@ -3,6 +3,7 @@ import type { Dispatch, SetStateAction } from "react";
 import type { FolderItem, GridItemType, SiteItem } from "./desktopGridTypes";
 import type { GridDnDDragItem } from "./desktopGridDnDTypes";
 import type { WidgetCompactionStrategy, WidgetConflictStrategy } from "./widgets/layoutSchema";
+import { removeSiteFromFolderByUrl } from "./desktopGridItemActions";
 
 export type MergeIntent = { targetId: string; draggedId: string };
 type ReorderPolicy = {
@@ -105,27 +106,8 @@ export function useGridDnD(
         setItems((prev) => {
           const sourceFolderIdx = prev.findIndex((i) => i.id === draggedItem.sourceFolderId);
           if (sourceFolderIdx === -1) return prev;
-
-          const sourceFolder = prev[sourceFolderIdx] as FolderItem;
           const targetIdx = prev.findIndex((i) => i.id === targetId);
-
-          const newSites = sourceFolder.sites.filter((s) => s.url !== movedSite.url);
-
-          const newItems = [...prev];
-
-          if (newSites.length === 0) {
-            newItems.splice(sourceFolderIdx, 1);
-          } else if (newSites.length === 1) {
-            const singleItem: GridItemType = {
-              id: `site-unfolded-${Date.now()}`,
-              type: "site",
-              shape: { cols: 1, rows: 1 },
-              site: newSites[0],
-            };
-            newItems[sourceFolderIdx] = singleItem;
-          } else {
-            newItems[sourceFolderIdx] = { ...sourceFolder, sites: newSites };
-          }
+          const newItems = removeSiteFromFolderByUrl(prev, draggedItem.sourceFolderId, movedSite.url);
 
           const newSiteItem: SiteItem = {
             id: `site-${Date.now()}`,

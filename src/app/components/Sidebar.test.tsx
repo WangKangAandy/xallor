@@ -27,4 +27,39 @@ describe("Sidebar", () => {
     });
     document.body.removeChild(container);
   });
+
+  /**
+   * 目的：验证热区悬停能驱动侧栏展开，避免热区存在但交互失效的回归。
+   * 预期：mouseenter 后面板 pointer-events 变为 auto；mouseleave 后恢复 none。
+   */
+  it("should_toggle_sidebar_panel_interactive_state_when_hover_zone_enter_leave", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    act(() => {
+      root.render(<Sidebar />);
+    });
+
+    const hoverZone = container.querySelector('[data-testid="sidebar-hover-zone"]') as HTMLDivElement | null;
+    const panel = container.querySelector(".glass-surface-sidebar") as HTMLDivElement | null;
+    expect(hoverZone).not.toBeNull();
+    expect(panel).not.toBeNull();
+    expect(panel?.style.pointerEvents).toBe("none");
+
+    act(() => {
+      hoverZone?.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+    });
+    expect(panel?.style.pointerEvents).toBe("auto");
+
+    act(() => {
+      hoverZone?.dispatchEvent(new MouseEvent("mouseout", { bubbles: true }));
+    });
+    expect(panel?.style.pointerEvents).toBe("none");
+
+    act(() => {
+      root.unmount();
+    });
+    document.body.removeChild(container);
+  });
 });

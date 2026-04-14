@@ -66,7 +66,10 @@ export default function App() {
         />
       </div>
 
-      <div className={`transition-all duration-700 ${isResting ? "opacity-0 -translate-x-2 pointer-events-none" : "opacity-100 translate-x-0 delay-150"}`}>
+      <div
+        data-testid="sidebar-layer"
+        className={`transition-opacity duration-700 ${isResting ? "opacity-0 pointer-events-none" : "opacity-100 delay-150"}`}
+      >
         <Suspense fallback={<SidebarFallback />}>
           <Sidebar />
         </Suspense>

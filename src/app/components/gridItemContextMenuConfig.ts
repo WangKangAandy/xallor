@@ -12,13 +12,22 @@ export type GridContextMenuEntry = {
 export function getGridItemContextMenuEntries(
   itemId: string,
   onDeleteItem?: (id: string) => void,
+  onEnterArrangeMode?: () => void,
 ): GridContextMenuEntry[] {
-  if (!onDeleteItem) return [];
-  return [
-    {
+  const entries: GridContextMenuEntry[] = [];
+  if (onDeleteItem) {
+    entries.push({
       id: "remove",
       label: "删除图标",
       onSelect: () => onDeleteItem(itemId),
-    },
-  ];
+    });
+  }
+  if (onEnterArrangeMode) {
+    entries.push({
+      id: "arrange-mode",
+      label: "整理模式",
+      onSelect: onEnterArrangeMode,
+    });
+  }
+  return entries;
 }

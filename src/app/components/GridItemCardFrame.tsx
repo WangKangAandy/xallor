@@ -18,6 +18,10 @@ export type GridItemCardFrameProps = {
   /** 与 {@link onDeleteItem} 同时提供时启用右键菜单。 */
   itemId?: string;
   onDeleteItem?: (id: string) => void;
+  onEnterArrangeMode?: () => void;
+  isArrangeMode?: boolean;
+  isArrangeSelected?: boolean;
+  onArrangeToggleSelect?: () => void;
   children: ReactNode;
 };
 
@@ -42,18 +46,31 @@ export const GridItemCardFrame = forwardRef<HTMLDivElement, GridItemCardFramePro
     folderResize,
     itemId,
     onDeleteItem,
+    onEnterArrangeMode,
+    isArrangeMode = false,
+    isArrangeSelected = false,
+    onArrangeToggleSelect,
     children,
   },
   ref,
 ) {
   const { isBorderHovered, setIsBorderHovered, isResizing, startResize } = folderResize;
-  const { onContextMenu, portal } = useGridItemContextMenu(itemId ?? "", onDeleteItem);
+  const { onContextMenu, portal } = useGridItemContextMenu(itemId ?? "", onDeleteItem, onEnterArrangeMode);
 
   return (
     <Fragment>
       <div
         ref={ref}
+        data-grid-item-id={itemId}
         onContextMenu={onContextMenu}
+        onClickCapture={(event) => {
+          if (!isArrangeMode || !itemId) return;
+          const target = event.target as HTMLElement | null;
+          if (target?.closest("[data-arrange-delete]")) return;
+          event.preventDefault();
+          event.stopPropagation();
+          onArrangeToggleSelect?.();
+        }}
         style={{
           gridColumn,
           gridRow,
@@ -70,7 +87,9 @@ export const GridItemCardFrame = forwardRef<HTMLDivElement, GridItemCardFramePro
           animate={{ opacity, scale: isMergeTarget ? 1.05 : 1 }}
           exit={{ opacity: 0, scale: 0.5 }}
           transition={{ type: "spring", stiffness: 320, damping: 28 }}
-          className="relative flex h-full w-full items-center justify-center"
+          className={[
+            "relative flex h-full w-full items-center justify-center rounded-[24px]",
+          ].join(" ")}
         >
           {showResizeChrome && (
             <DesktopGridResizeChrome
@@ -81,6 +100,27 @@ export const GridItemCardFrame = forwardRef<HTMLDivElement, GridItemCardFramePro
               startResize={startResize}
             />
           )}
+          {isArrangeMode && itemId ? (
+            <>
+              <button
+                type="button"
+                aria-label="删除当前图标"
+                data-arrange-delete="true"
+                className="absolute right-1.5 top-1.5 z-[2] flex h-5 w-5 items-center justify-center rounded-full border border-white/80 bg-black/20 text-xs text-white transition hover:bg-red-500/80"
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onDeleteItem?.(itemId);
+                }}
+              >
+                ×
+              </button>
+            </>
+          ) : null}
           {children}
         </motion.div>
       </div>

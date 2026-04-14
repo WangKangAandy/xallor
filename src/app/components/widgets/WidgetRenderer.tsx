@@ -33,6 +33,10 @@ export function WidgetRenderer(props: DesktopGridItemProps) {
     showLabels,
     onRename,
     onDeleteItem,
+    onEnterArrangeMode,
+    isArrangeMode,
+    isArrangeSelected,
+    onArrangeToggleSelect,
   } = props;
 
   const shared = {
@@ -53,6 +57,10 @@ export function WidgetRenderer(props: DesktopGridItemProps) {
         showLabels={showLabels}
         onRename={onRename}
         onDeleteItem={onDeleteItem}
+        onEnterArrangeMode={onEnterArrangeMode}
+        isArrangeMode={isArrangeMode}
+        isArrangeSelected={isArrangeSelected}
+        onArrangeToggleSelect={onArrangeToggleSelect}
         {...shared}
       />
     );
@@ -66,6 +74,10 @@ export function WidgetRenderer(props: DesktopGridItemProps) {
         onRename={onRename}
         onOpenFolder={onOpenFolder}
         onDeleteItem={onDeleteItem}
+        onEnterArrangeMode={onEnterArrangeMode}
+        isArrangeMode={isArrangeMode}
+        isArrangeSelected={isArrangeSelected}
+        onArrangeToggleSelect={onArrangeToggleSelect}
         {...shared}
       />
     );
@@ -74,7 +86,18 @@ export function WidgetRenderer(props: DesktopGridItemProps) {
     if (!canRenderWidgetInGrid(item.widgetType)) {
       return null;
     }
-    return <GridWidgetCard item={item} index={index} onDeleteItem={onDeleteItem} {...shared} />;
+    return (
+      <GridWidgetCard
+        item={item}
+        index={index}
+        onDeleteItem={onDeleteItem}
+        onEnterArrangeMode={onEnterArrangeMode}
+        isArrangeMode={isArrangeMode}
+        isArrangeSelected={isArrangeSelected}
+        onArrangeToggleSelect={onArrangeToggleSelect}
+        {...shared}
+      />
+    );
   }
   // 保底返回 null，防止异常数据导致整个网格崩溃。
   return null;

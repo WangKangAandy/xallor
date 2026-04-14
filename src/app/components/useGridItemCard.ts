@@ -14,6 +14,10 @@ export type GridItemCardSharedCallbacks = {
   onDropItem: (draggedItem: GridDnDDragItem, hoverId: string, inCenterZone?: boolean) => void;
   isMergeTarget: boolean;
   onResize: (id: string, newShape: GridShape) => void;
+  onEnterArrangeMode?: () => void;
+  isArrangeMode?: boolean;
+  isArrangeSelected?: boolean;
+  onArrangeToggleSelect?: () => void;
 };
 
 /**
@@ -25,7 +29,7 @@ export function useGridItemCard(
   index: number,
   callbacks: GridItemCardSharedCallbacks,
 ) {
-  const { onReorder, onHoverMergeIntent, onClearMergeIntent, onDropItem, isMergeTarget, onResize } = callbacks;
+  const { onReorder, onHoverMergeIntent, onClearMergeIntent, onDropItem, isMergeTarget, onResize, onEnterArrangeMode } = callbacks;
   const ref = useRef<HTMLDivElement>(null);
 
   const folderResize = useFolderResize({
@@ -69,5 +73,6 @@ export function useGridItemCard(
     renderSize,
     showResizeChrome,
     folderResize,
+    onEnterArrangeMode,
   };
 }

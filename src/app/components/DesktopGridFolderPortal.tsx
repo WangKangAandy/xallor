@@ -11,6 +11,10 @@ function FolderInnerItem({
   onDragStart,
   onDragEnd,
   onRename,
+  isArrangeMode = false,
+  isArrangeSelected = false,
+  onArrangeToggleSelect,
+  onDeleteSite,
 }: {
   site: Site;
   folderId: string;
@@ -18,6 +22,10 @@ function FolderInnerItem({
   onDragStart: () => void;
   onDragEnd: () => void;
   onRename: (newName: string) => void;
+  isArrangeMode?: boolean;
+  isArrangeSelected?: boolean;
+  onArrangeToggleSelect?: () => void;
+  onDeleteSite?: () => void;
 }) {
   const [{ isDragging }, drag, dragPreview] = useDrag({
     type: "ITEM",
@@ -34,38 +42,74 @@ function FolderInnerItem({
   });
 
   return (
-    <a
-      ref={drag}
-      href={site.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={(e) => {
-        if (isDragging) {
-          e.preventDefault();
-        }
-      }}
-      className={`group flex flex-col items-center ${showLabels ? "justify-start" : "justify-center"} w-[100px] ${showLabels ? "gap-2" : "gap-0"} cursor-grab active:cursor-grabbing ${isDragging ? "opacity-0" : "opacity-100"}`}
-    >
-      <div className="pointer-events-none shrink-0 transition-transform duration-200 group-hover:scale-105">
-        <GlassSurface
-          variant="tile"
-          rounded="none"
-          className="!rounded-[24px] flex h-[84px] w-[84px] items-center justify-center shadow-sm group-hover:bg-white/80"
-        >
-          <div ref={dragPreview}>
-            <Favicon domain={site.domain} name={site.name} size={48} />
-          </div>
-        </GlassSurface>
-      </div>
-      <EditableLabel
-        initialName={site.name}
-        onRename={onRename}
-        showLabels={showLabels}
-        className="text-[13px] text-gray-700 font-medium text-center truncate w-[100px] pointer-events-auto"
-        inputClassName="text-gray-700 text-center"
-        inputStyle={{ width: "120%", fontSize: 13, fontWeight: 500 }}
-      />
-    </a>
+    <div className="relative">
+      <a
+        ref={drag}
+        href={site.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => {
+          if (isDragging || isArrangeMode) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+          if (isArrangeMode) {
+            onArrangeToggleSelect?.();
+          }
+        }}
+        className={[
+          `group flex flex-col items-center ${showLabels ? "justify-start" : "justify-center"} w-[100px] ${showLabels ? "gap-2" : "gap-0"} cursor-grab active:cursor-grabbing ${isDragging ? "opacity-0" : "opacity-100"}`,
+        ].join(" ")}
+      >
+        <div className="pointer-events-none shrink-0 transition-transform duration-200 group-hover:scale-105">
+          <GlassSurface
+            variant="tile"
+            rounded="none"
+            className="!rounded-[24px] flex h-[84px] w-[84px] items-center justify-center shadow-sm group-hover:bg-white/80"
+            style={
+              isArrangeMode && isArrangeSelected
+                ? {
+                    boxShadow: "inset 0 0 0 2px rgba(59,130,246,0.95), inset 0 0 0 3px rgba(255,255,255,0.2)",
+                  }
+                : undefined
+            }
+          >
+            <div ref={dragPreview}>
+              <Favicon domain={site.domain} name={site.name} size={48} />
+            </div>
+          </GlassSurface>
+        </div>
+        <EditableLabel
+          initialName={site.name}
+          onRename={onRename}
+          showLabels={showLabels}
+          className="text-[13px] text-gray-700 font-medium text-center truncate w-[100px] pointer-events-auto"
+          inputClassName="text-gray-700 text-center"
+          inputStyle={{ width: "120%", fontSize: 13, fontWeight: 500 }}
+        />
+      </a>
+      {isArrangeMode ? (
+        <>
+          <button
+            type="button"
+            aria-label="删除当前文件夹内图标"
+            data-arrange-delete="true"
+            className="absolute right-1 top-1 z-[2] flex h-5 w-5 items-center justify-center rounded-full border border-white/80 bg-black/20 text-xs text-white transition hover:bg-red-500/80"
+            onPointerDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onDeleteSite?.();
+            }}
+          >
+            ×
+          </button>
+        </>
+      ) : null}
+    </div>
   );
 }
 
@@ -76,6 +120,10 @@ export function DesktopGridFolderPortal({
   onClose,
   onRenameFolder,
   onRenameInnerSite,
+  isArrangeMode = false,
+  isArrangeSelected,
+  onArrangeToggleSelect,
+  onDeleteInnerSite,
   onInnerDragStart,
   onInnerDragEnd,
 }: {
@@ -85,6 +133,10 @@ export function DesktopGridFolderPortal({
   onClose: () => void;
   onRenameFolder: (newName: string) => void;
   onRenameInnerSite: (siteUrl: string, newName: string) => void;
+  isArrangeMode?: boolean;
+  isArrangeSelected?: (siteUrl: string) => boolean;
+  onArrangeToggleSelect?: (siteUrl: string) => void;
+  onDeleteInnerSite?: (siteUrl: string) => void;
   onInnerDragStart: () => void;
   onInnerDragEnd: () => void;
 }) {
@@ -118,6 +170,10 @@ export function DesktopGridFolderPortal({
               folderId={folder.id}
               showLabels={showLabels}
               onRename={(newName) => onRenameInnerSite(site.url, newName)}
+              isArrangeMode={isArrangeMode}
+              isArrangeSelected={isArrangeSelected?.(site.url) ?? false}
+              onArrangeToggleSelect={() => onArrangeToggleSelect?.(site.url)}
+              onDeleteSite={() => onDeleteInnerSite?.(site.url)}
               onDragStart={onInnerDragStart}
               onDragEnd={onInnerDragEnd}
             />

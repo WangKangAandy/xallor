@@ -9,16 +9,29 @@ export type GridSiteCardProps = GridItemCardSharedCallbacks & {
   showLabels?: boolean;
   onRename?: (id: string, newName: string) => void;
   onDeleteItem?: (id: string) => void;
+  onEnterArrangeMode?: () => void;
+  isArrangeMode?: boolean;
+  isArrangeSelected?: boolean;
+  onArrangeToggleSelect?: () => void;
 };
 
 export function GridSiteCard({ item, index, showLabels = true, onRename, onDeleteItem, ...callbacks }: GridSiteCardProps) {
   const shell = useGridItemCard(item, index, callbacks);
 
   return (
-    <GridItemCardFrame {...shell} itemId={item.id} onDeleteItem={onDeleteItem}>
+    <GridItemCardFrame
+      {...shell}
+      itemId={item.id}
+      onDeleteItem={onDeleteItem}
+      isArrangeMode={callbacks.isArrangeMode}
+      isArrangeSelected={callbacks.isArrangeSelected}
+      onArrangeToggleSelect={callbacks.onArrangeToggleSelect}
+    >
       <DesktopGridItemSiteBody
         item={item}
         isMergeTarget={callbacks.isMergeTarget}
+        isArrangeMode={Boolean(callbacks.isArrangeMode)}
+        isArrangeSelected={Boolean(callbacks.isArrangeSelected)}
         showLabels={showLabels}
         onRename={(newName) => onRename?.(item.id, newName)}
       />

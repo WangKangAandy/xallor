@@ -95,4 +95,85 @@ describe("GridItemCardFrame", () => {
 
     root.unmount();
   });
+
+  /**
+   * 目的：整理模式下点击卡片任意区域即可切换选中，不依赖单独圆点控件。
+   */
+  it("should_trigger_arrange_toggle_callback_when_card_surface_clicked_in_arrange_mode", () => {
+    host = document.createElement("div");
+    document.body.appendChild(host);
+    const root = createRoot(host);
+    const onArrangeToggleSelect = vi.fn();
+    act(() => {
+      root.render(
+        <GridItemCardFrame
+          gridColumn="span 1"
+          gridRow="span 1"
+          renderSize={{ width: 80, height: 80 }}
+          zIndex={2}
+          opacity={1}
+          isMergeTarget={false}
+          isDragging={false}
+          showResizeChrome={false}
+          folderResize={folderResizeStub}
+          itemId="x-1"
+          onDeleteItem={vi.fn()}
+          isArrangeMode
+          onArrangeToggleSelect={onArrangeToggleSelect}
+        >
+          <span>tile</span>
+        </GridItemCardFrame>,
+      );
+    });
+
+    const card = document.querySelector('[data-grid-item-id="x-1"]') as HTMLDivElement | null;
+    expect(card).not.toBeNull();
+    act(() => {
+      card?.click();
+    });
+    expect(onArrangeToggleSelect).toHaveBeenCalledTimes(1);
+
+    root.unmount();
+  });
+
+  /**
+   * 目的：整理模式下左上叉号只执行当前项删除回调，参数为当前 itemId。
+   */
+  it("should_call_delete_handler_with_item_id_when_delete_x_clicked_in_arrange_mode", () => {
+    host = document.createElement("div");
+    document.body.appendChild(host);
+    const root = createRoot(host);
+    const onDeleteItem = vi.fn();
+    act(() => {
+      root.render(
+        <GridItemCardFrame
+          gridColumn="span 1"
+          gridRow="span 1"
+          renderSize={{ width: 80, height: 80 }}
+          zIndex={2}
+          opacity={1}
+          isMergeTarget={false}
+          isDragging={false}
+          showResizeChrome={false}
+          folderResize={folderResizeStub}
+          itemId="x-2"
+          onDeleteItem={onDeleteItem}
+          isArrangeMode
+          onArrangeToggleSelect={vi.fn()}
+        >
+          <span>tile</span>
+        </GridItemCardFrame>,
+      );
+    });
+
+    const deleteButton = document.querySelector('button[aria-label="删除当前图标"]') as HTMLButtonElement | null;
+    expect(deleteButton).not.toBeNull();
+    act(() => {
+      deleteButton?.click();
+    });
+    expect(onDeleteItem).toHaveBeenCalledTimes(1);
+    expect(onDeleteItem).toHaveBeenCalledWith("x-2");
+
+    root.unmount();
+  });
 });

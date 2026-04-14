@@ -21,6 +21,10 @@ export interface DesktopGridItemProps {
   onRename?: (id: string, newName: string) => void;
   /** 右键菜单等：从当前页移除该图标。 */
   onDeleteItem?: (id: string) => void;
+  onEnterArrangeMode?: () => void;
+  isArrangeMode?: boolean;
+  isArrangeSelected?: boolean;
+  onArrangeToggleSelect?: () => void;
 }
 
 export function DesktopGridItem(props: DesktopGridItemProps) {

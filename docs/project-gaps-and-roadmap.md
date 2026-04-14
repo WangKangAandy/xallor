@@ -25,6 +25,7 @@
 
 ### 高（结构 / 可扩展——优先做，防后期大重构）
 
+- **整理模式开工前置（新增）**：先对齐当前结构性不足与治理顺序，避免“边做整理模式边返工底层”。前置文档：[`current-structural-gaps.md`](./current-structural-gaps.md)；实施方案：[`arrange-mode-technical-plan.md`](./arrange-mode-technical-plan.md)。
 - **网格与交互边界（持续）**：核心拆分与层级约定已落地（`DesktopGridItem` 为薄路由；详见 [`grid-interaction-boundaries-plan.md`](./grid-interaction-boundaries-plan.md)）。后续按需：**可选 layout 上下文**、继续用**纯函数 + 单测**收敛行为，避免把隐式规则写回 JSX。
 - **依赖与产物卫生**：已移除未引用 `ui/`；仍建议定期 `depcheck` + 对照 `npm run build`，避免无用依赖回潮。
 - **复杂交互回归**：关键路径逐步补测试（或后续 Playwright）；避免只靠手工点网格。
@@ -60,5 +61,7 @@
 |------|------|
 | [`v2-volume-and-maintainability.md`](./v2-volume-and-maintainability.md) | 构建基线、历史拆分与后续可选任务 |
 | [`grid-interaction-boundaries-plan.md`](./grid-interaction-boundaries-plan.md) | 网格 DnD/层级/文件夹视图模型拆分计划与进度参照 |
+| [`arrange-mode-technical-plan.md`](./arrange-mode-technical-plan.md) | 整理模式状态机、事件流、分阶段实施与文件改动清单 |
+| [`current-structural-gaps.md`](./current-structural-gaps.md) | 开工整理模式前的结构性不足与治理门槛 |
 | [`glass-theme-unification-plan.md`](./glass-theme-unification-plan.md) | 毛玻璃 token + `GlassSurface` 渐进统一 |
 | [`package.json`](../package.json) | `build` / `typecheck` / `lint` / `test:run` |
