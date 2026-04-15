@@ -162,6 +162,26 @@ ID 规范建议：
 - [x] A0-4 将右键菜单“整理模式”入口 action 接到会话层（先不改 UI 表现）
 - [x] A0-5 在 `DesktopGrid` 注入会话实例（仅透传，不改变现有交互）
 
+### 6.1.1 当前结构治理增量（会话层/命令层轻拆，进行中）
+
+已落地（本轮）：
+
+- [x] 新增 `arrangeCommands.ts`，先统一 **selectable-id 映射** / **批量删除入口**（`deleteItemsByArrangeSelection`）。
+- [x] 新增 `parseFolderSiteArrangeId`，把复合 id 反解收敛到 `arrangeItemIds.ts`，避免组件层自行解析。
+- [x] `DesktopGrid` 中 folder 选择切换改为走命令层（`shouldSelectAllIds`）。
+- [x] 整理模式下补 `Delete/Backspace` 批删入口，统一走命令层删除。
+- [x] 补充命令层与 id 解析测试：`arrangeCommands.test.ts`、`arrangeItemIds.test.ts`。
+
+未完成（下一步门槛）：
+
+- [ ] `useArrangeSession` 仍在 `DesktopGrid` 内部创建，尚未上提到条带/页面上层（跨页会话共享前置）。
+- [ ] `moveSelected` 命令层尚未建立；`useGridDnD` 仍承载大量 drop 业务分支（B2/C 风险点）。
+- [ ] 编排级回归测试（B1-4/B2-4）尚未补齐。
+
+临时策略（用于处理中途插单问题）：
+
+- 当前可继续小步修复与局部功能迭代；**暂不进入 B2/C 深水功能**（批量移动/跨页移动）直到上述三项门槛至少完成前两项。
+
 ## Phase A（整理模式最小闭环）
 
 - 进入/退出整理模式
@@ -175,6 +195,7 @@ ID 规范建议：
 - [x] A1-1 整理模式 UI 壳：卡片右上圆点、左上叉号、右上角退出 X 按钮 + `Esc` 退出（仅 UI，不改批量逻辑）
 - [x] A1-2 圆点单选行为接线（点击切换 `selectedIds`，维持单页；拦截 pointer down 防止误触拖拽/打开）
 - [ ] A1-3 左上叉单删行为校验（整理模式下删除当前项）
+- [x] A1-4 键盘批删接线（`Delete/Backspace` -> `deleteItemsByArrangeSelection`）
 
 验收：
 
@@ -198,6 +219,7 @@ ID 规范建议：
 - [ ] B2-2 批量拖拽到已有文件夹（统一命令入口）
 - [ ] B2-3 文件夹展开态中继续选择（不退出整理，选择集一致）
 - [ ] B2-4 批量移动回归测试（外部 + 文件夹内部混合集）
+- [ ] B2-5 将 `moveSelected` 从 `useGridDnD` 业务分支中抽离到命令层（为 C 阶段跨页复用）
 
 验收：
 
@@ -228,6 +250,7 @@ ID 规范建议：
 
 - `src/app/components/arrange/arrangeTypes.ts`
 - `src/app/components/arrange/useArrangeSession.ts`
+- `src/app/components/arrange/arrangeCommands.ts`（选择映射/批删命令；后续承接批移）
 - `src/app/components/arrange/ArrangeOverlay.tsx`（垃圾区、模式工具条、页面缩放壳）
 - `src/app/components/arrange/selectionMath.ts`（框选命中）
 - `src/app/components/arrange/batchDragModel.ts`
@@ -254,6 +277,8 @@ ID 规范建议：
 
 - `src/app/components/useGridDnD.reorder.test.ts`（整理模式回归）
 - `src/app/components/useMultiPageGridPersistence.test.ts`（首页重排）
+- `src/app/components/arrange/arrangeCommands.test.ts`（选择映射 + 批删）
+- `src/app/components/arrange/arrangeItemIds.test.ts`（复合 id 解析）
 - 新增 `arrange` 目录测试（框选、批删、批移、跨页）
 
 ---

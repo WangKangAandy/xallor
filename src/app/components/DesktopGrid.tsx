@@ -12,6 +12,11 @@ import { useGridDnD } from "./useGridDnD";
 import { createGridItemFromAddPayload } from "./widgets/createGridItemFromAddPayload";
 import { useArrangeSession } from "./arrange/useArrangeSession";
 import { createFolderSiteArrangeId } from "./arrange/arrangeItemIds";
+import {
+  deleteItemsByArrangeSelection,
+  getSelectableArrangeIdsFromGridItem,
+  shouldSelectAllIds,
+} from "./arrange/arrangeCommands";
 import { buildSelectionRect, intersectsRect, rectFromDomRect } from "./arrange/selectionMath";
 import { useGridBackgroundContextMenu } from "./useGridBackgroundContextMenu";
 import {
@@ -143,6 +148,11 @@ export function DesktopGrid({
     },
     [setItems],
   );
+  const handleDeleteSelectedInArrangeMode = useCallback(() => {
+    if (!arrangeSession.state.isArrangeMode || arrangeSession.state.selectedIds.size === 0) return;
+    setItems((prev) => deleteItemsByArrangeSelection(prev, arrangeSession.state.selectedIds));
+    arrangeSession.clearSelection();
+  }, [arrangeSession, setItems]);
 
   const handleConfirmAddFromPicker = useCallback(
     (payload: AddIconSubmitPayload) => {
@@ -156,7 +166,7 @@ export function DesktopGrid({
 
   const openFolder = openFolderId ? (items.find((i) => i.id === openFolderId) as FolderItem | undefined) : undefined;
   const getFolderChildArrangeIds = useCallback((folder: FolderItem) => {
-    return folder.sites.map((site) => createFolderSiteArrangeId(folder.id, site.url));
+    return getSelectableArrangeIdsFromGridItem(folder);
   }, []);
   const isFolderFullySelected = useCallback(
     (folder: FolderItem) => {
@@ -169,7 +179,7 @@ export function DesktopGrid({
   const toggleFolderArrangeSelection = useCallback(
     (folder: FolderItem) => {
       const childIds = getFolderChildArrangeIds(folder);
-      const shouldSelectAll = !childIds.every((id) => arrangeSession.state.selectedIds.has(id));
+      const shouldSelectAll = shouldSelectAllIds(childIds, arrangeSession.state.selectedIds);
       arrangeSession.setManySelected(childIds, shouldSelectAll);
     },
     [arrangeSession, arrangeSession.state.selectedIds, getFolderChildArrangeIds],
@@ -180,8 +190,7 @@ export function DesktopGrid({
     (gridItemId: string) => {
       const item = findItemById(gridItemId);
       if (!item) return [] as string[];
-      if (item.type !== "folder") return [item.id];
-      return item.sites.map((site) => createFolderSiteArrangeId(item.id, site.url));
+      return getSelectableArrangeIdsFromGridItem(item);
     },
     [findItemById],
   );
@@ -252,13 +261,18 @@ export function DesktopGrid({
   useEffect(() => {
     if (!arrangeSession.state.isArrangeMode) return;
     const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Delete" || event.key === "Backspace") {
+        event.preventDefault();
+        handleDeleteSelectedInArrangeMode();
+        return;
+      }
       if (event.key !== "Escape") return;
       event.preventDefault();
       arrangeSession.exitArrangeMode();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [arrangeSession, arrangeSession.state.isArrangeMode]);
+  }, [arrangeSession, arrangeSession.state.isArrangeMode, handleDeleteSelectedInArrangeMode]);
   const { onContextMenu: onBackgroundContextMenu, portal: backgroundMenuPortal } =
     useGridBackgroundContextMenu(handleEnterArrangeMode);
   // 网格项 z-index 数值见 desktopGridLayers.ts（DesktopGridItem inline style）

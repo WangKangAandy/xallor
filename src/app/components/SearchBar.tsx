@@ -3,6 +3,7 @@ import { ChevronRight, Plus, X, Check } from 'lucide-react';
 import { loadSearchPayload, saveSearchPayload } from '../storage/repository';
 import { FaviconIcon } from './shared/FaviconIcon';
 import { GlassSurface } from './shared/GlassSurface';
+import { Z_SEARCH_BAR, Z_SEARCH_DROPDOWN } from './desktopGridLayers';
 
 interface SearchEngine {
   id: string;
@@ -151,7 +152,7 @@ export function SearchBar() {
   };
 
   return (
-    <div className="w-full max-w-2xl relative" ref={containerRef}>
+    <div className="relative w-full max-w-2xl" style={{ zIndex: Z_SEARCH_BAR }} ref={containerRef}>
       {/* Search Input Row */}
       <GlassSurface variant="bar" rounded="full" className="flex w-full items-center gap-3 px-5 py-4">
         {/* Engine Selector Trigger */}
@@ -203,7 +204,8 @@ export function SearchBar() {
         <GlassSurface
           variant="default"
           rounded="2xl"
-          className="absolute left-0 top-full z-50 mt-3 min-w-[140px] max-w-[240px] overflow-hidden shadow-2xl"
+          className="absolute left-0 top-full mt-3 min-w-[140px] max-w-[240px] overflow-hidden shadow-2xl"
+          style={{ zIndex: Z_SEARCH_DROPDOWN }}
         >
           {/* Engine List */}
           <div className="p-2 space-y-0.5">
