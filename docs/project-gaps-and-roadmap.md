@@ -33,6 +33,13 @@
 ### 中（体验与资源——重要，但不等同于「结构高优」；多为面向未来）
 
 - **外链资源（面向未来 / 弱网与扩展环境）**：背景图仍走 Unsplash、favicon 走第三方服务；在弱网或 CSP 收紧时可能不稳定。已用 [`RemoteBackgroundImage`](../src/app/components/feedback/RemoteBackgroundImage.tsx) 对**首页背景**做失败降级；其余可继续：**本地化或渐变兜底**、保持 **Favicon 多源链**；可独立里程碑。
+- **缓存与加载加速（新增，专项里程碑）**：详见 [`favicon-load-optimization-plan.md`](./favicon-load-optimization-plan.md)。  
+  - 已完成：  
+    - 项目级远程资源策略层 `remoteResourcePolicy`（并发竞速、成功源记忆、统一指标、**单候选超时 F3**）  
+    - Favicon 作为首个 consumer 接入，并完成量化复测（并发策略较串行显著提升）  
+    - `RemoteBackgroundImage` 作为第二个 consumer 接入（`w=` 双分辨率竞速 + 每候选超时 + `background` 成功记忆）  
+  - 待完成：  
+    - 持续采样与阶段报告（前后对比固化，验证 p90 是否随 F3 下降）
 - **错误与加载（基线已落地，可随功能扩展）**：展示层提供 [`RemoteContentPlaceholder`](../src/app/components/feedback/RemoteContentPlaceholder.tsx)（加载 / 失败 / 成功）；`storage/repository` 仅数据与校验（见文件头注释），**不**渲染占位组件。未来天气等 API 接入时包一层 `phase` 即可。
 - **多桌面网格挂载策略（未做，后续迭代）**：当前 [`MultiDesktopStrip`](../src/app/components/MultiDesktopStrip.tsx) 对每一页都挂载完整 [`DesktopGrid`](../src/app/components/DesktopGrid.tsx)（各含 `DndProvider`）；页数已由 [`MAX_DESKTOP_PAGES`](../src/app/storage/multiPageLimits.ts) 限制。计划在条带层改为 **「访问过则缓存」**：已访问过的页保留实例（隐藏未激活页），未访问页用占位撑布局，在**少重复 mount、保留页内临时状态**与**内存占用**之间折中；**不**采用「仅挂载当前页」以免反复切页时体验过糙。实现时机另排，不阻塞当前主线。
 - **毛玻璃视觉统一（持续，工程化）**：已有 [`GlassSurface`](../src/app/components/shared/GlassSurface.tsx) 与右键菜单接入；全站仍有多处手写 `backdrop-blur` / `bg-white/`。**分阶段**把 token 收束到 `theme.css` 变量并迁移高流量组件，见 [`glass-theme-unification-plan.md`](./glass-theme-unification-plan.md)。
@@ -64,4 +71,5 @@
 | [`arrange-mode-technical-plan.md`](./arrange-mode-technical-plan.md) | 整理模式状态机、事件流、分阶段实施与文件改动清单 |
 | [`current-structural-gaps.md`](./current-structural-gaps.md) | 开工整理模式前的结构性不足与治理门槛 |
 | [`glass-theme-unification-plan.md`](./glass-theme-unification-plan.md) | 毛玻璃 token + `GlassSurface` 渐进统一 |
+| [`favicon-load-optimization-plan.md`](./favicon-load-optimization-plan.md) | 远程资源策略层（Favicon 首期）与缓存/加载加速计划 |
 | [`package.json`](../package.json) | `build` / `typecheck` / `lint` / `test:run` |
