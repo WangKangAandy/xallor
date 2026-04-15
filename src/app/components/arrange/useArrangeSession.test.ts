@@ -56,6 +56,17 @@ describe("arrangeSessionReducer", () => {
   });
 
   /**
+   * 目的：实时框选需要每次 move 覆盖当前命中集合（动态增减）。
+   */
+  it("should_replace_selected_ids_when_set_selected_exact_dispatched", () => {
+    const entered = arrangeSessionReducer(ARRANGE_SESSION_INITIAL_STATE, { type: "enter", activePageId: "p-1" });
+    const first = arrangeSessionReducer(entered, { type: "setSelectedExact", ids: ["a", "b"] });
+    const second = arrangeSessionReducer(first, { type: "setSelectedExact", ids: ["b"] });
+    expect(Array.from(first.selectedIds).sort()).toEqual(["a", "b"]);
+    expect(Array.from(second.selectedIds)).toEqual(["b"]);
+  });
+
+  /**
    * 目的：退出整理模式应恢复初始状态，确保下次进入是干净会话。
    */
   it("should_return_initial_state_when_exit_arrange_mode", () => {

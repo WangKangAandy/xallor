@@ -1,0 +1,29 @@
+/** @vitest-environment jsdom */
+import { describe, expect, it } from "vitest";
+import { isArrangeGestureExcludedStartTarget } from "./arrangeGestureExclusions";
+
+describe("isArrangeGestureExcludedStartTarget", () => {
+  /**
+   * 目的：实体卡片本体不允许作为框选起手点。
+   */
+  it("should_exclude_grid_item_targets_when_starting_gesture", () => {
+    const node = document.createElement("div");
+    node.setAttribute("data-grid-item-id", "x-1");
+    document.body.appendChild(node);
+    expect(isArrangeGestureExcludedStartTarget(node)).toBe(true);
+    document.body.removeChild(node);
+  });
+
+  /**
+   * 目的：搜索框区域需要被排除，避免与搜索交互冲突。
+   */
+  it("should_exclude_search_bar_targets_when_starting_gesture", () => {
+    const root = document.createElement("div");
+    root.setAttribute("data-search-bar-root", "true");
+    const child = document.createElement("span");
+    root.appendChild(child);
+    document.body.appendChild(root);
+    expect(isArrangeGestureExcludedStartTarget(child)).toBe(true);
+    document.body.removeChild(root);
+  });
+});

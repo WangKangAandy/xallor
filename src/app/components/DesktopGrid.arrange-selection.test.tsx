@@ -126,5 +126,58 @@ describe("DesktopGrid arrange selection trigger", () => {
     });
     document.body.removeChild(container);
   });
+
+  /**
+   * 目的：Windows 风格语义下，实体本体不作为起手触发区；从卡片表面起手不应触发整理模式。
+   */
+  it("should_not_enter_arrange_mode_when_drag_started_from_grid_item_surface", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    const items: GridItemType[] = [
+      {
+        id: "site-3",
+        type: "site",
+        shape: { cols: 1, rows: 1 },
+        site: { name: "YouTube", domain: "youtube.com", url: "https://youtube.com" },
+      },
+    ];
+
+    act(() => {
+      root.render(<ArrangeSelectionHarness initialItems={items} />);
+    });
+
+    const item = container.querySelector('[data-grid-item-id="site-3"]') as HTMLDivElement | null;
+    expect(item).not.toBeNull();
+
+    Object.defineProperty(item, "getBoundingClientRect", {
+      configurable: true,
+      value: () =>
+        ({
+          left: 240,
+          top: 180,
+          right: 340,
+          bottom: 280,
+          width: 100,
+          height: 100,
+          x: 240,
+          y: 180,
+          toJSON: () => ({}),
+        }) as DOMRect,
+    });
+
+    act(() => {
+      dispatchPointerEvent(item as EventTarget, "pointerdown", 260, 200);
+      dispatchPointerEvent(window, "pointermove", 420, 360);
+      dispatchPointerEvent(window, "pointerup", 420, 360);
+    });
+
+    expect(container.querySelector('button[aria-label="退出整理模式"]')).toBeNull();
+
+    act(() => {
+      root.unmount();
+    });
+    document.body.removeChild(container);
+  });
 });
 

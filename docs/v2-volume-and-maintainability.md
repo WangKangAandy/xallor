@@ -15,7 +15,7 @@
 ## 后续可选（非阻塞）
 
 - 再跑一轮 `depcheck` + 全仓 `import` 核对；未使用的 `ui/*` 与 Radix 包可按需删或懒加载。
-- 复杂交互补充 Playwright（或继续加强纯函数单测）。
+- Playwright E2E 框架已接入（`@playwright/test` + `playwright.config.ts` + `e2e/arrange-gesture.spec.ts`）；后续持续补复杂交互场景（动态框选、批量移动、跨页）。
 - ESLint / Prettier 规则按需收紧。
 
 **原则**：小步、可回滚；改动后保持 `npm run test:run` 与手动 smoke（网格、文件夹缩放、持久化）。

@@ -17,7 +17,7 @@ import {
   getSelectableArrangeIdsFromGridItem,
   shouldSelectAllIds,
 } from "./arrange/arrangeCommands";
-import { buildSelectionRect, intersectsRect, rectFromDomRect } from "./arrange/selectionMath";
+import { useArrangeGestureController } from "./arrange/useArrangeGestureController";
 import { useGridBackgroundContextMenu } from "./useGridBackgroundContextMenu";
 import {
   resolveCompactionStrategy,
@@ -41,11 +41,9 @@ export type DesktopGridProps = {
 
 function GridDropZone({
   onDropEmpty,
-  onPointerDown,
   children,
 }: {
   onDropEmpty: (item: unknown) => void;
-  onPointerDown?: React.PointerEventHandler<HTMLDivElement>;
   children: React.ReactNode;
 }) {
   const [, drop] = useDrop({
@@ -57,7 +55,11 @@ function GridDropZone({
   });
 
   return (
-    <div data-testid="desktop-grid-dropzone" ref={drop} onPointerDown={onPointerDown} className="w-full h-full min-h-[500px]">
+    <div
+      data-testid="desktop-grid-dropzone"
+      ref={drop}
+      className="w-full h-full min-h-[500px]"
+    >
       {children}
     </div>
   );
@@ -194,64 +196,12 @@ export function DesktopGrid({
     },
     [findItemById],
   );
-  const collectHitSelectionIds = useCallback(
-    (selection: ReturnType<typeof buildSelectionRect>) => {
-      const root = gridRef.current;
-      if (!root) return [] as string[];
-      const hitSet = new Set<string>();
-      const elements = root.querySelectorAll<HTMLElement>("[data-grid-item-id]");
-      elements.forEach((el) => {
-        const id = el.dataset.gridItemId;
-        if (!id) return;
-        const cardRect = rectFromDomRect(el.getBoundingClientRect());
-        if (!intersectsRect(selection, cardRect)) return;
-        getSelectableIdsFromGridItem(id).forEach((selectId) => hitSet.add(selectId));
-      });
-      return Array.from(hitSet);
-    },
-    [getSelectableIdsFromGridItem],
-  );
-  const handleGridBackgroundPointerDown = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      if (arrangeSession.state.isArrangeMode) return;
-      if (event.button !== 0) return;
-      const target = event.target as HTMLElement | null;
-      if (!target) return;
-      if (target.closest("[data-grid-item-id]")) return;
-      if (target.closest("button,a,input,textarea,[contenteditable='true']")) return;
-
-      const start = { x: event.clientX, y: event.clientY };
-      arrangeSession.setSelecting(true);
-      arrangeSession.setSelectionRect({ x: start.x, y: start.y, w: 0, h: 0 });
-
-      const onPointerMove = (moveEvent: PointerEvent) => {
-        const current = { x: moveEvent.clientX, y: moveEvent.clientY };
-        const selection = buildSelectionRect(start, current);
-        arrangeSession.setSelectionRect({
-          x: selection.left,
-          y: selection.top,
-          w: selection.right - selection.left,
-          h: selection.bottom - selection.top,
-        });
-      };
-      const onPointerUp = (upEvent: PointerEvent) => {
-        const end = { x: upEvent.clientX, y: upEvent.clientY };
-        const selection = buildSelectionRect(start, end);
-        const hitIds = collectHitSelectionIds(selection);
-        if (hitIds.length > 0) {
-          arrangeSession.enterArrangeMode(pageId ?? "__single_page__");
-          arrangeSession.setManySelected(hitIds, true);
-        }
-        arrangeSession.setSelectionRect(null);
-        arrangeSession.setSelecting(false);
-        window.removeEventListener("pointermove", onPointerMove);
-        window.removeEventListener("pointerup", onPointerUp);
-      };
-      window.addEventListener("pointermove", onPointerMove);
-      window.addEventListener("pointerup", onPointerUp);
-    },
-    [arrangeSession, collectHitSelectionIds, pageId],
-  );
+  useArrangeGestureController({
+    pageId,
+    gridRef,
+    arrangeSession,
+    resolveSelectableIdsByGridItemId: getSelectableIdsFromGridItem,
+  });
   const handleEnterArrangeMode = useCallback(() => {
     arrangeSession.enterArrangeMode(pageId ?? "__single_page__");
   }, [arrangeSession, pageId]);
@@ -278,10 +228,20 @@ export function DesktopGrid({
   // 网格项 z-index 数值见 desktopGridLayers.ts（DesktopGridItem inline style）
   return (
     <DndProvider backend={HTML5Backend}>
-      <GridDropZone
-        onDropEmpty={(item) => handleDropItem(item as GridDnDDragItem, "GRID_END", false)}
-        onPointerDown={handleGridBackgroundPointerDown}
-      >
+      {arrangeSession.state.isSelecting && arrangeSession.state.selectionRect ? (
+        <div className="pointer-events-none fixed inset-0 z-[95]" aria-hidden>
+          <div
+            className="absolute border border-blue-400/80 bg-blue-500/15"
+            style={{
+              left: arrangeSession.state.selectionRect.x,
+              top: arrangeSession.state.selectionRect.y,
+              width: arrangeSession.state.selectionRect.w,
+              height: arrangeSession.state.selectionRect.h,
+            }}
+          />
+        </div>
+      ) : null}
+      <GridDropZone onDropEmpty={(item) => handleDropItem(item as GridDnDDragItem, "GRID_END", false)}>
         <div className="flex w-full flex-col gap-3">
           <div className="relative flex w-full items-center justify-end">
             <div className="flex items-center gap-2">

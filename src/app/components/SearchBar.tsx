@@ -152,7 +152,12 @@ export function SearchBar() {
   };
 
   return (
-    <div className="relative w-full max-w-2xl" style={{ zIndex: Z_SEARCH_BAR }} ref={containerRef}>
+    <div
+      className="relative w-full max-w-2xl"
+      style={{ zIndex: Z_SEARCH_BAR }}
+      ref={containerRef}
+      data-search-bar-root="true"
+    >
       {/* Search Input Row */}
       <GlassSurface variant="bar" rounded="full" className="flex w-full items-center gap-3 px-5 py-4">
         {/* Engine Selector Trigger */}

@@ -40,6 +40,7 @@ export function Sidebar() {
       <div className="pointer-events-none fixed left-0 top-1/2 z-30 -translate-y-1/2">
         <div
           data-testid="sidebar-hover-zone"
+          data-arrange-gesture-exclude="true"
           className="pointer-events-auto flex items-stretch"
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}

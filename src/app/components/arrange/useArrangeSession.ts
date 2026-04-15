@@ -10,6 +10,7 @@ export type ArrangeSessionAction =
   | { type: "enter"; activePageId: string }
   | { type: "exit" }
   | { type: "toggleSelect"; id: ArrangeItemId }
+  | { type: "setSelectedExact"; ids: ArrangeItemId[] }
   | { type: "setManySelected"; ids: ArrangeItemId[]; selected: boolean }
   | { type: "clearSelection" }
   | { type: "setSelecting"; value: boolean }
@@ -42,6 +43,9 @@ export function arrangeSessionReducer(state: ArrangeSessionState, action: Arrang
       else next.add(action.id);
       return { ...state, selectedIds: next };
     }
+    case "setSelectedExact":
+      if (!state.isArrangeMode) return state;
+      return { ...state, selectedIds: new Set(action.ids) };
     case "setManySelected": {
       if (!state.isArrangeMode) return state;
       const next = new Set(state.selectedIds);
@@ -87,6 +91,7 @@ export function useArrangeSession() {
   const enterArrangeMode = useCallback((activePageId: string) => dispatch({ type: "enter", activePageId }), []);
   const exitArrangeMode = useCallback(() => dispatch({ type: "exit" }), []);
   const toggleSelect = useCallback((id: ArrangeItemId) => dispatch({ type: "toggleSelect", id }), []);
+  const setSelectedExact = useCallback((ids: ArrangeItemId[]) => dispatch({ type: "setSelectedExact", ids }), []);
   const setManySelected = useCallback(
     (ids: ArrangeItemId[], selected: boolean) => dispatch({ type: "setManySelected", ids, selected }),
     [],
@@ -105,6 +110,7 @@ export function useArrangeSession() {
       enterArrangeMode,
       exitArrangeMode,
       toggleSelect,
+      setSelectedExact,
       setManySelected,
       clearSelection,
       setSelecting,
@@ -119,6 +125,7 @@ export function useArrangeSession() {
       enterArrangeMode,
       exitArrangeMode,
       toggleSelect,
+      setSelectedExact,
       setManySelected,
       clearSelection,
       setSelecting,

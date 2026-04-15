@@ -28,7 +28,7 @@
 - **整理模式开工前置（新增）**：先对齐当前结构性不足与治理顺序，避免“边做整理模式边返工底层”。前置文档：[`current-structural-gaps.md`](./current-structural-gaps.md)；实施方案：[`arrange-mode-technical-plan.md`](./arrange-mode-technical-plan.md)。
 - **网格与交互边界（持续）**：核心拆分与层级约定已落地（`DesktopGridItem` 为薄路由；详见 [`grid-interaction-boundaries-plan.md`](./grid-interaction-boundaries-plan.md)）。后续按需：**可选 layout 上下文**、继续用**纯函数 + 单测**收敛行为，避免把隐式规则写回 JSX。
 - **依赖与产物卫生**：已移除未引用 `ui/`；仍建议定期 `depcheck` + 对照 `npm run build`，避免无用依赖回潮。
-- **复杂交互回归**：关键路径逐步补测试（或后续 Playwright）；避免只靠手工点网格。
+- **复杂交互回归**：关键路径逐步补测试（Playwright 框架已接入，见 `playwright.config.ts` 与 `e2e/`）；当前重点继续补整理模式动态框选/批量移动/跨页等真实手势 case，避免只靠手工点网格。
 
 ### 中（体验与资源——重要，但不等同于「结构高优」；多为面向未来）
 
