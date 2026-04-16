@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { GridContextMenuEntry } from "./gridItemContextMenuConfig";
 import { GridItemContextMenu } from "./GridItemContextMenu";
+import { useDismissOnPointerDownOutside } from "./useDismissOnPointerDownOutside";
 
 type MenuPos = { x: number; y: number };
 
@@ -38,19 +39,14 @@ export function useGridContextMenu(entries: GridContextMenuEntry[]) {
     [hasEntries],
   );
 
+  useDismissOnPointerDownOutside(menuRef, Boolean(menu), () => setMenu(null));
   useEffect(() => {
     if (!menu) return;
-    const onPointerDown = (e: PointerEvent) => {
-      if (menuRef.current?.contains(e.target as Node)) return;
-      setMenu(null);
-    };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setMenu(null);
     };
-    window.addEventListener("pointerdown", onPointerDown, true);
     window.addEventListener("keydown", onKey);
     return () => {
-      window.removeEventListener("pointerdown", onPointerDown, true);
       window.removeEventListener("keydown", onKey);
     };
   }, [menu]);

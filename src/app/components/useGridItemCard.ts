@@ -18,6 +18,8 @@ export type GridItemCardSharedCallbacks = {
   isArrangeMode?: boolean;
   isArrangeSelected?: boolean;
   onArrangeToggleSelect?: () => void;
+  onDragStart?: (itemId: string) => void;
+  onDragEnd?: (itemId: string) => void;
 };
 
 /**
@@ -29,7 +31,7 @@ export function useGridItemCard(
   index: number,
   callbacks: GridItemCardSharedCallbacks,
 ) {
-  const { onReorder, onHoverMergeIntent, onClearMergeIntent, onDropItem, isMergeTarget, onResize, onEnterArrangeMode } = callbacks;
+  const { onReorder, onHoverMergeIntent, onClearMergeIntent, onDropItem, isMergeTarget, onResize, onEnterArrangeMode, onDragStart, onDragEnd } = callbacks;
   const ref = useRef<HTMLDivElement>(null);
 
   const folderResize = useFolderResize({
@@ -40,7 +42,7 @@ export function useGridItemCard(
     onResize,
   });
 
-  const [{ isDragging }, drag] = useGridItemDrag({ item, index });
+  const [{ isDragging }, drag] = useGridItemDrag({ item, index, onDragStart, onDragEnd });
   const { drop } = useGridItemDropTarget({
     ref,
     itemId: item.id,

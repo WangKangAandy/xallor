@@ -4,7 +4,9 @@ import type { GridItemType } from "../desktopGridTypes";
 import {
   deleteItemsByArrangeSelection,
   getSelectableArrangeIdsFromGridItem,
+  moveSelectedByDrop,
   moveDraggedItemByDrop,
+  resolveBatchDragIds,
   shouldSelectAllIds,
 } from "./arrangeCommands";
 
@@ -156,5 +158,107 @@ describe("moveDraggedItemByDrop", () => {
       expect(result[0].id).toBe("folder-42");
       expect(result[0].sites.map((site) => site.url).sort()).toEqual(["https://a.com", "https://b.com"]);
     }
+  });
+});
+
+describe("moveSelectedByDrop", () => {
+  /**
+   * 目的：当拖拽项已在选择集中时，批量移动应保持原有相对顺序。
+   */
+  it("should_keep_relative_order_when_move_selected_within_same_page", () => {
+    const items: GridItemType[] = [
+      { id: "site-a", type: "site", shape: { cols: 1, rows: 1 }, site: { name: "A", domain: "a.com", url: "https://a.com" } },
+      { id: "site-b", type: "site", shape: { cols: 1, rows: 1 }, site: { name: "B", domain: "b.com", url: "https://b.com" } },
+      { id: "site-c", type: "site", shape: { cols: 1, rows: 1 }, site: { name: "C", domain: "c.com", url: "https://c.com" } },
+      { id: "site-d", type: "site", shape: { cols: 1, rows: 1 }, site: { name: "D", domain: "d.com", url: "https://d.com" } },
+    ];
+    const dragged: GridDnDDragItem = { id: "site-a", type: "site" };
+    const selectedIds = new Set(["site-a", "site-c"]);
+
+    const result = moveSelectedByDrop(items, dragged, "site-d", {
+      shouldMerge: false,
+      selectedIds,
+    });
+
+    expect(result.map((item) => item.id)).toEqual(["site-b", "site-a", "site-c", "site-d"]);
+  });
+
+  /**
+   * 目的：拖拽项未在选择集中时应退化为单项移动，避免误搬运其它已选项。
+   */
+  it("should_ignore_selected_ids_when_dragged_item_is_not_selected", () => {
+    const items: GridItemType[] = [
+      { id: "site-a", type: "site", shape: { cols: 1, rows: 1 }, site: { name: "A", domain: "a.com", url: "https://a.com" } },
+      { id: "site-b", type: "site", shape: { cols: 1, rows: 1 }, site: { name: "B", domain: "b.com", url: "https://b.com" } },
+      { id: "site-c", type: "site", shape: { cols: 1, rows: 1 }, site: { name: "C", domain: "c.com", url: "https://c.com" } },
+    ];
+    const dragged: GridDnDDragItem = { id: "site-b", type: "site" };
+    const selectedIds = new Set(["site-a"]);
+
+    const result = moveSelectedByDrop(items, dragged, "site-c", {
+      shouldMerge: false,
+      selectedIds,
+    });
+
+    expect(result.map((item) => item.id)).toEqual(["site-a", "site-b", "site-c"]);
+  });
+
+  /**
+   * 目的：批量拖到文件夹中心区时，应将多项站点一次性追加进目标文件夹。
+   */
+  it("should_append_selected_into_existing_folder_when_drop_on_folder", () => {
+    const items: GridItemType[] = [
+      { id: "site-a", type: "site", shape: { cols: 1, rows: 1 }, site: { name: "A", domain: "a.com", url: "https://a.com" } },
+      { id: "site-b", type: "site", shape: { cols: 1, rows: 1 }, site: { name: "B", domain: "b.com", url: "https://b.com" } },
+      {
+        id: "folder-z",
+        type: "folder",
+        shape: { cols: 2, rows: 1 },
+        name: "dst",
+        colorFrom: "rgba(0,0,0,0.1)",
+        colorTo: "rgba(0,0,0,0.2)",
+        sites: [{ name: "Z", domain: "z.com", url: "https://z.com" }],
+      },
+    ];
+    const dragged: GridDnDDragItem = { id: "site-a", type: "site" };
+    const selectedIds = new Set(["site-a", "site-b"]);
+
+    const result = moveSelectedByDrop(items, dragged, "folder-z", {
+      shouldMerge: true,
+      inCenterZone: true,
+      selectedIds,
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.type).toBe("folder");
+    if (result[0]?.type === "folder") {
+      expect(result[0].sites.map((site) => site.url)).toEqual(["https://z.com", "https://a.com", "https://b.com"]);
+    }
+  });
+});
+
+describe("resolveBatchDragIds", () => {
+  /**
+   * 目的：拖拽锚点已选中时，批量拖拽集合应来自当前顶层选择集（过滤不存在 id）。
+   */
+  it("should_return_selected_top_level_ids_when_dragged_id_is_selected", () => {
+    const items: GridItemType[] = [
+      { id: "site-a", type: "site", shape: { cols: 1, rows: 1 }, site: { name: "A", domain: "a.com", url: "https://a.com" } },
+      { id: "site-b", type: "site", shape: { cols: 1, rows: 1 }, site: { name: "B", domain: "b.com", url: "https://b.com" } },
+    ];
+    const ids = resolveBatchDragIds(items, "site-a", new Set(["site-a", "unknown-id", "site-b"]));
+    expect(ids).toEqual(["site-a", "site-b"]);
+  });
+
+  /**
+   * 目的：拖拽锚点未选中时，应回退为单项拖拽集合，避免误带其它已选项。
+   */
+  it("should_fallback_to_single_dragged_id_when_dragged_id_not_selected", () => {
+    const items: GridItemType[] = [
+      { id: "site-a", type: "site", shape: { cols: 1, rows: 1 }, site: { name: "A", domain: "a.com", url: "https://a.com" } },
+      { id: "site-b", type: "site", shape: { cols: 1, rows: 1 }, site: { name: "B", domain: "b.com", url: "https://b.com" } },
+    ];
+    const ids = resolveBatchDragIds(items, "site-b", new Set(["site-a"]));
+    expect(ids).toEqual(["site-b"]);
   });
 });

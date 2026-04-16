@@ -24,7 +24,7 @@ export function MultiDesktopStrip() {
     pages,
     activePageIndex,
     isHydrated,
-    setPageItems,
+    applyMultiPageItemsPatch,
     setPageWidgetLayout,
     setPageAutoCompactEnabled,
     setPageConflictStrategy,
@@ -80,7 +80,7 @@ export function MultiDesktopStrip() {
                 pageId={page.pageId}
                 arrangeSession={arrangeSession}
                 items={page.items}
-                setItems={(u) => setPageItems(page.pageId, u)}
+                setItems={(u) => applyMultiPageItemsPatch({ [page.pageId]: u })}
                 showLabels={page.showLabels}
                 isHydrated={isHydrated}
                 widgetLayout={page.widgetLayout}

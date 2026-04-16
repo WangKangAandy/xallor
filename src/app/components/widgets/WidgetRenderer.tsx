@@ -37,6 +37,8 @@ export function WidgetRenderer(props: DesktopGridItemProps) {
     isArrangeMode,
     isArrangeSelected,
     onArrangeToggleSelect,
+    onDragStart,
+    onDragEnd,
   } = props;
 
   const shared = {
@@ -46,6 +48,8 @@ export function WidgetRenderer(props: DesktopGridItemProps) {
     onDropItem,
     isMergeTarget,
     onResize,
+    onDragStart,
+    onDragEnd,
   };
 
   const kind = getGridRenderableKind(item);

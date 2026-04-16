@@ -15,6 +15,7 @@ import { createFolderSiteArrangeId } from "./arrange/arrangeItemIds";
 import {
   deleteItemsByArrangeSelection,
   getSelectableArrangeIdsFromGridItem,
+  resolveBatchDragIds,
 } from "./arrange/arrangeCommands";
 import { useArrangeGestureController } from "./arrange/useArrangeGestureController";
 import { useGridBackgroundContextMenu } from "./useGridBackgroundContextMenu";
@@ -87,7 +88,12 @@ export function DesktopGrid({
   const layoutOrderedItems = useMemo(() => items, [items]);
 
   const { mergeIntent, handleReorder, handleHoverMergeIntent, handleClearMergeIntent, handleDropItem } =
-    useGridDnD(setItems, { compactionStrategy, conflictStrategy, pinnedItemIds });
+    useGridDnD(setItems, {
+      compactionStrategy,
+      conflictStrategy,
+      pinnedItemIds,
+      selectedIds: arrangeSession.state.isArrangeMode ? arrangeSession.state.selectedIds : undefined,
+    });
 
   const [openFolderId, setOpenFolderId] = useState<string | null>(null);
   const [isFolderDragging, setIsFolderDragging] = useState(false);
@@ -155,6 +161,22 @@ export function DesktopGrid({
     setItems((prev) => deleteItemsByArrangeSelection(prev, arrangeSession.state.selectedIds));
     arrangeSession.clearSelection();
   }, [arrangeSession, setItems]);
+  const handleItemDragStart = useCallback(
+    (itemId: string) => {
+      if (!arrangeSession.state.isArrangeMode) return;
+      if (arrangeSession.state.isSelecting) {
+        arrangeSession.setSelecting(false);
+        arrangeSession.setSelectionRect(null);
+      }
+      const dragIds = resolveBatchDragIds(items, itemId, arrangeSession.state.selectedIds);
+      arrangeSession.startBatchDrag(dragIds);
+    },
+    [arrangeSession, items],
+  );
+  const handleItemDragEnd = useCallback(() => {
+    if (!arrangeSession.state.isArrangeMode) return;
+    arrangeSession.endBatchDrag();
+  }, [arrangeSession]);
 
   const handleConfirmAddFromPicker = useCallback(
     (payload: AddIconSubmitPayload) => {
@@ -329,6 +351,8 @@ export function DesktopGrid({
                       onArrangeToggleSelect={() =>
                         item.type === "folder" ? toggleFolderArrangeSelection(item) : arrangeSession.toggleSelect(item.id)
                       }
+                      onDragStart={handleItemDragStart}
+                      onDragEnd={handleItemDragEnd}
                     />
                   ))}
                 {isHydrated ? <GridAddSlotCell onOpenAdd={() => setAddIconOpen(true)} alwaysVisible={isEmptyGrid} /> : null}

@@ -124,6 +124,10 @@ export function useArrangeGestureController({
 
     const onPointerMove = (event: PointerEvent) => {
       if (!gestureRef.current) return;
+      // Edge 下若不阻止默认行为，穿过 draggable 卡片时可能提前进入原生拖拽，导致后续 pointermove 丢失。
+      if (event.cancelable) {
+        event.preventDefault();
+      }
       latestPointerRef.current = { x: event.clientX, y: event.clientY };
       debugLog({ phase: "move-raw", x: event.clientX, y: event.clientY });
       if (rafIdRef.current != null) return;
@@ -162,6 +166,10 @@ export function useArrangeGestureController({
         return;
       }
       debugLog({ phase: "pointer-down-accepted", x: event.clientX, y: event.clientY });
+      // 抑制浏览器默认文本选择/原生拖拽，保证框选手势在不同 Chromium 壳（Chrome/Edge）行为一致。
+      if (event.cancelable) {
+        event.preventDefault();
+      }
 
       gestureRef.current = {
         startX: event.clientX,

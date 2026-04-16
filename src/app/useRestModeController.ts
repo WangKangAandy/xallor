@@ -97,7 +97,7 @@ export function useRestModeController() {
       if (shouldIgnoreWake()) return;
       wakeFromRestMode("touch");
     };
-    const onMouseDownWake = () => {
+    const onPointerDownWake = () => {
       if (shouldIgnoreWake()) return;
       wakeFromRestMode("mouse");
     };
@@ -107,12 +107,12 @@ export function useRestModeController() {
     };
     const opts: AddEventListenerOptions = { passive: true };
     window.addEventListener("mousemove", onMouseMoveWake, opts);
-    window.addEventListener("mousedown", onMouseDownWake, opts);
+    window.addEventListener("pointerdown", onPointerDownWake, opts);
     window.addEventListener("wheel", onWheelWake, opts);
     window.addEventListener("touchstart", onTouchWake, opts);
     return () => {
       window.removeEventListener("mousemove", onMouseMoveWake);
-      window.removeEventListener("mousedown", onMouseDownWake);
+      window.removeEventListener("pointerdown", onPointerDownWake);
       window.removeEventListener("wheel", onWheelWake);
       window.removeEventListener("touchstart", onTouchWake);
     };

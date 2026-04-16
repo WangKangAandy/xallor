@@ -124,6 +124,55 @@ describe("multiPageGridReducer updateItems", () => {
   });
 });
 
+describe("multiPageGridReducer applyItemsPatchMap", () => {
+  /**
+   * 目的：跨页批量变更应在单次 reducer 计算内生效，避免按页散改造成中间态。
+   */
+  it("should_apply_item_updates_for_multiple_pages_in_single_action", () => {
+    const state = {
+      pages: [
+        { items: [siteItem], showLabels: true, pageId: "p-a" },
+        { items: [], showLabels: true, pageId: "p-b" },
+      ],
+      activePageIndex: 0,
+      isHydrated: true,
+    };
+    const nextSite = {
+      id: "s-next",
+      type: "site" as const,
+      shape: { cols: 1, rows: 1 },
+      site: { name: "Next", domain: "next.com", url: "https://next.com" },
+    };
+    const next = multiPageGridReducer(state, {
+      type: "applyItemsPatchMap",
+      patchMap: {
+        "p-a": [],
+        "p-b": [nextSite],
+      },
+    });
+    expect(next.pages[0].items).toEqual([]);
+    expect(next.pages[1].items.map((item) => item.id)).toEqual(["s-next"]);
+  });
+
+  /**
+   * 目的：当 patchMap 中页 id 全部不存在时，reducer 应保持引用不变以避免无效重渲染。
+   */
+  it("should_noop_when_patch_map_has_no_matching_page_ids", () => {
+    const state = {
+      pages: [{ items: [siteItem], showLabels: true, pageId: "only" }],
+      activePageIndex: 0,
+      isHydrated: true,
+    };
+    const next = multiPageGridReducer(state, {
+      type: "applyItemsPatchMap",
+      patchMap: {
+        missing: [],
+      },
+    });
+    expect(next).toBe(state);
+  });
+});
+
 describe("multiPageGridReducer setPageCompactionStrategy", () => {
   /**
    * 目的：设置开关写入当前页 widgetLayout，支持自动补位策略按页持久化控制。

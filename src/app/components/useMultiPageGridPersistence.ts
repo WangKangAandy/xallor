@@ -9,10 +9,12 @@ import { emptyGridPagePayload } from "./desktopGridInitialItems";
 const SAVE_DEBOUNCE_MS = 400;
 
 type State = MultiPageGridState & { isHydrated: boolean };
+type PageItemsPatchMap = Record<string, React.SetStateAction<GridItemType[]>>;
 
 type Action =
   | { type: "hydrate"; payload: MultiPageGridState }
   | { type: "updateItems"; pageId: string; updater: React.SetStateAction<GridItemType[]> }
+  | { type: "applyItemsPatchMap"; patchMap: PageItemsPatchMap }
   | { type: "setPageWidgetLayout"; pageId: string; layout: WidgetPageLayoutState }
   | { type: "setPageCompactionStrategy"; pageId: string; strategy: WidgetCompactionStrategy }
   | { type: "setPageConflictStrategy"; pageId: string; strategy: "swap" | "reject" | "eject" }
@@ -50,6 +52,21 @@ export function multiPageGridReducer(state: State, action: Action): State {
       let touched = false;
       const pages = state.pages.map((p) => {
         if (p.pageId !== pageId) return p;
+        touched = true;
+        const nextItems = typeof updater === "function" ? updater(p.items) : updater;
+        return syncWidgetLayoutMetadata(p, nextItems);
+      });
+      if (!touched) return state;
+      return { ...state, pages };
+    }
+    case "applyItemsPatchMap": {
+      const patchEntries = Object.entries(action.patchMap);
+      if (patchEntries.length === 0) return state;
+      const patchMap = new Map(patchEntries);
+      let touched = false;
+      const pages = state.pages.map((p) => {
+        const updater = patchMap.get(p.pageId);
+        if (updater === undefined) return p;
         touched = true;
         const nextItems = typeof updater === "function" ? updater(p.items) : updater;
         return syncWidgetLayoutMetadata(p, nextItems);
@@ -176,6 +193,9 @@ export function useMultiPageGridPersistence(fallback: MultiPageGridState) {
   const setPageItems = useCallback((pageId: string, updater: React.SetStateAction<GridItemType[]>) => {
     dispatch({ type: "updateItems", pageId, updater });
   }, []);
+  const applyMultiPageItemsPatch = useCallback((patchMap: PageItemsPatchMap) => {
+    dispatch({ type: "applyItemsPatchMap", patchMap });
+  }, []);
   const setPageWidgetLayout = useCallback((pageId: string, layout: WidgetPageLayoutState) => {
     dispatch({ type: "setPageWidgetLayout", pageId, layout });
   }, []);
@@ -199,6 +219,7 @@ export function useMultiPageGridPersistence(fallback: MultiPageGridState) {
     activePageIndex,
     isHydrated,
     setPageItems,
+    applyMultiPageItemsPatch,
     setPageWidgetLayout,
     setPageAutoCompactEnabled,
     setPageConflictStrategy,

@@ -84,7 +84,7 @@ export default function App() {
         <div className="w-full flex flex-col items-center transition-all duration-700 xl:scale-[1.02] 2xl:scale-[1.05] xl:origin-top flex-1">
           {/* Search Bar */}
           <div
-            className={`w-full max-w-[640px] xl:max-w-[680px] 2xl:max-w-[720px] mb-12 flex justify-center flex-shrink-0 transition-all duration-700 ${
+            className={`relative z-20 w-full max-w-[640px] xl:max-w-[680px] 2xl:max-w-[720px] mb-12 flex justify-center flex-shrink-0 transition-all duration-700 ${
               isResting ? "opacity-0 -translate-y-2" : "opacity-100 translate-y-0 delay-75"
             }`}
           >
@@ -95,7 +95,7 @@ export default function App() {
 
           {/* 多桌面条带（纵向滚轮切页）；单页时与原先单网格一致 */}
           <div
-            className={`w-full flex-1 flex min-h-0 justify-center max-w-[1200px] xl:max-w-[1280px] transition-all duration-700 ${
+            className={`relative z-10 w-full flex-1 flex min-h-0 justify-center max-w-[1200px] xl:max-w-[1280px] transition-all duration-700 ${
               isResting ? "opacity-0 translate-y-2" : "opacity-100 translate-y-0 delay-150"
             }`}
           >

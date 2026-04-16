@@ -4,6 +4,7 @@ import { loadSearchPayload, saveSearchPayload } from '../storage/repository';
 import { FaviconIcon } from './shared/FaviconIcon';
 import { GlassSurface } from './shared/GlassSurface';
 import { Z_SEARCH_BAR, Z_SEARCH_DROPDOWN } from './desktopGridLayers';
+import { useDismissOnPointerDownOutside } from './useDismissOnPointerDownOutside';
 
 interface SearchEngine {
   id: string;
@@ -120,16 +121,10 @@ export function SearchBar() {
     return () => globalThis.clearTimeout(timer);
   }, [engines, selected]);
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-        setShowAddForm(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
+  useDismissOnPointerDownOutside(containerRef, isOpen || showAddForm, () => {
+    setIsOpen(false);
+    setShowAddForm(false);
+  });
 
   const handleSearch = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && query.trim()) {

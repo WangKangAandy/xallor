@@ -140,6 +140,126 @@ test.describe("arrange gesture", () => {
   });
 
   /**
+   * 目的：已选中多个顶层图标时，拖拽其中一个应按选择集批量移动，而非只移动单项。
+   */
+  test("should_move_selected_group_when_dragging_one_selected_item", async ({ page }) => {
+    await page.goto("/");
+
+    const allItems = page.locator("[data-grid-item-id]");
+    await expect(allItems.first()).toBeVisible();
+
+    const candidateSiteIds = await allItems.evaluateAll((nodes) =>
+      nodes
+        .map((node) => node.getAttribute("data-grid-item-id") ?? "")
+        .filter((id) => id.length > 0 && !/^f\d+$/i.test(id) && !id.startsWith("folder-")),
+    );
+    expect(candidateSiteIds.length).toBeGreaterThanOrEqual(4);
+    const [firstId, secondId, thirdId, fourthId] = candidateSiteIds;
+    const beforeOrder = await allItems.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-grid-item-id") ?? ""));
+    const beforeIndexA = beforeOrder.indexOf(firstId);
+    const beforeIndexB = beforeOrder.indexOf(secondId);
+
+    await enterArrangeModeByDraggingToFirstItem(page);
+    await expect.poll(async () => getArrangeSelectedGridItemCount(page)).toBe(1);
+
+    const firstCard = page.locator(`[data-grid-item-id="${firstId}"]`);
+    const secondCard = page.locator(`[data-grid-item-id="${secondId}"]`);
+    const thirdCard = page.locator(`[data-grid-item-id="${thirdId}"]`);
+    const fourthCard = page.locator(`[data-grid-item-id="${fourthId}"]`);
+    await expect(firstCard).toBeVisible();
+    await expect(secondCard).toBeVisible();
+    await expect(thirdCard).toBeVisible();
+    await expect(fourthCard).toBeVisible();
+    await secondCard.click();
+    await expect.poll(async () => getArrangeSelectedGridItemCount(page)).toBeGreaterThanOrEqual(2);
+
+    const dragSource = firstCard;
+    const dropTarget = fourthCard;
+    await expect(dragSource).toBeVisible();
+    await expect(dropTarget).toBeVisible();
+
+    // 落在边缘区触发重排路径，避免中心区合并逻辑干扰断言。
+    await dragSource.dragTo(dropTarget, { targetPosition: { x: 4, y: 4 } });
+
+    await expect.poll(async () => {
+      const ids = await page
+        .locator("[data-grid-item-id]")
+        .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-grid-item-id") ?? ""));
+      const indexA = ids.indexOf(firstId);
+      const indexB = ids.indexOf(secondId);
+      const indexC = ids.indexOf(thirdId);
+      return {
+        ids,
+        indexA,
+        indexB,
+        indexC,
+      };
+    }).toMatchObject({
+      indexB: expect.any(Number),
+    });
+
+    const afterIds = await page
+      .locator("[data-grid-item-id]")
+      .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-grid-item-id") ?? ""));
+    const indexA = afterIds.indexOf(firstId);
+    const indexB = afterIds.indexOf(secondId);
+    const indexC = afterIds.indexOf(thirdId);
+    expect(indexA).toBeGreaterThan(-1);
+    expect(indexB).toBeGreaterThan(-1);
+    expect(indexC).toBeGreaterThan(-1);
+    // 批量移动应保持选中组相邻，且至少两项都发生了位置变化。
+    expect(indexB).toBe(indexA + 1);
+    expect(indexA).not.toBe(beforeIndexA);
+    expect(indexB).not.toBe(beforeIndexB);
+  });
+
+  /**
+   * 目的：整理模式下已选中多个顶层站点时，拖到文件夹中心区应批量并入目标文件夹。
+   */
+  test("should_merge_selected_group_into_folder_when_drop_in_center_zone", async ({ page }) => {
+    await page.goto("/");
+
+    const allItems = page.locator("[data-grid-item-id]");
+    await expect(allItems.first()).toBeVisible();
+
+    const candidateSiteIds = await allItems.evaluateAll((nodes) =>
+      nodes
+        .map((node) => node.getAttribute("data-grid-item-id") ?? "")
+        .filter((id) => id.length > 0 && !/^f\d+$/i.test(id) && !id.startsWith("folder-")),
+    );
+    expect(candidateSiteIds.length).toBeGreaterThanOrEqual(2);
+    const [firstId, secondId] = candidateSiteIds;
+
+    await enterArrangeModeByDraggingToFirstItem(page);
+    await expect.poll(async () => getArrangeSelectedGridItemCount(page)).toBe(1);
+
+    const firstCard = page.locator(`[data-grid-item-id="${firstId}"]`);
+    const secondCard = page.locator(`[data-grid-item-id="${secondId}"]`);
+    const folderCard = page.locator('[data-grid-item-id="f1"]');
+    await expect(firstCard).toBeVisible();
+    await expect(secondCard).toBeVisible();
+    await expect(folderCard).toBeVisible();
+
+    await secondCard.click();
+    await expect.poll(async () => getArrangeSelectedGridItemCount(page)).toBeGreaterThanOrEqual(2);
+
+    const beforeCount = await allItems.count();
+    const folderBox = await folderCard.boundingBox();
+    expect(folderBox).not.toBeNull();
+    if (!folderBox) return;
+
+    await firstCard.dragTo(folderCard, {
+      targetPosition: { x: folderBox.width / 2, y: folderBox.height / 2 },
+    });
+
+    // 两个站点并入后，顶层项目数应减少（至少减少 1；通常为 -2，但可能伴随规范化影响）。
+    await expect.poll(async () => page.locator("[data-grid-item-id]").count()).toBeLessThan(beforeCount);
+    await expect(page.locator(`[data-grid-item-id="${firstId}"]`)).toHaveCount(0);
+    await expect(page.locator(`[data-grid-item-id="${secondId}"]`)).toHaveCount(0);
+    await expect(folderCard).toBeVisible();
+  });
+
+  /**
    * 目的：固化「外层选中文件夹 → ⤢ 展开内部整理 → 点遮罩退出仍在外层整理态」路径。
    * 前置：默认网格含 id=f1 的「社交」文件夹。
    */

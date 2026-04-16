@@ -25,6 +25,8 @@ export interface DesktopGridItemProps {
   isArrangeMode?: boolean;
   isArrangeSelected?: boolean;
   onArrangeToggleSelect?: () => void;
+  onDragStart?: (itemId: string) => void;
+  onDragEnd?: (itemId: string) => void;
 }
 
 export function DesktopGridItem(props: DesktopGridItemProps) {
