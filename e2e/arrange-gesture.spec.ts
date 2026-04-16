@@ -1,6 +1,18 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("arrange gesture", () => {
+  async function installDeterministicGridFixture(page: Parameters<typeof test>[0]["page"]): Promise<void> {
+    await page.addInitScript(() => {
+      // 仅清理持久化，回退到应用内置默认数据，避免测试间状态污染。
+      globalThis.localStorage.clear();
+      globalThis.localStorage.setItem("xallor_device_id", "e2e-seed-device");
+    });
+  }
+
+  test.beforeEach(async ({ page }) => {
+    await installDeterministicGridFixture(page);
+  });
+
   async function getArrangeSelectedGridItemCount(page: Parameters<typeof test>[0]["page"]): Promise<number> {
     return page.evaluate(() => {
       const selectedShadowPattern = /59,\s*130,\s*246/;
@@ -33,6 +45,11 @@ test.describe("arrange gesture", () => {
     await page.mouse.move(first.x + first.width * 0.8, first.y + first.height * 0.8, { steps: 8 });
     await page.mouse.up();
     await expect(page.getByRole("button", { name: "退出整理模式" })).toBeVisible();
+  }
+
+  async function waitForGridReady(page: Parameters<typeof test>[0]["page"]): Promise<void> {
+    await page.waitForSelector('[data-testid="desktop-grid-dropzone"]', { timeout: 30000 });
+    await page.waitForSelector("[data-grid-item-id]", { timeout: 30000 });
   }
 
   test("should enter arrange mode when dragging from blank area to hit grid items", async ({ page }) => {
@@ -144,6 +161,7 @@ test.describe("arrange gesture", () => {
    */
   test("should_move_selected_group_when_dragging_one_selected_item", async ({ page }) => {
     await page.goto("/");
+    await waitForGridReady(page);
 
     const allItems = page.locator("[data-grid-item-id]");
     await expect(allItems.first()).toBeVisible();
@@ -218,6 +236,7 @@ test.describe("arrange gesture", () => {
    */
   test("should_merge_selected_group_into_folder_when_drop_in_center_zone", async ({ page }) => {
     await page.goto("/");
+    await waitForGridReady(page);
 
     const allItems = page.locator("[data-grid-item-id]");
     await expect(allItems.first()).toBeVisible();
@@ -282,5 +301,65 @@ test.describe("arrange gesture", () => {
 
     await expect(page.locator(".glass-scrim")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "退出整理模式" })).toBeVisible();
+  });
+
+  /**
+   * 目的：覆盖 B2-4 混合集拖拽路径：文件夹内多选后拖一项到外层，批量从文件夹移出。
+   */
+  test("should_move_selected_folder_inner_items_to_outer_grid_when_dragging_one_inner_item", async ({ page }) => {
+    await page.goto("/");
+    await waitForGridReady(page);
+    const outerItems = page.locator("[data-grid-item-id]");
+    await expect(outerItems.first()).toBeVisible();
+    const beforeOuterCount = await outerItems.count();
+
+    await enterArrangeModeByDraggingToFirstItem(page);
+    const folderRoot = page.locator('[data-grid-item-id="f1"]');
+    await expect(folderRoot).toBeVisible();
+    await folderRoot.click();
+    const expandBtn = page.getByRole("button", { name: "展开整理" });
+    await expect(expandBtn).toBeVisible();
+    await expandBtn.click();
+
+    const innerItems = page.locator('[data-testid^="folder-inner-draggable-"]');
+    const xItem = innerItems.nth(0);
+    const discordItem = innerItems.nth(1);
+    await expect(xItem).toBeVisible();
+    await expect(discordItem).toBeVisible();
+    await xItem.click();
+    await discordItem.click();
+
+    const outerIds = await outerItems.evaluateAll((nodes) =>
+      nodes.map((node) => node.getAttribute("data-grid-item-id") ?? "").filter((id) => id.length > 0),
+    );
+    const dropTargetId = outerIds.find((id) => id !== "f1");
+    expect(dropTargetId).toBeTruthy();
+    if (!dropTargetId) return;
+    const dropTarget = page.locator(`[data-grid-item-id="${dropTargetId}"]`);
+    const startBox = await xItem.boundingBox();
+    const dropBox = await dropTarget.boundingBox();
+    expect(startBox).not.toBeNull();
+    expect(dropBox).not.toBeNull();
+    if (!startBox || !dropBox) return;
+
+    await page.mouse.move(startBox.x + startBox.width / 2, startBox.y + startBox.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(startBox.x + startBox.width / 2 + 24, startBox.y + startBox.height / 2 + 24, { steps: 5 });
+    await expect(page.getByTestId("folder-overlay-scrim")).toHaveClass(/pointer-events-none/);
+    await page.mouse.move(dropBox.x + 8, dropBox.y + 8, { steps: 8 });
+    await page.mouse.up();
+
+    await expect(page.getByTestId("folder-overlay-scrim")).toHaveCount(0);
+    await expect.poll(async () => page.locator("[data-grid-item-id]").count()).toBeGreaterThan(beforeOuterCount);
+    const folderAfterDrag = page.locator('[data-grid-item-id="f1"]');
+    if ((await folderAfterDrag.count()) > 0) {
+      await folderAfterDrag.click();
+      const remainInnerCount = await page.locator('[data-testid^="folder-inner-draggable-"]').count();
+      expect(remainInnerCount).toBeLessThan(2);
+      const scrim = page.getByTestId("folder-overlay-scrim");
+      if ((await scrim.count()) > 0) {
+        await scrim.click({ position: { x: 8, y: 8 } });
+      }
+    }
   });
 });

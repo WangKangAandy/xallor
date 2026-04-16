@@ -45,6 +45,7 @@ function FolderInnerItem({
     <div className="relative">
       <a
         ref={drag}
+        data-testid={`folder-inner-draggable-${encodeURIComponent(site.url)}`}
         href={site.url}
         target="_blank"
         rel="noopener noreferrer"
@@ -143,6 +144,7 @@ export function DesktopGridFolderPortal({
   return createPortal(
     /* z-[100]：高于主内容 z-10 / 侧栏 z-30；全页装饰层勿盖过此处，见 desktopGridLayers.ts */
     <div
+      data-testid="folder-overlay-scrim"
       className={`glass-scrim fixed inset-0 z-[100] flex items-center justify-center p-4 transition-all ${isFolderDragging ? "pointer-events-none opacity-0" : "opacity-100"}`}
       onClick={() => onClose()}
     >
