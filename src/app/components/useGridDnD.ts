@@ -1,9 +1,9 @@
 import { useCallback, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
-import type { FolderItem, GridItemType, SiteItem } from "./desktopGridTypes";
+import type { GridItemType } from "./desktopGridTypes";
 import type { GridDnDDragItem } from "./desktopGridDnDTypes";
 import type { WidgetCompactionStrategy, WidgetConflictStrategy } from "./widgets/layoutSchema";
-import { removeSiteFromFolderByUrl } from "./desktopGridItemActions";
+import { moveDraggedItemByDrop } from "./arrange/arrangeCommands";
 
 export type MergeIntent = { targetId: string; draggedId: string };
 type ReorderPolicy = {
@@ -101,88 +101,12 @@ export function useGridDnD(
       const isIntentActive =
         currentIntent && currentIntent.targetId === targetId && currentIntent.draggedId === draggedItem.id;
 
-      if (draggedItem.type === "folder-site" && draggedItem.site) {
-        const movedSite = draggedItem.site;
-        setItems((prev) => {
-          const sourceFolderIdx = prev.findIndex((i) => i.id === draggedItem.sourceFolderId);
-          if (sourceFolderIdx === -1) return prev;
-          const targetIdx = prev.findIndex((i) => i.id === targetId);
-          const newItems = removeSiteFromFolderByUrl(prev, draggedItem.sourceFolderId, movedSite.url);
-
-          const newSiteItem: SiteItem = {
-            id: `site-${Date.now()}`,
-            type: "site",
-            shape: { cols: 1, rows: 1 },
-            site: movedSite,
-          };
-
-          const targetItem = newItems.find((i) => i.id === targetId);
-          if (targetItem && inCenterZone && targetItem.type === "folder") {
-            targetItem.sites.push(movedSite);
-          } else if (targetItem && inCenterZone && targetItem.type === "site") {
-            const newFolder: FolderItem = {
-              id: `folder-${Date.now()}`,
-              type: "folder",
-              shape: { cols: 2, rows: 1 },
-              name: "新建文件夹",
-              colorFrom: "rgba(147,197,253,0.75)",
-              colorTo: "rgba(99,102,241,0.75)",
-              sites: [targetItem.site, movedSite],
-            };
-            const actualTargetIdx = newItems.findIndex((i) => i.id === targetId);
-            newItems[actualTargetIdx] = newFolder;
-          } else {
-            const insertIdx = targetIdx !== -1 ? targetIdx : newItems.length;
-            newItems.splice(insertIdx, 0, newSiteItem);
-          }
-
-          return newItems;
-        });
-        setMergeIntent(null);
-        return;
-      }
-
-      if (isIntentActive || inCenterZone) {
-        setItems((prev) => {
-          const dragIdx = prev.findIndex((i) => i.id === draggedItem.id);
-          const targetIdx = prev.findIndex((i) => i.id === targetId);
-          if (dragIdx === -1 || targetIdx === -1 || dragIdx === targetIdx) return prev;
-
-          const draggedItemData = prev[dragIdx];
-          const targetItem = prev[targetIdx];
-
-          if (draggedItemData.type !== "site") return prev;
-
-          const newItems = [...prev];
-          let merged = false;
-
-          if (targetItem.type === "site") {
-            const newFolder: FolderItem = {
-              id: `folder-${Date.now()}`,
-              type: "folder",
-              shape: { cols: 2, rows: 1 },
-              name: "新建文件夹",
-              colorFrom: "rgba(147,197,253,0.75)",
-              colorTo: "rgba(99,102,241,0.75)",
-              sites: [targetItem.site, draggedItemData.site],
-            };
-            newItems[targetIdx] = newFolder;
-            merged = true;
-          } else if (targetItem.type === "folder") {
-            const updatedFolder: FolderItem = {
-              ...targetItem,
-              sites: [...targetItem.sites, draggedItemData.site],
-            };
-            newItems[targetIdx] = updatedFolder;
-            merged = true;
-          }
-
-          if (merged) {
-            newItems.splice(dragIdx, 1);
-          }
-          return newItems;
-        });
-      }
+      setItems((prev) =>
+        moveDraggedItemByDrop(prev, draggedItem, targetId, {
+          inCenterZone,
+          shouldMerge: Boolean(isIntentActive || inCenterZone),
+        }),
+      );
       setMergeIntent(null);
     },
     [setItems, setMergeIntent],

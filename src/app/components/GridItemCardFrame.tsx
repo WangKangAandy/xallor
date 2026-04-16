@@ -48,7 +48,7 @@ export const GridItemCardFrame = forwardRef<HTMLDivElement, GridItemCardFramePro
     onDeleteItem,
     onEnterArrangeMode,
     isArrangeMode = false,
-    isArrangeSelected = false,
+    isArrangeSelected: _isArrangeSelected = false,
     onArrangeToggleSelect,
     children,
   },
@@ -67,6 +67,7 @@ export const GridItemCardFrame = forwardRef<HTMLDivElement, GridItemCardFramePro
           if (!isArrangeMode || !itemId) return;
           const target = event.target as HTMLElement | null;
           if (target?.closest("[data-arrange-delete]")) return;
+          if (target?.closest("[data-arrange-action]")) return;
           event.preventDefault();
           event.stopPropagation();
           onArrangeToggleSelect?.();

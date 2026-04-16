@@ -16,6 +16,25 @@ test.describe("arrange gesture", () => {
     });
   }
 
+  async function enterArrangeModeByDraggingToFirstItem(page: Parameters<typeof test>[0]["page"]): Promise<void> {
+    const dropzone = page.getByTestId("desktop-grid-dropzone");
+    const gridItems = page.locator("[data-grid-item-id]");
+    await expect(dropzone).toBeVisible();
+    await expect(gridItems.first()).toBeVisible();
+
+    const box = await dropzone.boundingBox();
+    const first = await gridItems.nth(0).boundingBox();
+    expect(box).not.toBeNull();
+    expect(first).not.toBeNull();
+    if (!box || !first) return;
+
+    await page.mouse.move(box.x + 24, box.y + 24);
+    await page.mouse.down();
+    await page.mouse.move(first.x + first.width * 0.8, first.y + first.height * 0.8, { steps: 8 });
+    await page.mouse.up();
+    await expect(page.getByRole("button", { name: "退出整理模式" })).toBeVisible();
+  }
+
   test("should enter arrange mode when dragging from blank area to hit grid items", async ({ page }) => {
     await page.goto("/");
 
@@ -78,5 +97,70 @@ test.describe("arrange gesture", () => {
     await expect.poll(async () => getArrangeSelectedGridItemCount(page)).toBe(1);
 
     await page.mouse.up();
+  });
+
+  test("should not enter arrange mode when drag distance is below activation threshold", async ({ page }) => {
+    await page.goto("/");
+
+    const dropzone = page.getByTestId("desktop-grid-dropzone");
+    await expect(dropzone).toBeVisible();
+    const box = await dropzone.boundingBox();
+    expect(box).not.toBeNull();
+    if (!box) return;
+
+    // 小于激活阈值（6px）时，不应进入整理模式。
+    const startX = box.x + 24;
+    const startY = box.y + 24;
+    const endX = startX + 3;
+    const endY = startY + 3;
+
+    await page.mouse.move(startX, startY);
+    await page.mouse.down();
+    await page.mouse.move(endX, endY, { steps: 5 });
+    await page.mouse.up();
+
+    await expect(page.getByRole("button", { name: "退出整理模式" })).toHaveCount(0);
+  });
+
+  test("should delete_selected_items_when_delete_pressed_in_arrange_mode", async ({ page }) => {
+    await page.goto("/");
+
+    const gridItems = page.locator("[data-grid-item-id]");
+    await expect(gridItems.first()).toBeVisible();
+    const beforeCount = await gridItems.count();
+    expect(beforeCount).toBeGreaterThanOrEqual(1);
+
+    await enterArrangeModeByDraggingToFirstItem(page);
+    await expect.poll(async () => getArrangeSelectedGridItemCount(page)).toBeGreaterThanOrEqual(1);
+
+    await page.keyboard.press("Delete");
+
+    await expect.poll(async () => page.locator("[data-grid-item-id]").count()).toBeLessThan(beforeCount);
+    await expect.poll(async () => getArrangeSelectedGridItemCount(page)).toBe(0);
+  });
+
+  /**
+   * 目的：固化「外层选中文件夹 → ⤢ 展开内部整理 → 点遮罩退出仍在外层整理态」路径。
+   * 前置：默认网格含 id=f1 的「社交」文件夹。
+   */
+  test("should open folder arrange from expand pill and close overlay without exiting arrange mode", async ({ page }) => {
+    await page.goto("/");
+
+    await enterArrangeModeByDraggingToFirstItem(page);
+
+    const folderRoot = page.locator('[data-grid-item-id="f1"]');
+    await expect(folderRoot).toBeVisible();
+    await folderRoot.click();
+
+    const expandBtn = page.getByRole("button", { name: "展开整理" });
+    await expect(expandBtn).toBeVisible();
+    await expandBtn.click();
+
+    const scrim = page.locator(".glass-scrim").first();
+    await expect(scrim).toBeVisible();
+    await scrim.click({ position: { x: 8, y: 8 } });
+
+    await expect(page.locator(".glass-scrim")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "退出整理模式" })).toBeVisible();
   });
 });

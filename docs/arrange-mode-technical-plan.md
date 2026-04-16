@@ -174,9 +174,9 @@ ID 规范建议：
 
 未完成（下一步门槛）：
 
-- [ ] `useArrangeSession` 仍在 `DesktopGrid` 内部创建，尚未上提到条带/页面上层（跨页会话共享前置）。
-- [ ] `moveSelected` 命令层尚未建立；`useGridDnD` 仍承载大量 drop 业务分支（B2/C 风险点）。
-- [ ] 编排级回归测试（B1-4/B2-4）尚未补齐。
+- [x] `useArrangeSession` 已从 `DesktopGrid` 内部上提到条带层（`MultiDesktopStrip`）统一创建并下发，作为跨页会话共享前置。
+- [x] 已新增 `moveDraggedItemByDrop` 命令并接入 `useGridDnD`，将 folder-site/site 的核心 drop 合并分支从 hook 内下沉到命令层；后续在 B2 阶段继续扩展为完整 `moveSelected`（跨容器/跨页批量）语义。
+- [ ] 编排级回归测试进行中：B1-4 已落基础 E2E 回归（进入/动态增减/阈值不触发/Delete 批删），B2-4（批量移动外部+文件夹混合集）待补。
 
 临时策略（用于处理中途插单问题）：
 
@@ -211,7 +211,8 @@ ID 规范建议：
 - [x] B1-1 框选状态机接线（`idle -> selecting -> settled`），仅作用当前页
 - [x] B1-2 新增 `selectionMath.ts`，实现矩形与卡片包围盒相交命中
 - [x] B1-3 在 `DesktopGrid` 接入最小框选链路（按下空白区开始、移动更新、抬起提交）
-- [ ] B1-4 增加最小回归测试（状态流转 + 命中计算 + 不干扰现有单项拖拽）
+- [x] B1-4 增加最小回归测试（状态流转 + 命中计算 + 不干扰现有单项拖拽）
+  - 已落地：`e2e/arrange-gesture.spec.ts` 覆盖「空白起手命中进入」「拖动中动态增选/回收取消」「小于阈值不触发」「Delete 批删」。
 
 ### Phase B-2 小步任务（批量移动到同页/文件夹）
 

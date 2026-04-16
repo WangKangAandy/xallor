@@ -1,4 +1,5 @@
-import type { GridItemType } from "../desktopGridTypes";
+import type { GridDnDDragItem } from "../desktopGridDnDTypes";
+import type { FolderItem, GridItemType } from "../desktopGridTypes";
 import { removeGridItemById, removeSiteFromFolderByUrl } from "../desktopGridItemActions";
 import { createFolderSiteArrangeId, parseFolderSiteArrangeId } from "./arrangeItemIds";
 
@@ -33,4 +34,92 @@ export function deleteItemsByArrangeSelection(items: GridItemType[], selectedIds
     next = removeGridItemById(next, id);
   }
   return next;
+}
+
+type MoveDraggedItemOptions = {
+  inCenterZone?: boolean;
+  shouldMerge: boolean;
+  createIdSeed?: () => number;
+};
+
+/**
+ * 统一 drop 后的移动命令：收敛 folder-site 与主网格 site 的落点/合并分支。
+ */
+export function moveDraggedItemByDrop(
+  items: GridItemType[],
+  draggedItem: GridDnDDragItem,
+  targetId: string,
+  options: MoveDraggedItemOptions,
+): GridItemType[] {
+  const createIdSeed = options.createIdSeed ?? Date.now;
+
+  if (draggedItem.type === "folder-site" && draggedItem.site) {
+    if (!draggedItem.sourceFolderId) return items;
+    const sourceFolderExists = items.some((item) => item.id === draggedItem.sourceFolderId);
+    if (!sourceFolderExists) return items;
+
+    const movedSite = draggedItem.site;
+    const removedFromSource = removeSiteFromFolderByUrl(items, draggedItem.sourceFolderId, movedSite.url);
+    const targetItem = removedFromSource.find((item) => item.id === targetId);
+
+    if (targetItem && options.inCenterZone && targetItem.type === "folder") {
+      return removedFromSource.map((item) =>
+        item.id === targetItem.id && item.type === "folder"
+          ? { ...item, sites: [...item.sites, movedSite] }
+          : item,
+      );
+    }
+    if (targetItem && options.inCenterZone && targetItem.type === "site") {
+      const newFolder: FolderItem = {
+        id: `folder-${createIdSeed()}`,
+        type: "folder",
+        shape: { cols: 2, rows: 1 },
+        name: "新建文件夹",
+        colorFrom: "rgba(147,197,253,0.75)",
+        colorTo: "rgba(99,102,241,0.75)",
+        sites: [targetItem.site, movedSite],
+      };
+      return removedFromSource.map((item) => (item.id === targetId ? newFolder : item));
+    }
+
+    const newSiteItem: GridItemType = {
+      id: `site-${createIdSeed()}`,
+      type: "site",
+      shape: { cols: 1, rows: 1 },
+      site: movedSite,
+    };
+    const insertIdx = removedFromSource.findIndex((item) => item.id === targetId);
+    const next = [...removedFromSource];
+    next.splice(insertIdx >= 0 ? insertIdx : next.length, 0, newSiteItem);
+    return next;
+  }
+
+  if (!options.shouldMerge || draggedItem.id === targetId) return items;
+
+  const dragged = items.find((item) => item.id === draggedItem.id);
+  const target = items.find((item) => item.id === targetId);
+  if (!dragged || !target || dragged.type !== "site") return items;
+
+  if (target.type === "site") {
+    const newFolder: FolderItem = {
+      id: `folder-${createIdSeed()}`,
+      type: "folder",
+      shape: { cols: 2, rows: 1 },
+      name: "新建文件夹",
+      colorFrom: "rgba(147,197,253,0.75)",
+      colorTo: "rgba(99,102,241,0.75)",
+      sites: [target.site, dragged.site],
+    };
+    return items.flatMap((item) => {
+      if (item.id === draggedItem.id) return [];
+      if (item.id === targetId) return [newFolder];
+      return [item];
+    });
+  }
+  if (target.type === "folder") {
+    return items
+      .map((item) => (item.id === targetId && item.type === "folder" ? { ...item, sites: [...item.sites, dragged.site] } : item))
+      .filter((item) => item.id !== draggedItem.id);
+  }
+  return items;
 }

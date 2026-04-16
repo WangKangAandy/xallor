@@ -10,12 +10,11 @@ import { GRID_CELL_SIZE, GRID_GAP } from "./desktopGridConstants";
 import { removeGridItemById, removeSiteFromFolderByUrl } from "./desktopGridItemActions";
 import { useGridDnD } from "./useGridDnD";
 import { createGridItemFromAddPayload } from "./widgets/createGridItemFromAddPayload";
-import { useArrangeSession } from "./arrange/useArrangeSession";
+import type { ArrangeSessionController } from "./arrange/useArrangeSession";
 import { createFolderSiteArrangeId } from "./arrange/arrangeItemIds";
 import {
   deleteItemsByArrangeSelection,
   getSelectableArrangeIdsFromGridItem,
-  shouldSelectAllIds,
 } from "./arrange/arrangeCommands";
 import { useArrangeGestureController } from "./arrange/useArrangeGestureController";
 import { useGridBackgroundContextMenu } from "./useGridBackgroundContextMenu";
@@ -28,6 +27,7 @@ import {
 
 export type DesktopGridProps = {
   pageId?: string;
+  arrangeSession: ArrangeSessionController;
   items: GridItemType[];
   setItems: React.Dispatch<React.SetStateAction<GridItemType[]>>;
   showLabels: boolean;
@@ -67,6 +67,7 @@ function GridDropZone({
 
 export function DesktopGrid({
   pageId,
+  arrangeSession,
   items,
   setItems,
   showLabels,
@@ -76,7 +77,6 @@ export function DesktopGrid({
   onToggleAutoCompact,
   onChangeConflictStrategy,
 }: DesktopGridProps) {
-  const arrangeSession = useArrangeSession();
   const pinnedItemIds = useMemo(
     () => new Set((widgetLayout?.layout ?? []).filter((entry) => entry.mode === "pinned").map((entry) => entry.id)),
     [widgetLayout],
@@ -170,19 +170,21 @@ export function DesktopGrid({
   const getFolderChildArrangeIds = useCallback((folder: FolderItem) => {
     return getSelectableArrangeIdsFromGridItem(folder);
   }, []);
-  const isFolderFullySelected = useCallback(
+  const isFolderSelectedInArrange = useCallback(
     (folder: FolderItem) => {
       const childIds = getFolderChildArrangeIds(folder);
       if (childIds.length === 0) return false;
-      return childIds.every((id) => arrangeSession.state.selectedIds.has(id));
+      // 外层文件夹仅展示二值状态：内部任意命中都视为“选中”。
+      return childIds.some((id) => arrangeSession.state.selectedIds.has(id));
     },
     [arrangeSession.state.selectedIds, getFolderChildArrangeIds],
   );
   const toggleFolderArrangeSelection = useCallback(
     (folder: FolderItem) => {
       const childIds = getFolderChildArrangeIds(folder);
-      const shouldSelectAll = shouldSelectAllIds(childIds, arrangeSession.state.selectedIds);
-      arrangeSession.setManySelected(childIds, shouldSelectAll);
+      const hasAnySelected = childIds.some((id) => arrangeSession.state.selectedIds.has(id));
+      // 外层点击切换：已选（含部分）-> 全取消；未选 -> 全选。
+      arrangeSession.setManySelected(childIds, !hasAnySelected);
     },
     [arrangeSession, arrangeSession.state.selectedIds, getFolderChildArrangeIds],
   );
@@ -321,7 +323,7 @@ export function DesktopGrid({
                       isArrangeMode={arrangeSession.state.isArrangeMode}
                       isArrangeSelected={
                         item.type === "folder"
-                          ? isFolderFullySelected(item)
+                          ? isFolderSelectedInArrange(item)
                           : arrangeSession.state.selectedIds.has(item.id)
                       }
                       onArrangeToggleSelect={() =>

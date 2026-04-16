@@ -138,3 +138,5 @@ export function useArrangeSession() {
   );
 }
 
+export type ArrangeSessionController = ReturnType<typeof useArrangeSession>;
+

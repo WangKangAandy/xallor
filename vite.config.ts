@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from 'vite'
 import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
@@ -17,5 +18,9 @@ export default defineConfig({
       // Alias @ to the src directory
       '@': path.resolve(__dirname, './src'),
     },
+  },
+  test: {
+    // Playwright 用例放在 e2e/，勿被 Vitest 当单元测试执行
+    exclude: ['**/node_modules/**', '**/dist/**', '**/e2e/**'],
   },
 })

@@ -4,6 +4,7 @@ import { defaultFirstGridPagePayload } from "./desktopGridInitialItems";
 import { DesktopGrid } from "./DesktopGrid";
 import { DesktopPageDotsRow } from "./DesktopPageDotsRow";
 import { DESKTOP_SLIDE_MS } from "./multiDesktopStripConstants";
+import { useArrangeSession } from "./arrange/useArrangeSession";
 import { useDesktopPageIndicator } from "./useDesktopPageIndicator";
 import { useDesktopStripWheel } from "./useDesktopStripWheel";
 import { useMultiPageGridPersistence } from "./useMultiPageGridPersistence";
@@ -18,6 +19,7 @@ const FALLBACK: MultiPageGridState = {
  * 指示条与滚轮逻辑见 `useDesktopPageIndicator`、`useDesktopStripWheel`。
  */
 export function MultiDesktopStrip() {
+  const arrangeSession = useArrangeSession();
   const {
     pages,
     activePageIndex,
@@ -76,6 +78,7 @@ export function MultiDesktopStrip() {
             <div className="w-full max-w-[1200px] xl:max-w-[1280px]">
               <DesktopGrid
                 pageId={page.pageId}
+                arrangeSession={arrangeSession}
                 items={page.items}
                 setItems={(u) => setPageItems(page.pageId, u)}
                 showLabels={page.showLabels}

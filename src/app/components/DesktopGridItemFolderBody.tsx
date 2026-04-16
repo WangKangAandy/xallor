@@ -71,9 +71,36 @@ export function DesktopGridItemFolderBody({
       }
       onClick={(e) => {
         e.stopPropagation();
-        onOpenFolder();
+        if (!isArrangeMode) {
+          onOpenFolder();
+        }
+      }}
+      onDoubleClick={(e) => {
+        if (!isArrangeMode) return;
+        // 整理模式下禁用“双击展开”，避免与外层选中语义冲突。
+        e.preventDefault();
+        e.stopPropagation();
       }}
     >
+      {isArrangeMode && isArrangeSelected ? (
+        <button
+          type="button"
+          aria-label="展开整理"
+          data-arrange-action="open-folder-arrange"
+          className="absolute left-1/2 top-1.5 z-[3] -translate-x-1/2 rounded-full border border-white/70 bg-black/25 px-2 py-0.5 text-xs leading-none text-white transition hover:bg-black/40"
+          onPointerDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onOpenFolder();
+          }}
+        >
+          ⤢
+        </button>
+      ) : null}
       <div
         className="relative h-full w-full overflow-hidden"
         style={{ width: viewportWidth, height: viewportHeight, borderRadius: "var(--grid-panel-radius)" }}

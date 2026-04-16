@@ -8,7 +8,9 @@ describe("DesktopGridItemWidgetBody", () => {
    * 预期：calendar 分支渲染占位文案，至少可见可交互。
    */
   it("should_render_calendar_placeholder_when_widget_type_is_calendar", () => {
-    const html = renderToStaticMarkup(<DesktopGridItemWidgetBody widgetType="calendar" />);
+    const html = renderToStaticMarkup(
+      <DesktopGridItemWidgetBody widgetType="calendar" isArrangeMode={false} isArrangeSelected={false} />,
+    );
     expect(html).toContain("已添加日历组件（占位）");
     expect(html).toContain("日历");
   });

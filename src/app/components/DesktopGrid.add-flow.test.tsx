@@ -3,12 +3,14 @@ import { act } from "react";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { describe, expect, it } from "vitest";
+import { useArrangeSession } from "./arrange/useArrangeSession";
 import { DesktopGrid } from "./DesktopGrid";
 import type { GridItemType } from "./desktopGridTypes";
 
 function DesktopGridHarness() {
   const [items, setItems] = useState<GridItemType[]>([]);
-  return <DesktopGrid items={items} setItems={setItems} showLabels isHydrated />;
+  const arrangeSession = useArrangeSession();
+  return <DesktopGrid arrangeSession={arrangeSession} items={items} setItems={setItems} showLabels isHydrated />;
 }
 
 async function waitForBodyText(text: string, timeoutMs = 1200) {
@@ -111,7 +113,8 @@ describe("DesktopGrid add flow", () => {
     });
 
     expect(document.querySelector('[role="dialog"]')).toBeNull();
-    await waitForBodyText("Tokyo, Japan");
+    // 天气文案依赖异步拉取，弱网下需更长等待窗口
+    await waitForBodyText("Tokyo, Japan", 8000);
     expect(document.body.textContent).toContain("Tokyo, Japan");
 
     act(() => {

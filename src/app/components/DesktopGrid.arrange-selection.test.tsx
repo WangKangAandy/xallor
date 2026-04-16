@@ -3,12 +3,14 @@ import { act } from "react";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { describe, expect, it } from "vitest";
+import { useArrangeSession } from "./arrange/useArrangeSession";
 import { DesktopGrid } from "./DesktopGrid";
 import type { GridItemType } from "./desktopGridTypes";
 
 function ArrangeSelectionHarness({ initialItems }: { initialItems: GridItemType[] }) {
   const [items, setItems] = useState<GridItemType[]>(initialItems);
-  return <DesktopGrid items={items} setItems={setItems} showLabels isHydrated />;
+  const arrangeSession = useArrangeSession();
+  return <DesktopGrid arrangeSession={arrangeSession} items={items} setItems={setItems} showLabels isHydrated />;
 }
 
 function dispatchPointerEvent(target: EventTarget, type: string, x: number, y: number, button = 0) {
@@ -173,6 +175,88 @@ describe("DesktopGrid arrange selection trigger", () => {
     });
 
     expect(container.querySelector('button[aria-label="退出整理模式"]')).toBeNull();
+
+    act(() => {
+      root.unmount();
+    });
+    document.body.removeChild(container);
+  });
+
+  /**
+   * 目的：整理模式下文件夹卡片点击应仅切换选中；需通过“展开整理”按钮进入内部整理态。
+   */
+  it("should_open_folder_only_when_expand_arrange_button_clicked_in_arrange_mode", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    const items: GridItemType[] = [
+      {
+        id: "folder-1",
+        type: "folder",
+        shape: { cols: 2, rows: 1 },
+        name: "社交",
+        colorFrom: "rgba(147,197,253,0.75)",
+        colorTo: "rgba(99,102,241,0.75)",
+        sites: [
+          { name: "X", domain: "x.com", url: "https://x.com" },
+          { name: "Discord", domain: "discord.com", url: "https://discord.com" },
+        ],
+      },
+    ];
+
+    act(() => {
+      root.render(<ArrangeSelectionHarness initialItems={items} />);
+    });
+
+    const dropzone = container.querySelector('[data-testid="desktop-grid-dropzone"]') as HTMLDivElement | null;
+    const folder = container.querySelector('[data-grid-item-id="folder-1"]') as HTMLDivElement | null;
+    expect(dropzone).not.toBeNull();
+    expect(folder).not.toBeNull();
+
+    Object.defineProperty(folder, "getBoundingClientRect", {
+      configurable: true,
+      value: () =>
+        ({
+          left: 320,
+          top: 220,
+          right: 520,
+          bottom: 320,
+          width: 200,
+          height: 100,
+          x: 320,
+          y: 220,
+          toJSON: () => ({}),
+        }) as DOMRect,
+    });
+
+    act(() => {
+      dispatchPointerEvent(dropzone as EventTarget, "pointerdown", 40, 40);
+      dispatchPointerEvent(window, "pointermove", 380, 280);
+      dispatchPointerEvent(window, "pointerup", 380, 280);
+    });
+
+    expect(container.querySelector('button[aria-label="退出整理模式"]')).not.toBeNull();
+    expect(container.querySelector('button[aria-label="展开整理"]')).not.toBeNull();
+
+    // 仅点击文件夹卡片本体，不应直接展开内部整理态。
+    act(() => {
+      (folder as HTMLDivElement).click();
+    });
+    expect(document.body.querySelector(".glass-scrim")).toBeNull();
+    expect(container.querySelector('button[aria-label="展开整理"]')).toBeNull();
+
+    // 再次点击恢复选中后，展开按钮应重新出现。
+    act(() => {
+      (folder as HTMLDivElement).click();
+    });
+
+    // 点击“展开整理”按钮后才进入内部整理态。
+    const openArrangeBtn = container.querySelector('button[aria-label="展开整理"]') as HTMLButtonElement | null;
+    expect(openArrangeBtn).not.toBeNull();
+    act(() => {
+      openArrangeBtn?.click();
+    });
+    expect(document.body.querySelector(".glass-scrim")).not.toBeNull();
 
     act(() => {
       root.unmount();
