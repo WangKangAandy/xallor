@@ -17,7 +17,7 @@ import {
   getSelectableArrangeIdsFromGridItem,
   resolveBatchDragIds,
 } from "./arrange/arrangeCommands";
-import { useArrangeGestureController } from "./arrange/useArrangeGestureController";
+import type { ArrangeGestureGridRuntime } from "./arrange/useArrangeGestureController";
 import { useGridBackgroundContextMenu } from "./useGridBackgroundContextMenu";
 import {
   resolveCompactionStrategy,
@@ -28,8 +28,8 @@ import {
 
 export type DesktopGridProps = {
   pageId?: string;
-  /** 多桌面下仅当前活动页启用全局框选手势监听，避免跨页重复写会话状态。 */
-  isActivePage?: boolean;
+  onArrangeRuntimeMount?: (runtime: ArrangeGestureGridRuntime) => void;
+  onArrangeRuntimeUnmount?: (gridId: string) => void;
   arrangeSession: ArrangeSessionController;
   items: GridItemType[];
   setItems: React.Dispatch<React.SetStateAction<GridItemType[]>>;
@@ -44,9 +44,13 @@ export type DesktopGridProps = {
 
 function GridDropZone({
   onDropEmpty,
+  gridId,
+  onDropZoneRef,
   children,
 }: {
   onDropEmpty: (item: unknown) => void;
+  gridId?: string;
+  onDropZoneRef?: (el: HTMLDivElement | null) => void;
   children: React.ReactNode;
 }) {
   const [, drop] = useDrop({
@@ -60,7 +64,11 @@ function GridDropZone({
   return (
     <div
       data-testid="desktop-grid-dropzone"
-      ref={drop}
+      data-arrange-grid-id={gridId}
+      ref={(node) => {
+        drop(node);
+        onDropZoneRef?.(node);
+      }}
       className="w-full h-full min-h-[500px]"
     >
       {children}
@@ -70,7 +78,8 @@ function GridDropZone({
 
 export function DesktopGrid({
   pageId,
-  isActivePage = true,
+  onArrangeRuntimeMount,
+  onArrangeRuntimeUnmount,
   arrangeSession,
   items,
   setItems,
@@ -101,6 +110,7 @@ export function DesktopGrid({
   const [openFolderId, setOpenFolderId] = useState<string | null>(null);
   const [isFolderDragging, setIsFolderDragging] = useState(false);
   const [addIconOpen, setAddIconOpen] = useState(false);
+  const dropZoneRef = useRef<HTMLDivElement | null>(null);
   const gridRef = useRef<HTMLDivElement | null>(null);
 
   const handleRename = useCallback(
@@ -223,13 +233,21 @@ export function DesktopGrid({
     },
     [findItemById],
   );
-  useArrangeGestureController({
-    enabled: isActivePage,
-    pageId,
-    gridRef,
-    arrangeSession,
-    resolveSelectableIdsByGridItemId: getSelectableIdsFromGridItem,
-  });
+  const getSelectableIdsFromGridItemRef = useRef(getSelectableIdsFromGridItem);
+  getSelectableIdsFromGridItemRef.current = getSelectableIdsFromGridItem;
+  useEffect(() => {
+    if (!pageId || !onArrangeRuntimeMount) return;
+    onArrangeRuntimeMount({
+      gridId: pageId,
+      pageId,
+      getRootEl: () => dropZoneRef.current,
+      isMounted: () => Boolean(dropZoneRef.current?.isConnected),
+      resolveSelectableIdsByGridItemId: (gridItemId: string) => getSelectableIdsFromGridItemRef.current(gridItemId),
+    });
+    return () => {
+      onArrangeRuntimeUnmount?.(pageId);
+    };
+  }, [pageId, onArrangeRuntimeMount, onArrangeRuntimeUnmount]);
   const handleEnterArrangeMode = useCallback(() => {
     arrangeSession.enterArrangeMode(pageId ?? "__single_page__");
   }, [arrangeSession, pageId]);
@@ -269,7 +287,13 @@ export function DesktopGrid({
           />
         </div>
       ) : null}
-      <GridDropZone onDropEmpty={(item) => handleDropItem(item as GridDnDDragItem, "GRID_END", false)}>
+      <GridDropZone
+        onDropEmpty={(item) => handleDropItem(item as GridDnDDragItem, "GRID_END", false)}
+        gridId={pageId}
+        onDropZoneRef={(el) => {
+          dropZoneRef.current = el;
+        }}
+      >
         <div className="flex w-full flex-col gap-3">
           <div className="relative flex w-full items-center justify-end">
             <div className="flex items-center gap-2">

@@ -28,6 +28,28 @@ test.describe("arrange gesture", () => {
     });
   }
 
+  async function getArrangeHitOscillationCount(page: Parameters<typeof test>[0]["page"]): Promise<number> {
+    return page.evaluate(() => {
+      const win = window as typeof window & {
+        __arrangeGestureDebugApi?: { dump: () => Array<{ phase?: string; ts?: number; hitCount?: number }> };
+      };
+      const events = win.__arrangeGestureDebugApi?.dump?.() ?? [];
+      const moveHits = events.filter((event) => event.phase === "move-hit");
+      let oscillation = 0;
+      for (let i = 1; i < moveHits.length; i += 1) {
+        const prev = moveHits[i - 1];
+        const next = moveHits[i];
+        if (prev?.ts !== next?.ts) continue;
+        const prevHit = prev?.hitCount ?? -1;
+        const nextHit = next?.hitCount ?? -1;
+        if ((prevHit === 0 && nextHit > 0) || (nextHit === 0 && prevHit > 0)) {
+          oscillation += 1;
+        }
+      }
+      return oscillation;
+    });
+  }
+
   async function enterArrangeModeByDraggingToFirstItem(page: Parameters<typeof test>[0]["page"]): Promise<void> {
     const dropzone = page.getByTestId("desktop-grid-dropzone");
     const gridItems = page.locator("[data-grid-item-id]");
@@ -78,6 +100,13 @@ test.describe("arrange gesture", () => {
 
   test("should dynamically add and remove selection while dragging", async ({ page }) => {
     await page.goto("/");
+    await page.evaluate(() => {
+      const win = window as typeof window & {
+        __arrangeGestureDebugApi?: { enable: (verbose?: boolean) => void; clear: () => void; disable: () => void };
+      };
+      win.__arrangeGestureDebugApi?.enable(false);
+      win.__arrangeGestureDebugApi?.clear();
+    });
 
     const gridItems = page.locator("[data-grid-item-id]");
     await expect(gridItems.first()).toBeVisible();
@@ -114,6 +143,11 @@ test.describe("arrange gesture", () => {
     await expect.poll(async () => getArrangeSelectedGridItemCount(page)).toBe(1);
 
     await page.mouse.up();
+    await expect.poll(async () => getArrangeHitOscillationCount(page)).toBe(0);
+    await page.evaluate(() => {
+      const win = window as typeof window & { __arrangeGestureDebugApi?: { disable: () => void } };
+      win.__arrangeGestureDebugApi?.disable();
+    });
   });
 
   test("should not enter arrange mode when drag distance is below activation threshold", async ({ page }) => {

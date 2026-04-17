@@ -1,9 +1,12 @@
 import { AnimatePresence, motion } from "motion/react";
+import { useCallback, useRef } from "react";
 import type { MultiPageGridState } from "../storage/types";
 import { defaultFirstGridPagePayload } from "./desktopGridInitialItems";
 import { DesktopGrid } from "./DesktopGrid";
+import type { ArrangeGestureGridRuntime } from "./arrange/useArrangeGestureController";
 import { DesktopPageDotsRow } from "./DesktopPageDotsRow";
 import { DESKTOP_SLIDE_MS } from "./multiDesktopStripConstants";
+import { useArrangeGestureController } from "./arrange/useArrangeGestureController";
 import { useArrangeSession } from "./arrange/useArrangeSession";
 import { useDesktopPageIndicator } from "./useDesktopPageIndicator";
 import { useDesktopStripWheel } from "./useDesktopStripWheel";
@@ -20,6 +23,7 @@ const FALLBACK: MultiPageGridState = {
  */
 export function MultiDesktopStrip() {
   const arrangeSession = useArrangeSession();
+  const runtimeRegistryRef = useRef<Map<string, ArrangeGestureGridRuntime>>(new Map());
   const {
     pages,
     activePageIndex,
@@ -52,6 +56,14 @@ export function MultiDesktopStrip() {
 
   const pageCount = Math.max(pages.length, 1);
   const translatePct = (activePageIndex / pageCount) * 100;
+  const handleArrangeRuntimeMount = useCallback((runtime: ArrangeGestureGridRuntime) => {
+    runtimeRegistryRef.current.set(runtime.gridId, runtime);
+  }, []);
+  const handleArrangeRuntimeUnmount = useCallback((gridId: string) => {
+    runtimeRegistryRef.current.delete(gridId);
+  }, []);
+  const getGridRuntimes = useCallback(() => Array.from(runtimeRegistryRef.current.values()), []);
+  useArrangeGestureController({ arrangeSession, getGridRuntimes });
 
   return (
     <div
@@ -78,7 +90,8 @@ export function MultiDesktopStrip() {
             <div className="w-full max-w-[1200px] xl:max-w-[1280px]">
               <DesktopGrid
                 pageId={page.pageId}
-                isActivePage={pages[activePageIndex]?.pageId === page.pageId}
+                onArrangeRuntimeMount={handleArrangeRuntimeMount}
+                onArrangeRuntimeUnmount={handleArrangeRuntimeUnmount}
                 arrangeSession={arrangeSession}
                 items={page.items}
                 setItems={(u) => applyMultiPageItemsPatch({ [page.pageId]: u })}
