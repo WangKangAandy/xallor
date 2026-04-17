@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FaviconIcon } from "./shared/FaviconIcon";
+import { useDismissOnPointerDownOutside } from "./useDismissOnPointerDownOutside";
 
 export function Favicon({
   domain,
@@ -46,6 +47,7 @@ export function EditableLabel({
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const editingRootRef = useRef<HTMLDivElement>(null);
   const savedRef = useRef(false);
 
   useEffect(() => {
@@ -63,6 +65,13 @@ export function EditableLabel({
       onRename(value.trim());
     }
   };
+  const handleCancel = () => {
+    savedRef.current = true;
+    setIsEditing(false);
+    setValue("");
+  };
+
+  useDismissOnPointerDownOutside(editingRootRef, isEditing, handleCancel);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
@@ -70,8 +79,7 @@ export function EditableLabel({
       handleSave();
     } else if (e.key === "Escape") {
       e.preventDefault();
-      savedRef.current = true;
-      setIsEditing(false);
+      handleCancel();
     }
   };
 
@@ -80,7 +88,7 @@ export function EditableLabel({
   if (isEditing) {
     if (autoWidth) {
       return (
-        <div className="relative inline-flex items-center justify-center min-w-[40px] max-w-full">
+        <div ref={editingRootRef} className="relative inline-flex items-center justify-center min-w-[40px] max-w-full">
           <span
             className={`${inputClassName} pointer-events-none whitespace-pre`}
             style={{
@@ -121,26 +129,28 @@ export function EditableLabel({
     }
 
     return (
-      <input
-        ref={inputRef}
-        type="text"
-        value={value}
-        placeholder={initialName}
-        maxLength={15}
-        onChange={(e) => setValue(e.target.value)}
-        onBlur={handleSave}
-        onKeyDown={handleKeyDown}
-        onClick={(e) => e.stopPropagation()}
-        onPointerDown={(e) => e.stopPropagation()}
-        style={{
-          background: "transparent",
-          outline: "none",
-          border: "none",
-          ...({ fieldSizing: "content" } as React.CSSProperties & { fieldSizing?: string }),
-          ...inputStyle,
-        }}
-        className={`focus:ring-0 ${inputClassName}`}
-      />
+      <div ref={editingRootRef} className="inline-flex max-w-full">
+        <input
+          ref={inputRef}
+          type="text"
+          value={value}
+          placeholder={initialName}
+          maxLength={15}
+          onChange={(e) => setValue(e.target.value)}
+          onBlur={handleSave}
+          onKeyDown={handleKeyDown}
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+          style={{
+            background: "transparent",
+            outline: "none",
+            border: "none",
+            ...({ fieldSizing: "content" } as React.CSSProperties & { fieldSizing?: string }),
+            ...inputStyle,
+          }}
+          className={`focus:ring-0 ${inputClassName}`}
+        />
+      </div>
     );
   }
 
