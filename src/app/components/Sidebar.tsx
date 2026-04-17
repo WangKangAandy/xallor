@@ -7,6 +7,10 @@ interface MenuItem {
   label: string;
 }
 
+interface SidebarProps {
+  onOpenSettings?: () => void;
+}
+
 const MENU_ITEMS: MenuItem[] = [
   { Icon: LayoutDashboard, label: 'Dashboard' },
   { Icon: Star,            label: 'Favorites' },
@@ -15,8 +19,13 @@ const MENU_ITEMS: MenuItem[] = [
   { Icon: Settings,        label: 'Settings' },
 ];
 
-export function Sidebar() {
+export function Sidebar({ onOpenSettings }: SidebarProps) {
   const [hovered, setHovered] = useState(false);
+  const handleMenuClick = (label: string) => {
+    if (label === "Settings") {
+      onOpenSettings?.();
+    }
+  };
 
   return (
     <>
@@ -64,6 +73,7 @@ export function Sidebar() {
                     key={label}
                     className="group relative flex h-12 w-12 items-center justify-center rounded-2xl transition-all hover:bg-white/30"
                     title={label}
+                    onClick={() => handleMenuClick(label)}
                   >
                     <Icon className="h-5 w-5 text-gray-700" strokeWidth={1.5} />
                     <span className="pointer-events-none absolute left-full ml-3 whitespace-nowrap rounded-lg bg-gray-800 px-3 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
