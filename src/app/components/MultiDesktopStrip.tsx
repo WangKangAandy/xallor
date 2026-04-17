@@ -78,6 +78,7 @@ export function MultiDesktopStrip() {
             <div className="w-full max-w-[1200px] xl:max-w-[1280px]">
               <DesktopGrid
                 pageId={page.pageId}
+                isActivePage={pages[activePageIndex]?.pageId === page.pageId}
                 arrangeSession={arrangeSession}
                 items={page.items}
                 setItems={(u) => applyMultiPageItemsPatch({ [page.pageId]: u })}

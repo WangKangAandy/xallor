@@ -28,6 +28,8 @@ import {
 
 export type DesktopGridProps = {
   pageId?: string;
+  /** 多桌面下仅当前活动页启用全局框选手势监听，避免跨页重复写会话状态。 */
+  isActivePage?: boolean;
   arrangeSession: ArrangeSessionController;
   items: GridItemType[];
   setItems: React.Dispatch<React.SetStateAction<GridItemType[]>>;
@@ -68,6 +70,7 @@ function GridDropZone({
 
 export function DesktopGrid({
   pageId,
+  isActivePage = true,
   arrangeSession,
   items,
   setItems,
@@ -221,6 +224,7 @@ export function DesktopGrid({
     [findItemById],
   );
   useArrangeGestureController({
+    enabled: isActivePage,
     pageId,
     gridRef,
     arrangeSession,

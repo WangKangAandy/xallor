@@ -14,6 +14,7 @@ type ArrangeGestureSession = {
 };
 
 type UseArrangeGestureControllerParams = {
+  enabled?: boolean;
   pageId?: string;
   gridRef: RefObject<HTMLDivElement | null>;
   arrangeSession: ArrangeGestureSession;
@@ -22,6 +23,7 @@ type UseArrangeGestureControllerParams = {
 
 type ArrangeGestureDebugEvent = {
   phase: string;
+  ts?: number;
   x?: number;
   y?: number;
   distance?: number;
@@ -30,10 +32,20 @@ type ArrangeGestureDebugEvent = {
   isArrangeMode?: boolean;
 };
 
+type ArrangeGestureDebugApi = {
+  enable: (verbose?: boolean) => void;
+  disable: () => void;
+  clear: () => void;
+  dump: () => ArrangeGestureDebugEvent[];
+  summary: () => Record<string, number>;
+};
+
 declare global {
   interface Window {
     __arrangeGestureDebugEnabled?: boolean;
+    __arrangeGestureDebugVerbose?: boolean;
     __arrangeGestureDebugEvents?: ArrangeGestureDebugEvent[];
+    __arrangeGestureDebugApi?: ArrangeGestureDebugApi;
   }
 }
 
@@ -44,6 +56,7 @@ declare global {
  * - 首次命中即进入整理模式（无需等待 pointerup）
  */
 export function useArrangeGestureController({
+  enabled = true,
   pageId,
   gridRef,
   arrangeSession,
@@ -68,14 +81,46 @@ export function useArrangeGestureController({
   }, [arrangeSession, pageId, resolveSelectableIdsByGridItemId]);
 
   useEffect(() => {
+    const ensureDebugApi = () => {
+      if (window.__arrangeGestureDebugApi) return;
+      window.__arrangeGestureDebugApi = {
+        enable: (verbose = false) => {
+          window.__arrangeGestureDebugEnabled = true;
+          window.__arrangeGestureDebugVerbose = verbose;
+        },
+        disable: () => {
+          window.__arrangeGestureDebugEnabled = false;
+          window.__arrangeGestureDebugVerbose = false;
+        },
+        clear: () => {
+          window.__arrangeGestureDebugEvents = [];
+        },
+        dump: () => [...(window.__arrangeGestureDebugEvents ?? [])],
+        summary: () =>
+          (window.__arrangeGestureDebugEvents ?? []).reduce<Record<string, number>>((acc, event) => {
+            const key = event.phase ?? "unknown";
+            acc[key] = (acc[key] ?? 0) + 1;
+            return acc;
+          }, {}),
+      };
+    };
+
+    ensureDebugApi();
+    if (!enabled) return;
+
     const debugLog = (event: ArrangeGestureDebugEvent) => {
       if (!window.__arrangeGestureDebugEnabled) return;
       if (!window.__arrangeGestureDebugEvents) {
         window.__arrangeGestureDebugEvents = [];
       }
-      window.__arrangeGestureDebugEvents.push(event);
+      const enrichedEvent = { ...event, ts: Date.now() };
+      window.__arrangeGestureDebugEvents.push(enrichedEvent);
       if (window.__arrangeGestureDebugEvents.length > 400) {
         window.__arrangeGestureDebugEvents.shift();
+      }
+      if (window.__arrangeGestureDebugVerbose) {
+        // eslint-disable-next-line no-console
+        console.debug("[arrange-gesture]", enrichedEvent);
       }
     };
 
@@ -191,5 +236,5 @@ export function useArrangeGestureController({
         rafIdRef.current = null;
       }
     };
-  }, [gridRef]);
+  }, [enabled, gridRef]);
 }
