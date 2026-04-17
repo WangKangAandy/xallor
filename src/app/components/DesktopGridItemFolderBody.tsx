@@ -61,7 +61,7 @@ export function DesktopGridItemFolderBody({
     <GridDesktopCardSurface
       variant="panel"
       isMergeTarget={isMergeTarget}
-      className="group/folder relative flex h-full w-full cursor-pointer flex-col overflow-hidden"
+      className="group/folder relative flex h-full w-full cursor-pointer flex-col"
       style={
         isArrangeMode && isArrangeSelected
           ? {
