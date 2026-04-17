@@ -15,4 +15,15 @@ describe("filterAddIconCatalog", () => {
     const r = filterAddIconCatalog(ADD_ICON_CATALOG, "all", "git");
     expect(r.some((e) => e.kind === "site" && e.name === "GitHub")).toBe(true);
   });
+
+  /**
+   * 目的：组件目录项使用 i18n key，搜索须同时命中中英文关键字（不依赖当前界面语言）。
+   */
+  it("should_match_component_search_in_zh_or_en_haystack", () => {
+    const zh = filterAddIconCatalog(ADD_ICON_CATALOG, "components", "天气");
+    expect(zh.some((e) => e.kind === "component" && e.id === "cat-widget-weather")).toBe(true);
+
+    const en = filterAddIconCatalog(ADD_ICON_CATALOG, "components", "weather");
+    expect(en.some((e) => e.kind === "component" && e.id === "cat-widget-weather")).toBe(true);
+  });
 });

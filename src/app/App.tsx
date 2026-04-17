@@ -2,6 +2,7 @@ import { lazy, Suspense, useState } from "react";
 import { DEFAULT_NEW_TAB_BACKGROUND_URL, RemoteBackgroundImage } from "./components/feedback";
 import { SettingsSpotlightModal } from "./components/SettingsSpotlightModal";
 import { GlassSurface } from "./components/shared/GlassSurface";
+import { AppI18nProvider, useAppI18n } from "./i18n/AppI18n";
 import { useRestModeController } from "./useRestModeController";
 
 const SearchBar = lazy(async () => {
@@ -20,6 +21,7 @@ const Sidebar = lazy(async () => {
 });
 
 function MultiDesktopFallback() {
+  const { t } = useAppI18n();
   return (
     <GlassSurface
       variant="fallbackPanel"
@@ -27,7 +29,7 @@ function MultiDesktopFallback() {
       className="w-full min-h-[320px] max-w-[1200px] xl:max-w-[1280px] mx-auto flex items-center justify-center text-white/70 text-sm"
       aria-hidden
     >
-      加载桌面…
+      {t("app.loadingDesktop")}
     </GlassSurface>
   );
 }
@@ -47,7 +49,7 @@ function SearchBarFallback() {
   );
 }
 
-export default function App() {
+function AppContent() {
   const { isResting, handleDoubleClickCapture } = useRestModeController();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
@@ -118,5 +120,13 @@ export default function App() {
       <div className="pointer-events-none absolute inset-0 z-20" aria-hidden />
       <SettingsSpotlightModal open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AppI18nProvider>
+      <AppContent />
+    </AppI18nProvider>
   );
 }

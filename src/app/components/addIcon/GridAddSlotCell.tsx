@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import { GRID_CELL_SIZE } from "../desktopGridConstants";
 import { Z_GRID_ITEM_BASE } from "../desktopGridLayers";
 import { GlassSurface } from "../shared/GlassSurface";
+import { useAppI18n } from "../../i18n/AppI18n";
 
 type GridAddSlotCellProps = {
   onOpenAdd: () => void;
@@ -15,6 +16,7 @@ type GridAddSlotCellProps = {
  * 与站点卡片区分开，不占用 `DesktopGridItem` / DnD 链路。
  */
 export function GridAddSlotCell({ onOpenAdd, alwaysVisible = false }: GridAddSlotCellProps) {
+  const { t } = useAppI18n();
   const handleClick = (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -43,7 +45,7 @@ export function GridAddSlotCell({ onOpenAdd, alwaysVisible = false }: GridAddSlo
       >
         <button
           type="button"
-          aria-label="添加图标"
+          aria-label={t("addIcon.dialogTitle")}
           className="flex h-[88px] w-[88px] shrink-0 items-center justify-center rounded-[28px] text-white/95 outline-none transition-transform hover:brightness-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
           onClick={handleClick}
         >

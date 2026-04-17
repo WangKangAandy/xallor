@@ -1,16 +1,44 @@
 /** @vitest-environment jsdom */
 import { act } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { describe, expect, it } from "vitest";
+import { AppI18nProvider } from "../i18n/AppI18n";
 import { useArrangeSession } from "./arrange/useArrangeSession";
 import { DesktopGrid } from "./DesktopGrid";
 import type { GridItemType } from "./desktopGridTypes";
 
-function ArrangeSelectionHarness({ initialItems }: { initialItems: GridItemType[] }) {
+function ArrangeSelectionHarness({
+  initialItems,
+  pageId = "test-page",
+  enterArrangeModeOnMount = false,
+}: {
+  initialItems: GridItemType[];
+  pageId?: string;
+  /** 框选手势已上移到 MultiDesktopStrip；单测内用 session 进入整理态以对齐当前架构。 */
+  enterArrangeModeOnMount?: boolean;
+}) {
   const [items, setItems] = useState<GridItemType[]>(initialItems);
   const arrangeSession = useArrangeSession();
-  return <DesktopGrid arrangeSession={arrangeSession} items={items} setItems={setItems} showLabels isHydrated />;
+  const { enterArrangeMode } = arrangeSession;
+
+  useEffect(() => {
+    if (!enterArrangeModeOnMount) return;
+    enterArrangeMode(pageId);
+  }, [enterArrangeModeOnMount, pageId, enterArrangeMode]);
+
+  return (
+    <AppI18nProvider>
+      <DesktopGrid
+        pageId={pageId}
+        arrangeSession={arrangeSession}
+        items={items}
+        setItems={setItems}
+        showLabels
+        isHydrated
+      />
+    </AppI18nProvider>
+  );
 }
 
 function dispatchPointerEvent(target: EventTarget, type: string, x: number, y: number, button = 0) {
@@ -19,10 +47,9 @@ function dispatchPointerEvent(target: EventTarget, type: string, x: number, y: n
 
 describe("DesktopGrid arrange selection trigger", () => {
   /**
-   * 目的：保护“从外层空白区域起手框选也能触发”的回归点。
-   * 预期：在 dropzone 空白处起手并框住图标后，自动进入整理模式。
+   * 目的：进入整理模式后应出现「退出整理模式」入口（框选手势由 MultiDesktopStrip 统一监听，见 e2e）。
    */
-  it("should_enter_arrange_mode_when_selection_started_from_dropzone_blank_area_hits_item", () => {
+  it("should_show_exit_arrange_button_when_arrange_mode_active", () => {
     const container = document.createElement("div");
     document.body.appendChild(container);
     const root = createRoot(container);
@@ -36,35 +63,13 @@ describe("DesktopGrid arrange selection trigger", () => {
     ];
 
     act(() => {
-      root.render(<ArrangeSelectionHarness initialItems={items} />);
+      root.render(<ArrangeSelectionHarness initialItems={items} enterArrangeModeOnMount />);
     });
 
     const dropzone = container.querySelector('[data-testid="desktop-grid-dropzone"]') as HTMLDivElement | null;
     const item = container.querySelector('[data-grid-item-id="site-1"]') as HTMLDivElement | null;
     expect(dropzone).not.toBeNull();
     expect(item).not.toBeNull();
-
-    Object.defineProperty(item, "getBoundingClientRect", {
-      configurable: true,
-      value: () =>
-        ({
-          left: 320,
-          top: 220,
-          right: 420,
-          bottom: 320,
-          width: 100,
-          height: 100,
-          x: 320,
-          y: 220,
-          toJSON: () => ({}),
-        }) as DOMRect,
-    });
-
-    act(() => {
-      dispatchPointerEvent(dropzone as EventTarget, "pointerdown", 40, 40);
-      dispatchPointerEvent(window, "pointermove", 380, 300);
-      dispatchPointerEvent(window, "pointerup", 380, 300);
-    });
 
     expect(container.querySelector('button[aria-label="退出整理模式"]')).not.toBeNull();
 
@@ -205,7 +210,7 @@ describe("DesktopGrid arrange selection trigger", () => {
     ];
 
     act(() => {
-      root.render(<ArrangeSelectionHarness initialItems={items} />);
+      root.render(<ArrangeSelectionHarness initialItems={items} enterArrangeModeOnMount />);
     });
 
     const dropzone = container.querySelector('[data-testid="desktop-grid-dropzone"]') as HTMLDivElement | null;
@@ -213,29 +218,11 @@ describe("DesktopGrid arrange selection trigger", () => {
     expect(dropzone).not.toBeNull();
     expect(folder).not.toBeNull();
 
-    Object.defineProperty(folder, "getBoundingClientRect", {
-      configurable: true,
-      value: () =>
-        ({
-          left: 320,
-          top: 220,
-          right: 520,
-          bottom: 320,
-          width: 200,
-          height: 100,
-          x: 320,
-          y: 220,
-          toJSON: () => ({}),
-        }) as DOMRect,
-    });
+    expect(container.querySelector('button[aria-label="退出整理模式"]')).not.toBeNull();
 
     act(() => {
-      dispatchPointerEvent(dropzone as EventTarget, "pointerdown", 40, 40);
-      dispatchPointerEvent(window, "pointermove", 380, 280);
-      dispatchPointerEvent(window, "pointerup", 380, 280);
+      (folder as HTMLDivElement).click();
     });
-
-    expect(container.querySelector('button[aria-label="退出整理模式"]')).not.toBeNull();
     expect(container.querySelector('button[aria-label="展开整理"]')).not.toBeNull();
 
     // 仅点击文件夹卡片本体，不应直接展开内部整理态。

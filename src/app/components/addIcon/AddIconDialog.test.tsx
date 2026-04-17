@@ -5,6 +5,7 @@ import { act } from "react";
 import { describe, expect, it } from "vitest";
 import { createRoot } from "react-dom/client";
 import { AddIconDialog } from "./AddIconDialog";
+import { AppI18nProvider } from "../../i18n/AppI18n";
 
 describe("AddIconDialog", () => {
   /**
@@ -18,7 +19,9 @@ describe("AddIconDialog", () => {
 
     act(() => {
       root.render(
-        <AddIconDialog open onOpenChange={onOpenChange} contextSiteId="site-1" />,
+        <AppI18nProvider>
+          <AddIconDialog open onOpenChange={onOpenChange} contextSiteId="site-1" />
+        </AppI18nProvider>,
       );
     });
 
@@ -30,7 +33,9 @@ describe("AddIconDialog", () => {
 
     act(() => {
       root.render(
-        <AddIconDialog open={false} onOpenChange={onOpenChange} contextSiteId={null} />,
+        <AppI18nProvider>
+          <AddIconDialog open={false} onOpenChange={onOpenChange} contextSiteId={null} />
+        </AppI18nProvider>,
       );
     });
 
@@ -54,7 +59,9 @@ describe("AddIconDialog", () => {
 
     act(() => {
       root.render(
-        <AddIconDialog open onOpenChange={() => {}} contextSiteId="site-1" />,
+        <AppI18nProvider>
+          <AddIconDialog open onOpenChange={() => {}} contextSiteId="site-1" />
+        </AppI18nProvider>,
       );
     });
 
@@ -103,7 +110,9 @@ describe("AddIconDialog", () => {
 
     act(() => {
       root.render(
-        <AddIconDialog open onOpenChange={() => {}} contextSiteId={null} />,
+        <AppI18nProvider>
+          <AddIconDialog open onOpenChange={() => {}} contextSiteId={null} />
+        </AppI18nProvider>,
       );
     });
 

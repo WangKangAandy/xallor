@@ -9,6 +9,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
+import { useAppI18n, type AppLocale } from "../i18n/AppI18n";
 
 type SettingsSpotlightModalProps = {
   open: boolean;
@@ -16,40 +17,41 @@ type SettingsSpotlightModalProps = {
 };
 
 const SECTIONS = [
-  { id: "general", label: "General", Icon: SlidersHorizontal },
-  { id: "appearance", label: "Appearance", Icon: Sparkles },
-  { id: "search", label: "Search Engine", Icon: Search },
-  { id: "new-tab", label: "New Tab", Icon: MonitorCog },
-  { id: "widgets", label: "Widgets", Icon: Boxes },
-  { id: "privacy", label: "Privacy & Security", Icon: Shield },
-  { id: "about", label: "About", Icon: Globe },
+  { id: "general", labelKey: "settings.general", Icon: SlidersHorizontal },
+  { id: "appearance", labelKey: "settings.appearance", Icon: Sparkles },
+  { id: "search", labelKey: "settings.searchEngine", Icon: Search },
+  { id: "new-tab", labelKey: "settings.newTab", Icon: MonitorCog },
+  { id: "widgets", labelKey: "settings.widgets", Icon: Boxes },
+  { id: "privacy", labelKey: "settings.privacySecurity", Icon: Shield },
+  { id: "about", labelKey: "settings.about", Icon: Globe },
 ] as const;
 
 const TOGGLES = [
   {
-    title: "Show Weather",
-    desc: "Display weather widget on new tab page.",
+    titleKey: "settings.showWeather",
+    descKey: "settings.showWeatherDesc",
     enabled: true,
   },
   {
-    title: "Show Shortcut Suggestions",
-    desc: "Automatically suggest website shortcuts.",
+    titleKey: "settings.showShortcutSuggestions",
+    descKey: "settings.showShortcutSuggestionsDesc",
     enabled: true,
   },
   {
-    title: "Show Recently Visited",
-    desc: "Display recently visited websites.",
+    titleKey: "settings.showRecentlyVisited",
+    descKey: "settings.showRecentlyVisitedDesc",
     enabled: false,
   },
 ] as const;
 
 export function SettingsSpotlightModal({ open, onClose }: SettingsSpotlightModalProps) {
+  const { locale, setLocale, t } = useAppI18n();
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 md:p-10">
       <button
-        aria-label="关闭设置"
+        aria-label={t("settings.close")}
         className="absolute inset-0 bg-slate-900/30 backdrop-blur-[1px]"
         onClick={onClose}
       />
@@ -63,9 +65,9 @@ export function SettingsSpotlightModal({ open, onClose }: SettingsSpotlightModal
       <div className="relative w-full max-w-[980px] overflow-hidden rounded-[24px] border border-white/55 bg-white/90 shadow-[0_30px_90px_rgba(2,6,23,0.5),0_12px_32px_rgba(15,23,42,0.38)] backdrop-blur-xl">
         <div className="grid min-h-[560px] grid-cols-[250px_1fr]">
           <aside className="border-r border-slate-200/65 bg-white/58 px-4 py-5">
-            <div className="mb-4 px-2 text-lg font-semibold text-slate-800">Settings</div>
+            <div className="mb-4 px-2 text-lg font-semibold text-slate-800">{t("settings.title")}</div>
             <nav className="space-y-1">
-              {SECTIONS.map(({ id, label, Icon }) => {
+              {SECTIONS.map(({ id, labelKey, Icon }) => {
                 const active = id === "general";
                 return (
                   <button
@@ -75,7 +77,7 @@ export function SettingsSpotlightModal({ open, onClose }: SettingsSpotlightModal
                     }`}
                   >
                     <Icon className="h-4 w-4 opacity-85" />
-                    <span>{label}</span>
+                    <span>{t(labelKey)}</span>
                   </button>
                 );
               })}
@@ -89,12 +91,12 @@ export function SettingsSpotlightModal({ open, onClose }: SettingsSpotlightModal
                 <input
                   readOnly
                   value=""
-                  placeholder="Search settings..."
+                  placeholder={t("settings.searchPlaceholder")}
                   className="w-full rounded-xl border border-slate-200 bg-white/70 py-2 pl-9 pr-3 text-sm text-slate-700 outline-none"
                 />
               </div>
               <button
-                aria-label="关闭"
+                aria-label={t("settings.close")}
                 className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-900/5 hover:text-slate-600"
                 onClick={onClose}
               >
@@ -104,27 +106,32 @@ export function SettingsSpotlightModal({ open, onClose }: SettingsSpotlightModal
 
             <div className="space-y-6 px-6 py-6 text-slate-800">
               <header>
-                <h2 className="text-base font-semibold">General</h2>
+                <h2 className="text-base font-semibold">{t("settings.general")}</h2>
               </header>
 
               <div className="space-y-3 rounded-2xl border border-slate-200/70 bg-white/72 p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <div className="text-sm font-medium">Language</div>
-                    <div className="text-xs text-slate-500">Choose your preferred language.</div>
+                    <div className="text-sm font-medium">{t("settings.language")}</div>
+                    <div className="text-xs text-slate-500">{t("settings.languageDesc")}</div>
                   </div>
-                  <button className="rounded-lg border border-slate-200 bg-white/85 px-3 py-1.5 text-xs text-slate-600">
-                    English
-                  </button>
+                  <select
+                    value={locale}
+                    onChange={(event) => setLocale(event.target.value as AppLocale)}
+                    className="rounded-lg border border-slate-200 bg-white/85 px-3 py-1.5 text-xs text-slate-600 outline-none"
+                  >
+                    <option value="zh-CN">{t("settings.languageOptionZh")}</option>
+                    <option value="en-US">{t("settings.languageOptionEn")}</option>
+                  </select>
                 </div>
                 <div className="h-px bg-slate-200/70" />
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <div className="text-sm font-medium">Open on startup</div>
-                    <div className="text-xs text-slate-500">Open New Tab Page when browser starts.</div>
+                    <div className="text-sm font-medium">{t("settings.openOnStartup")}</div>
+                    <div className="text-xs text-slate-500">{t("settings.openOnStartupDesc")}</div>
                   </div>
                   <button className="rounded-lg border border-slate-200 bg-white/85 px-3 py-1.5 text-xs text-slate-600">
-                    New Tab Page
+                    {t("settings.newTabPage")}
                   </button>
                 </div>
               </div>
@@ -132,13 +139,13 @@ export function SettingsSpotlightModal({ open, onClose }: SettingsSpotlightModal
               <div className="space-y-2 rounded-2xl border border-slate-200/70 bg-white/72 p-4">
                 <div className="mb-2 flex items-center gap-2 text-sm font-medium">
                   <Bell className="h-4 w-4 text-slate-500" />
-                  Startup Content
+                  {t("settings.startupContent")}
                 </div>
                 {TOGGLES.map((item) => (
-                  <div key={item.title} className="flex items-center justify-between gap-3 py-2">
+                  <div key={item.titleKey} className="flex items-center justify-between gap-3 py-2">
                     <div>
-                      <div className="text-sm">{item.title}</div>
-                      <div className="text-xs text-slate-500">{item.desc}</div>
+                      <div className="text-sm">{t(item.titleKey)}</div>
+                      <div className="text-xs text-slate-500">{t(item.descKey)}</div>
                     </div>
                     <span
                       className={`inline-flex h-6 w-10 items-center rounded-full p-0.5 transition-colors ${

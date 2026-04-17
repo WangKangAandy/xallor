@@ -6,6 +6,7 @@ import { AddIconPickerPanel } from "./AddIconPickerPanel";
 import { AddIconPreviewPanel } from "./AddIconPreviewPanel";
 import type { AddIconSubmitPayload } from "./addIconSubmitPayload";
 import { useAddIconCatalogModel } from "./useAddIconCatalogModel";
+import { useAppI18n } from "../../i18n/AppI18n";
 
 export type { AddIconSubmitPayload } from "./addIconSubmitPayload";
 
@@ -25,6 +26,7 @@ export type AddIconDialogProps = {
  * 「添加图标」模块：无顶栏标题；左栏分区 + 右栏预览（含关闭）；目录见 `addIconCatalog.ts`。
  */
 export function AddIconDialog({ open, onOpenChange, contextSiteId, onConfirmAdd }: AddIconDialogProps) {
+  const { t } = useAppI18n();
   const titleId = useId();
   const {
     pickerFilter,
@@ -95,7 +97,7 @@ export function AddIconDialog({ open, onOpenChange, contextSiteId, onConfirmAdd 
     >
       <button
         type="button"
-        aria-label="关闭"
+        aria-label={t("addIcon.closeDialog")}
         className="absolute inset-0 bg-black/35 backdrop-blur-[2px] transition-opacity"
         onClick={handleClose}
       />
@@ -108,7 +110,7 @@ export function AddIconDialog({ open, onOpenChange, contextSiteId, onConfirmAdd 
         className="relative z-[1] flex h-[min(680px,calc(100dvh-1.5rem))] max-h-[min(680px,calc(100dvh-1.5rem))] w-full max-w-[min(1400px,92vw)] flex-col overflow-hidden shadow-2xl"
       >
         <span id={titleId} className="sr-only">
-          添加图标
+          {t("addIcon.dialogTitle")}
         </span>
 
         <div className="flex min-h-0 flex-1 flex-col sm:flex-row">

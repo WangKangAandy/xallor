@@ -3,6 +3,7 @@ import { act } from "react";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { describe, expect, it } from "vitest";
+import { AppI18nProvider } from "../i18n/AppI18n";
 import { useArrangeSession } from "./arrange/useArrangeSession";
 import { DesktopGrid } from "./DesktopGrid";
 import type { GridItemType } from "./desktopGridTypes";
@@ -10,7 +11,11 @@ import type { GridItemType } from "./desktopGridTypes";
 function DesktopGridHarness() {
   const [items, setItems] = useState<GridItemType[]>([]);
   const arrangeSession = useArrangeSession();
-  return <DesktopGrid arrangeSession={arrangeSession} items={items} setItems={setItems} showLabels isHydrated />;
+  return (
+    <AppI18nProvider>
+      <DesktopGrid arrangeSession={arrangeSession} items={items} setItems={setItems} showLabels isHydrated />
+    </AppI18nProvider>
+  );
 }
 
 async function waitForBodyText(text: string, timeoutMs = 1200) {

@@ -2,6 +2,7 @@ import { Search, X } from "lucide-react";
 import { ADD_ICON_PICKER_FILTERS, type AddIconPickerFilter } from "./addIconPickerConstants";
 import type { AddIconCatalogEntry } from "./addIconCatalog";
 import { AddIconPickerSection } from "./AddIconPickerSection";
+import { useAppI18n } from "../../i18n/AppI18n";
 
 type AddIconPickerPanelProps = {
   pickerFilter: AddIconPickerFilter;
@@ -25,6 +26,7 @@ export function AddIconPickerPanel({
   selectedId,
   onSelectId,
 }: AddIconPickerPanelProps) {
+  const { t } = useAppI18n();
   const siteEntries = filteredEntries.filter((e) => e.kind === "site");
   const componentEntries = filteredEntries.filter((e) => e.kind === "component");
 
@@ -41,7 +43,7 @@ export function AddIconPickerPanel({
           <Search className="h-4 w-4 shrink-0 text-gray-400" aria-hidden />
           <input
             type="text"
-            placeholder="搜索站点或输入网址（如：github.com）"
+            placeholder={t("addIcon.searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => onSearchQueryChange(e.target.value)}
             className="min-w-0 flex-1 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 outline-none"
@@ -50,7 +52,7 @@ export function AddIconPickerPanel({
           {searchQuery ? (
             <button
               type="button"
-              aria-label="清除搜索"
+              aria-label={t("addIcon.clearSearch")}
               className="shrink-0 rounded-full p-0.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
               onClick={() => onSearchQueryChange("")}
             >
@@ -59,7 +61,7 @@ export function AddIconPickerPanel({
           ) : null}
         </div>
 
-        <div className="flex flex-wrap gap-1.5" role="tablist" aria-label="列表类型">
+        <div className="flex flex-wrap gap-1.5" role="tablist" aria-label={t("addIcon.filterTabLabel")}>
           {ADD_ICON_PICKER_FILTERS.map((f) => (
             <button
               key={f.id}
@@ -74,7 +76,11 @@ export function AddIconPickerPanel({
                   : "bg-transparent text-gray-600 hover:bg-white/50",
               ].join(" ")}
             >
-              {f.label}
+              {f.id === "all"
+                ? t("addIcon.filterAll")
+                : f.id === "sites"
+                  ? t("addIcon.filterSites")
+                  : t("addIcon.filterComponents")}
             </button>
           ))}
         </div>
@@ -83,13 +89,14 @@ export function AddIconPickerPanel({
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 pb-4 sm:px-5">
         {!hasAnySection ? (
           <div className="rounded-xl border border-dashed border-gray-300/80 bg-white/50 px-4 py-10 text-center text-xs text-gray-500">
-            无匹配项，试试其它关键字或筛选。
+            {t("addIcon.noResults")}
           </div>
         ) : (
           <>
             {showSites ? (
               <AddIconPickerSection
-                title="站点"
+                title={t("addIcon.sectionSites")}
+                viewMoreLabel={t("addIcon.viewMore")}
                 gridVariant="site"
                 entries={siteEntries}
                 selectedId={selectedId}
@@ -98,7 +105,8 @@ export function AddIconPickerPanel({
             ) : null}
             {showComponents ? (
               <AddIconPickerSection
-                title="组件"
+                title={t("addIcon.sectionComponents")}
+                viewMoreLabel={t("addIcon.viewMore")}
                 gridVariant="component"
                 entries={componentEntries}
                 selectedId={selectedId}

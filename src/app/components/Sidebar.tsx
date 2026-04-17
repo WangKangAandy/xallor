@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { LayoutDashboard, Star, Clock, User, Settings, type LucideIcon } from 'lucide-react';
 import { GlassSurface } from './shared/GlassSurface';
+import { useAppI18n } from "../i18n/AppI18n";
 
 interface MenuItem {
   Icon: LucideIcon;
-  label: string;
+  labelKey: "sidebar.dashboard" | "sidebar.favorites" | "sidebar.recent" | "sidebar.profile" | "sidebar.settings";
 }
 
 interface SidebarProps {
@@ -12,17 +13,18 @@ interface SidebarProps {
 }
 
 const MENU_ITEMS: MenuItem[] = [
-  { Icon: LayoutDashboard, label: 'Dashboard' },
-  { Icon: Star,            label: 'Favorites' },
-  { Icon: Clock,           label: 'Recent' },
-  { Icon: User,            label: 'Profile' },
-  { Icon: Settings,        label: 'Settings' },
+  { Icon: LayoutDashboard, labelKey: "sidebar.dashboard" },
+  { Icon: Star, labelKey: "sidebar.favorites" },
+  { Icon: Clock, labelKey: "sidebar.recent" },
+  { Icon: User, labelKey: "sidebar.profile" },
+  { Icon: Settings, labelKey: "sidebar.settings" },
 ];
 
 export function Sidebar({ onOpenSettings }: SidebarProps) {
+  const { t } = useAppI18n();
   const [hovered, setHovered] = useState(false);
-  const handleMenuClick = (label: string) => {
-    if (label === "Settings") {
+  const handleMenuClick = (labelKey: MenuItem["labelKey"]) => {
+    if (labelKey === "sidebar.settings") {
       onOpenSettings?.();
     }
   };
@@ -38,7 +40,7 @@ export function Sidebar({ onOpenSettings }: SidebarProps) {
         }}
       >
         {MENU_ITEMS.map((item) => (
-          <div key={item.label} className="h-[4px] w-[4px] rounded-full bg-white/70" />
+          <div key={item.labelKey} className="h-[4px] w-[4px] rounded-full bg-white/70" />
         ))}
       </div>
 
@@ -68,16 +70,16 @@ export function Sidebar({ onOpenSettings }: SidebarProps) {
               }}
             >
               <div className="flex flex-col gap-4">
-                {MENU_ITEMS.map(({ Icon, label }) => (
+                {MENU_ITEMS.map(({ Icon, labelKey }) => (
                   <button
-                    key={label}
+                    key={labelKey}
                     className="group relative flex h-12 w-12 items-center justify-center rounded-2xl transition-all hover:bg-white/30"
-                    title={label}
-                    onClick={() => handleMenuClick(label)}
+                    title={t(labelKey)}
+                    onClick={() => handleMenuClick(labelKey)}
                   >
                     <Icon className="h-5 w-5 text-gray-700" strokeWidth={1.5} />
                     <span className="pointer-events-none absolute left-full ml-3 whitespace-nowrap rounded-lg bg-gray-800 px-3 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
-                      {label}
+                      {t(labelKey)}
                     </span>
                   </button>
                 ))}

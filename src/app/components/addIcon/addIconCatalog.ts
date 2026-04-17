@@ -1,3 +1,4 @@
+import { getComponentCatalogSearchHaystack, type MessageKey } from "../../i18n/AppI18n";
 import type { AddIconPickerFilter } from "./addIconPickerConstants";
 import { ADDABLE_WIDGET_TYPES, type AddableWidgetType } from "../widgets/addableWidgetTypes";
 
@@ -14,24 +15,27 @@ export type AddIconCatalogSite = {
 export type AddIconCatalogComponent = {
   kind: "component";
   id: string;
-  name: string;
-  subtitle: string;
+  nameKey: MessageKey;
+  subtitleKey: MessageKey;
   widgetType: AddableWidgetType;
 };
 
 export type AddIconCatalogEntry = AddIconCatalogSite | AddIconCatalogComponent;
 
 /** 内置演示目录（与图二「左栏网格」对应，仅占位数据）。 */
-const ADD_ICON_COMPONENT_META: Record<AddableWidgetType, { id: string; name: string; subtitle: string }> = {
+const ADD_ICON_COMPONENT_META: Record<
+  AddableWidgetType,
+  { id: string; nameKey: MessageKey; subtitleKey: MessageKey }
+> = {
   weather: {
     id: "cat-widget-weather",
-    name: "天气",
-    subtitle: "实时天气",
+    nameKey: "addIcon.widgetWeatherName",
+    subtitleKey: "addIcon.widgetWeatherSubtitle",
   },
   calendar: {
     id: "cat-widget-calendar",
-    name: "日历",
-    subtitle: "月视图",
+    nameKey: "addIcon.widgetCalendarName",
+    subtitleKey: "addIcon.widgetCalendarSubtitle",
   },
 };
 
@@ -102,7 +106,8 @@ function matchesSearch(entry: AddIconCatalogEntry, q: string): boolean {
       entry.domain.toLowerCase().includes(s)
     );
   }
-  return entry.name.toLowerCase().includes(s) || entry.subtitle.toLowerCase().includes(s);
+  const haystack = getComponentCatalogSearchHaystack(entry.nameKey, entry.subtitleKey);
+  return haystack.includes(s);
 }
 
 /**

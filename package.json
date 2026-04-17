@@ -7,6 +7,7 @@
     "build": "node ./node_modules/vite/bin/vite.js build",
     "dev": "node ./node_modules/vite/bin/vite.js",
     "typecheck": "tsc --noEmit -p tsconfig.json",
+    "i18n:validate": "node scripts/validate-i18n.mjs",
     "lint": "eslint src",
     "test": "vitest",
     "test:run": "vitest run",

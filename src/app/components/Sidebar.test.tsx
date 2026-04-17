@@ -4,6 +4,7 @@
 import { act } from "react";
 import { describe, expect, it } from "vitest";
 import { createRoot } from "react-dom/client";
+import { AppI18nProvider } from "../i18n/AppI18n";
 import { Sidebar } from "./Sidebar";
 
 describe("Sidebar", () => {
@@ -17,7 +18,11 @@ describe("Sidebar", () => {
     const root = createRoot(container);
 
     act(() => {
-      root.render(<Sidebar />);
+      root.render(
+        <AppI18nProvider>
+          <Sidebar />
+        </AppI18nProvider>,
+      );
     });
 
     expect(document.querySelector('[data-testid="sidebar-hover-zone"]')).not.toBeNull();
@@ -38,7 +43,11 @@ describe("Sidebar", () => {
     const root = createRoot(container);
 
     act(() => {
-      root.render(<Sidebar />);
+      root.render(
+        <AppI18nProvider>
+          <Sidebar />
+        </AppI18nProvider>,
+      );
     });
 
     const hoverZone = container.querySelector('[data-testid="sidebar-hover-zone"]') as HTMLDivElement | null;

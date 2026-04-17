@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link2, X } from "lucide-react";
 import { FaviconIcon } from "../shared/FaviconIcon";
 import type { AddIconCatalogEntry } from "./addIconCatalog";
+import { useAppI18n } from "../../i18n/AppI18n";
 import {
   type AddIconSubmitPayload,
   type SiteIconVariantId,
@@ -124,6 +125,7 @@ export function AddIconPreviewPanel({
   onAdd,
   onContinueAdding,
 }: AddIconPreviewPanelProps) {
+  const { t } = useAppI18n();
   const canSubmit = Boolean(selected);
   const previewHeadingId = "add-icon-preview-heading";
 
@@ -182,11 +184,11 @@ export function AddIconPreviewPanel({
       <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-4 sm:px-5 sm:pb-5 sm:pt-5">
         <div className="mb-2 flex shrink-0 items-center justify-between gap-2">
           <h2 id={previewHeadingId} className="text-sm font-semibold text-gray-900">
-            预览
+            {t("addIcon.preview")}
           </h2>
           <button
             type="button"
-            aria-label="关闭对话框"
+            aria-label={t("addIcon.closeDialog")}
             className="rounded-full p-1.5 text-gray-500 hover:bg-gray-100/80 hover:text-gray-800"
             onClick={onClose}
           >
@@ -198,9 +200,9 @@ export function AddIconPreviewPanel({
           <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 py-2 [scrollbar-width:thin]">
             {!selected ? (
               <>
-                <p className="text-xs leading-relaxed text-gray-500">在左侧选择一个站点或组件，此处显示摘要。</p>
+                <p className="text-xs leading-relaxed text-gray-500">{t("addIcon.previewHint")}</p>
                 <div className="mt-4 flex min-h-[120px] items-center justify-center rounded-xl border border-dashed border-gray-200/90 bg-gray-50/50 p-4 text-center text-xs text-gray-400">
-                  未选择
+                  {t("addIcon.unselected")}
                 </div>
               </>
             ) : selected.kind === "site" ? (
@@ -220,7 +222,7 @@ export function AddIconPreviewPanel({
                         <p className="mt-0.5 truncate text-xs text-gray-500">{siteDraftUrl || selected.url}</p>
                       </div>
                     </div>
-                    <span className={KIND_TAG_EMERALD}>站点</span>
+                    <span className={KIND_TAG_EMERALD}>{t("addIcon.kindSite")}</span>
                   </div>
                   <div className="flex flex-col items-center justify-center border-t border-gray-200/80 pt-3">
                     <SitePreviewHeroIcon
@@ -235,7 +237,7 @@ export function AddIconPreviewPanel({
                 <div className="space-y-2.5">
                   <div>
                     <label htmlFor="add-icon-site-name" className="text-xs font-medium text-gray-600">
-                      名称
+                      {t("addIcon.fieldName")}
                     </label>
                     <div className="relative mt-1">
                       <input
@@ -254,7 +256,7 @@ export function AddIconPreviewPanel({
                   </div>
                   <div>
                     <label htmlFor="add-icon-site-url" className="text-xs font-medium text-gray-600">
-                      网址
+                      {t("addIcon.fieldUrl")}
                     </label>
                     <div className="relative mt-1">
                       <input
@@ -276,7 +278,7 @@ export function AddIconPreviewPanel({
 
                 <div>
                   <p id="add-icon-site-icon-label" className="text-xs font-medium text-gray-600">
-                    图标
+                    {t("addIcon.fieldIcon")}
                   </p>
                   <div
                     className="mt-1.5 flex flex-wrap gap-2"
@@ -287,7 +289,7 @@ export function AddIconPreviewPanel({
                       type="button"
                       role="radio"
                       aria-checked={siteIconVariant === 0}
-                      aria-label="图标：彩色"
+                      aria-label={t("addIcon.iconColor")}
                       onClick={() => setSiteIconVariant(0)}
                       className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white p-1 transition-colors ${siteIconOptionClasses(siteIconVariant === 0, "default")}`}
                     >
@@ -297,7 +299,7 @@ export function AddIconPreviewPanel({
                       type="button"
                       role="radio"
                       aria-checked={siteIconVariant === 1}
-                      aria-label="图标：反色"
+                      aria-label={t("addIcon.iconInverted")}
                       onClick={() => setSiteIconVariant(1)}
                       className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-gray-900 p-1 hover:bg-gray-800 ${siteIconOptionClasses(siteIconVariant === 1, "dark")}`}
                     >
@@ -312,7 +314,7 @@ export function AddIconPreviewPanel({
                       type="button"
                       role="radio"
                       aria-checked={siteIconVariant === 2}
-                      aria-label="图标：小尺寸"
+                      aria-label={t("addIcon.iconSmall")}
                       onClick={() => setSiteIconVariant(2)}
                       className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white p-1 ${siteIconOptionClasses(siteIconVariant === 2, "default")}`}
                     >
@@ -322,7 +324,7 @@ export function AddIconPreviewPanel({
                       type="button"
                       role="radio"
                       aria-checked={siteIconVariant === 3}
-                      aria-label="更多图标选项"
+                      aria-label={t("addIcon.iconMore")}
                       onClick={() => setSiteIconVariant(3)}
                       className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-gray-50/80 text-lg font-medium text-gray-500 transition-colors hover:bg-gray-100 ${siteIconOptionClasses(siteIconVariant === 3, "more")}`}
                     >
@@ -342,29 +344,29 @@ export function AddIconPreviewPanel({
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="truncate text-sm font-semibold text-gray-900">{selected.name}</p>
-                      <span className={KIND_TAG_EMERALD}>组件</span>
+                      <p className="truncate text-sm font-semibold text-gray-900">{t(selected.nameKey)}</p>
+                      <span className={KIND_TAG_EMERALD}>{t("addIcon.kindComponent")}</span>
                     </div>
-                    <p className="mt-0.5 truncate text-xs text-gray-500">{selected.subtitle}</p>
+                    <p className="mt-0.5 truncate text-xs text-gray-500">{t(selected.subtitleKey)}</p>
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-gray-600">组件尺寸</p>
+                  <p className="text-xs font-medium text-gray-600">{t("addIcon.componentSizes")}</p>
                   <div className="mt-2 grid grid-cols-3 gap-1.5 text-center text-[10px] text-gray-600">
-                    <div className="rounded-lg border border-gray-100/90 bg-gray-50/50 py-2">大 4×2</div>
-                    <div className="rounded-lg border border-gray-100/90 bg-gray-50/50 py-2">中 2×2</div>
-                    <div className="rounded-lg border border-gray-100/90 bg-gray-50/50 py-2">小 2×1</div>
+                    <div className="rounded-lg border border-gray-100/90 bg-gray-50/50 py-2">{t("addIcon.sizeLarge")}</div>
+                    <div className="rounded-lg border border-gray-100/90 bg-gray-50/50 py-2">{t("addIcon.sizeMedium")}</div>
+                    <div className="rounded-lg border border-gray-100/90 bg-gray-50/50 py-2">{t("addIcon.sizeSmall")}</div>
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-gray-600">图样示例</p>
+                  <p className="text-xs font-medium text-gray-600">{t("addIcon.preview")}</p>
                   <div
                     className={`mt-2 flex min-h-[120px] flex-1 flex-col items-center justify-center p-4 text-[11px] text-emerald-900/70 ${PREVIEW_PATTERN_SURFACE}`}
                   >
                     <span className="text-3xl" aria-hidden>
                       {selected.widgetType === "weather" ? "⛅" : "📅"}
                     </span>
-                    <p className="mt-2 text-xs font-medium text-emerald-900/80">预览效果（占位）</p>
+                    <p className="mt-2 text-xs font-medium text-emerald-900/80">{t("addIcon.previewPattern")}</p>
                   </div>
                 </div>
               </div>
@@ -379,7 +381,7 @@ export function AddIconPreviewPanel({
                 className="rounded-xl border border-gray-200/90 bg-white px-3 py-2 text-sm font-medium text-gray-800 shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:bg-gray-50/90 disabled:cursor-not-allowed disabled:opacity-45"
                 onClick={handleAddClick}
               >
-                添加
+                {t("addIcon.add")}
               </button>
               <button
                 type="button"
@@ -387,7 +389,7 @@ export function AddIconPreviewPanel({
                 className="rounded-xl border border-gray-200/90 bg-white px-3 py-2 text-sm font-medium text-gray-800 shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:bg-gray-50/90 disabled:cursor-not-allowed disabled:opacity-45"
                 onClick={handleContinueClick}
               >
-                继续添加
+                {t("addIcon.continueAdd")}
               </button>
             </div>
           </div>

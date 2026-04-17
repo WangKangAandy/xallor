@@ -1,5 +1,6 @@
 import type { AddIconCatalogEntry } from "./addIconCatalog";
 import { AddIconPickerTile } from "./AddIconPickerTile";
+import { useAppI18n } from "../../i18n/AppI18n";
 
 type AddIconPickerGridProps = {
   entries: AddIconCatalogEntry[];
@@ -17,10 +18,11 @@ const COMPONENT_GRID = SITE_GRID;
  * 分区内的图标列表（listbox）。
  */
 export function AddIconPickerGrid({ entries, selectedId, onSelectId, gridVariant }: AddIconPickerGridProps) {
+  const { t } = useAppI18n();
   if (entries.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-gray-200/90 bg-white/40 px-4 py-8 text-center text-xs text-gray-500">
-        无匹配项，试试其它关键字或筛选。
+        {t("addIcon.noResults")}
       </div>
     );
   }
@@ -31,7 +33,7 @@ export function AddIconPickerGrid({ entries, selectedId, onSelectId, gridVariant
     <div
       className={gridClass}
       role="listbox"
-      aria-label="可选图标"
+      aria-label={t("addIcon.selectableIcons")}
       aria-multiselectable={false}
     >
       {entries.map((entry) => (

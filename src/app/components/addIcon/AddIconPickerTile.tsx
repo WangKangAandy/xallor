@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import { useAppI18n } from "../../i18n/AppI18n";
 import { FaviconIcon } from "../shared/FaviconIcon";
 import type { AddIconCatalogEntry } from "./addIconCatalog";
 
@@ -23,6 +24,7 @@ const selectedSurface =
  * 站点：方形磁贴；组件：与站点同列宽（同网格），图标区与站点同一套 h-8 / sm:h-9。
  */
 export function AddIconPickerTile({ entry, selected, onSelect }: AddIconPickerTileProps) {
+  const { t } = useAppI18n();
   if (entry.kind === "site") {
     return (
       <button
@@ -79,8 +81,8 @@ export function AddIconPickerTile({ entry, selected, onSelect }: AddIconPickerTi
         {entry.widgetType === "weather" ? "⛅" : "📅"}
       </div>
       <div className="min-w-0 flex-1 pr-3 text-left">
-        <p className="line-clamp-2 text-[10px] font-semibold leading-tight text-gray-900 sm:text-[11px]">{entry.name}</p>
-        <p className="mt-px line-clamp-2 text-[9px] leading-relaxed text-gray-500 sm:text-[10px]">{entry.subtitle}</p>
+        <p className="line-clamp-2 text-[10px] font-semibold leading-tight text-gray-900 sm:text-[11px]">{t(entry.nameKey)}</p>
+        <p className="mt-px line-clamp-2 text-[9px] leading-relaxed text-gray-500 sm:text-[10px]">{t(entry.subtitleKey)}</p>
       </div>
     </button>
   );

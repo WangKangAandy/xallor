@@ -25,6 +25,7 @@ import {
   type WidgetConflictStrategy,
   type WidgetPageLayoutState,
 } from "./widgets/layoutSchema";
+import { useAppI18n } from "../i18n/AppI18n";
 
 export type DesktopGridProps = {
   pageId?: string;
@@ -90,6 +91,7 @@ export function DesktopGrid({
   onToggleAutoCompact,
   onChangeConflictStrategy,
 }: DesktopGridProps) {
+  const { t } = useAppI18n();
   const pinnedItemIds = useMemo(
     () => new Set((widgetLayout?.layout ?? []).filter((entry) => entry.mode === "pinned").map((entry) => entry.id)),
     [widgetLayout],
@@ -303,7 +305,7 @@ export function DesktopGrid({
                 aria-pressed={autoCompactEnabled}
                 onClick={() => onToggleAutoCompact?.(!autoCompactEnabled)}
               >
-                自动补位：{autoCompactEnabled ? "开" : "关"}
+                {t("grid.autoCompact")}：{autoCompactEnabled ? t("grid.on") : t("grid.off")}
               </button>
               <button
                 type="button"
@@ -314,15 +316,19 @@ export function DesktopGrid({
                   )
                 }
               >
-                冲突策略：
-                {conflictStrategy === "eject" ? "挤出" : conflictStrategy === "swap" ? "交换" : "拒绝"}
+                {t("grid.conflictStrategy")}：
+                {conflictStrategy === "eject"
+                  ? t("grid.strategyEject")
+                  : conflictStrategy === "swap"
+                    ? t("grid.strategySwap")
+                    : t("grid.strategyReject")}
               </button>
             </div>
             {arrangeSession.state.isArrangeMode ? (
               <button
                 type="button"
-                aria-label="退出整理模式"
-                title="退出整理模式（Esc）"
+                aria-label={t("grid.exitArrangeMode")}
+                title={t("grid.exitArrangeModeTitle")}
                 className="absolute right-0 top-0 z-[2] flex h-7 w-7 items-center justify-center rounded-full border border-white/70 bg-black/25 text-sm text-white transition hover:bg-black/40"
                 onClick={handleExitArrangeMode}
               >

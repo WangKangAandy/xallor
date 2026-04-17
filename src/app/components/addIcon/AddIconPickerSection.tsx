@@ -3,6 +3,7 @@ import { AddIconPickerGrid } from "./AddIconPickerGrid";
 
 type AddIconPickerSectionProps = {
   title: string;
+  viewMoreLabel: string;
   gridVariant: "site" | "component";
   entries: AddIconCatalogEntry[];
   selectedId: string | null;
@@ -12,7 +13,14 @@ type AddIconPickerSectionProps = {
 /**
  * 左栏分区标题（站点 / 组件）+ 「查看更多」占位，与图二分区结构一致。
  */
-export function AddIconPickerSection({ title, gridVariant, entries, selectedId, onSelectId }: AddIconPickerSectionProps) {
+export function AddIconPickerSection({
+  title,
+  viewMoreLabel,
+  gridVariant,
+  entries,
+  selectedId,
+  onSelectId,
+}: AddIconPickerSectionProps) {
   if (entries.length === 0) {
     return null;
   }
@@ -25,7 +33,7 @@ export function AddIconPickerSection({ title, gridVariant, entries, selectedId, 
           type="button"
           className="shrink-0 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline"
         >
-          查看更多 &gt;
+          {viewMoreLabel}
         </button>
       </div>
       <AddIconPickerGrid
