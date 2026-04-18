@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useAppI18n, type AppLocale } from "../i18n/AppI18n";
 import type { LayoutMode } from "../preferences";
+import { SegmentedControl } from "./shared/SegmentedControl";
 
 type SettingsSpotlightModalProps = {
   open: boolean;
@@ -121,19 +122,28 @@ export function SettingsSpotlightModal({
               </header>
 
               <div className="space-y-3 rounded-2xl border border-slate-200/70 bg-white/72 p-4">
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                   <div>
                     <div className="text-sm font-medium">{t("settings.language")}</div>
                     <div className="text-xs text-slate-500">{t("settings.languageDesc")}</div>
                   </div>
-                  <select
+                  <SegmentedControl<AppLocale>
                     value={locale}
-                    onChange={(event) => setLocale(event.target.value as AppLocale)}
-                    className="rounded-lg border border-slate-200 bg-white/85 px-3 py-1.5 text-xs text-slate-600 outline-none"
-                  >
-                    <option value="zh-CN">{t("settings.languageOptionZh")}</option>
-                    <option value="en-US">{t("settings.languageOptionEn")}</option>
-                  </select>
+                    onChange={setLocale}
+                    options={[
+                      {
+                        value: "zh-CN",
+                        label: t("settings.languageOptionZh"),
+                        testId: "settings-locale-zh-CN",
+                      },
+                      {
+                        value: "en-US",
+                        label: t("settings.languageOptionEn"),
+                        testId: "settings-locale-en-US",
+                      },
+                    ]}
+                    ariaLabel={t("settings.language")}
+                  />
                 </div>
                 <div className="h-px bg-slate-200/70" />
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
@@ -141,38 +151,23 @@ export function SettingsSpotlightModal({
                     <div className="text-sm font-medium">{t("settings.layoutMode")}</div>
                     <div className="text-xs text-slate-500">{t("settings.layoutModeDesc")}</div>
                   </div>
-                  <div
-                    className="inline-flex shrink-0 gap-0.5 rounded-lg border border-slate-200 bg-slate-100/80 p-0.5"
-                    role="group"
-                    aria-label={t("settings.layoutMode")}
-                  >
-                    <button
-                      type="button"
-                      data-testid="settings-layout-mode-default"
-                      aria-pressed={layoutMode === "default"}
-                      className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                        layoutMode === "default"
-                          ? "bg-white text-slate-900 shadow-sm"
-                          : "text-slate-600 hover:text-slate-900"
-                      }`}
-                      onClick={() => onLayoutModeChange("default")}
-                    >
-                      {t("settings.layoutOptionDefault")}
-                    </button>
-                    <button
-                      type="button"
-                      data-testid="settings-layout-mode-minimal"
-                      aria-pressed={layoutMode === "minimal"}
-                      className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                        layoutMode === "minimal"
-                          ? "bg-white text-slate-900 shadow-sm"
-                          : "text-slate-600 hover:text-slate-900"
-                      }`}
-                      onClick={() => onLayoutModeChange("minimal")}
-                    >
-                      {t("settings.layoutOptionMinimal")}
-                    </button>
-                  </div>
+                  <SegmentedControl<LayoutMode>
+                    value={layoutMode}
+                    onChange={onLayoutModeChange}
+                    options={[
+                      {
+                        value: "default",
+                        label: t("settings.layoutOptionDefault"),
+                        testId: "settings-layout-mode-default",
+                      },
+                      {
+                        value: "minimal",
+                        label: t("settings.layoutOptionMinimal"),
+                        testId: "settings-layout-mode-minimal",
+                      },
+                    ]}
+                    ariaLabel={t("settings.layoutMode")}
+                  />
                 </div>
                 <div className="h-px bg-slate-200/70" />
                 <div className="flex items-center justify-between gap-3">
