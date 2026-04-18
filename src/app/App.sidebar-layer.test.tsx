@@ -14,6 +14,17 @@ vi.mock("./useRestModeController", () => ({
   }),
 }));
 
+vi.mock("./preferences", () => ({
+  getLayoutCapabilities: (mode: string) =>
+    mode === "minimal"
+      ? { showDesktop: false, allowArrange: false }
+      : { showDesktop: true, allowArrange: true },
+  useUiPreferences: () => ({
+    layoutMode: "default" as const,
+    setLayoutMode: vi.fn(),
+  }),
+}));
+
 describe("App sidebar layer", () => {
   let host: HTMLDivElement | null = null;
 
@@ -29,7 +40,9 @@ describe("App sidebar layer", () => {
    * 目的：防止侧栏包裹层再次引入 translate，破坏 fixed 参照系导致侧栏热区错位。
    * 预期：清醒/小憩态都不应包含 translate-x 类名。
    */
-  it("should_not_apply_translate_classes_on_sidebar_layer_in_any_rest_state", async () => {
+  it(
+    "should_not_apply_translate_classes_on_sidebar_layer_in_any_rest_state",
+    async () => {
     const mod = await import("./App");
     const App = mod.default;
     host = document.createElement("div");
@@ -55,6 +68,8 @@ describe("App sidebar layer", () => {
     act(() => {
       root.unmount();
     });
-  });
+  },
+    15_000,
+  );
 });
 

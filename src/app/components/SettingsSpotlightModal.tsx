@@ -10,10 +10,13 @@ import {
   X,
 } from "lucide-react";
 import { useAppI18n, type AppLocale } from "../i18n/AppI18n";
+import type { LayoutMode } from "../preferences";
 
 type SettingsSpotlightModalProps = {
   open: boolean;
   onClose: () => void;
+  layoutMode: LayoutMode;
+  onLayoutModeChange: (mode: LayoutMode) => void;
 };
 
 const SECTIONS = [
@@ -44,25 +47,31 @@ const TOGGLES = [
   },
 ] as const;
 
-export function SettingsSpotlightModal({ open, onClose }: SettingsSpotlightModalProps) {
+export function SettingsSpotlightModal({
+  open,
+  onClose,
+  layoutMode,
+  onLayoutModeChange,
+}: SettingsSpotlightModalProps) {
   const { locale, setLocale, t } = useAppI18n();
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 md:p-10">
       <button
+        type="button"
         aria-label={t("settings.close")}
-        className="absolute inset-0 bg-slate-900/30 backdrop-blur-[1px]"
+        className="absolute inset-0 z-0 bg-slate-900/30 backdrop-blur-[1px]"
         onClick={onClose}
       />
 
       {/* Spotlight halo: keep subtle so panel edge remains crisp */}
       <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 top-1/2 h-[620px] w-[980px] -translate-x-1/2 -translate-y-1/2 rounded-[44px] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.22),rgba(255,255,255,0)_68%)]"
+        className="pointer-events-none absolute left-1/2 top-1/2 z-[1] h-[620px] w-[980px] -translate-x-1/2 -translate-y-1/2 rounded-[44px] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.22),rgba(255,255,255,0)_68%)]"
       />
 
-      <div className="relative w-full max-w-[980px] overflow-hidden rounded-[24px] border border-white/55 bg-white/90 shadow-[0_30px_90px_rgba(2,6,23,0.5),0_12px_32px_rgba(15,23,42,0.38)] backdrop-blur-xl">
+      <div className="relative z-10 w-full max-w-[980px] overflow-hidden rounded-[24px] border border-white/55 bg-white/90 shadow-[0_30px_90px_rgba(2,6,23,0.5),0_12px_32px_rgba(15,23,42,0.38)] backdrop-blur-xl">
         <div className="grid min-h-[560px] grid-cols-[250px_1fr]">
           <aside className="border-r border-slate-200/65 bg-white/58 px-4 py-5">
             <div className="mb-4 px-2 text-lg font-semibold text-slate-800">{t("settings.title")}</div>
@@ -96,6 +105,8 @@ export function SettingsSpotlightModal({ open, onClose }: SettingsSpotlightModal
                 />
               </div>
               <button
+                type="button"
+                data-testid="settings-modal-close"
                 aria-label={t("settings.close")}
                 className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-900/5 hover:text-slate-600"
                 onClick={onClose}
@@ -123,6 +134,45 @@ export function SettingsSpotlightModal({ open, onClose }: SettingsSpotlightModal
                     <option value="zh-CN">{t("settings.languageOptionZh")}</option>
                     <option value="en-US">{t("settings.languageOptionEn")}</option>
                   </select>
+                </div>
+                <div className="h-px bg-slate-200/70" />
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                  <div>
+                    <div className="text-sm font-medium">{t("settings.layoutMode")}</div>
+                    <div className="text-xs text-slate-500">{t("settings.layoutModeDesc")}</div>
+                  </div>
+                  <div
+                    className="inline-flex shrink-0 gap-0.5 rounded-lg border border-slate-200 bg-slate-100/80 p-0.5"
+                    role="group"
+                    aria-label={t("settings.layoutMode")}
+                  >
+                    <button
+                      type="button"
+                      data-testid="settings-layout-mode-default"
+                      aria-pressed={layoutMode === "default"}
+                      className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                        layoutMode === "default"
+                          ? "bg-white text-slate-900 shadow-sm"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                      onClick={() => onLayoutModeChange("default")}
+                    >
+                      {t("settings.layoutOptionDefault")}
+                    </button>
+                    <button
+                      type="button"
+                      data-testid="settings-layout-mode-minimal"
+                      aria-pressed={layoutMode === "minimal"}
+                      className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                        layoutMode === "minimal"
+                          ? "bg-white text-slate-900 shadow-sm"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                      onClick={() => onLayoutModeChange("minimal")}
+                    >
+                      {t("settings.layoutOptionMinimal")}
+                    </button>
+                  </div>
                 </div>
                 <div className="h-px bg-slate-200/70" />
                 <div className="flex items-center justify-between gap-3">

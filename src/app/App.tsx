@@ -1,8 +1,9 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import { DEFAULT_NEW_TAB_BACKGROUND_URL, RemoteBackgroundImage } from "./components/feedback";
 import { SettingsSpotlightModal } from "./components/SettingsSpotlightModal";
 import { GlassSurface } from "./components/shared/GlassSurface";
 import { AppI18nProvider, useAppI18n } from "./i18n/AppI18n";
+import { getLayoutCapabilities, useUiPreferences } from "./preferences";
 import { useRestModeController } from "./useRestModeController";
 
 const SearchBar = lazy(async () => {
@@ -52,6 +53,8 @@ function SearchBarFallback() {
 function AppContent() {
   const { isResting, handleDoubleClickCapture } = useRestModeController();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const { layoutMode, setLayoutMode } = useUiPreferences();
+  const capabilities = useMemo(() => getLayoutCapabilities(layoutMode), [layoutMode]);
 
   return (
     <div
@@ -102,23 +105,31 @@ function AppContent() {
               </Suspense>
             </div>
 
-            {/* 多桌面条带（纵向滚轮切页）；单页时与原先单网格一致 */}
-            <div
-              className={`relative z-10 w-full flex-1 flex min-h-0 justify-center max-w-[1200px] xl:max-w-[1280px] transition-all duration-700 ${
-                isResting ? "opacity-0 translate-y-2" : "opacity-100 translate-y-0 delay-150"
-              }`}
-            >
-              <Suspense fallback={<MultiDesktopFallback />}>
-                <MultiDesktopStrip />
-              </Suspense>
-            </div>
+            {/* 主列 main slot：极简不挂载 MultiDesktopStrip（整理会话随之卸载） */}
+            {capabilities.showDesktop ? (
+              <div
+                data-testid="desktop-main-slot"
+                className={`relative z-10 w-full flex-1 flex min-h-0 justify-center max-w-[1200px] xl:max-w-[1280px] transition-all duration-700 ${
+                  isResting ? "opacity-0 translate-y-2" : "opacity-100 translate-y-0 delay-150"
+                }`}
+              >
+                <Suspense fallback={<MultiDesktopFallback />}>
+                  <MultiDesktopStrip />
+                </Suspense>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
 
       {/* 可扩展保留层：未来电子宠物等可放在该层并在小憩状态保持可见/可交互。 */}
       <div className="pointer-events-none absolute inset-0 z-20" aria-hidden />
-      <SettingsSpotlightModal open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      <SettingsSpotlightModal
+        open={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        layoutMode={layoutMode}
+        onLayoutModeChange={setLayoutMode}
+      />
     </div>
   );
 }
