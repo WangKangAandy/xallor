@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { DndProvider, useDrop } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
+import { useDrop } from "react-dnd";
 import { AddIconDialog, GridAddSlotCell, type AddIconSubmitPayload } from "./addIcon";
 import { DesktopGridItem } from "./DesktopGridItem";
 import { DesktopGridFolderPortal } from "./DesktopGridFolderPortal";
@@ -275,7 +274,7 @@ export function DesktopGrid({
     useGridBackgroundContextMenu(handleEnterArrangeMode);
   // 网格项 z-index 数值见 desktopGridLayers.ts（DesktopGridItem inline style）
   return (
-    <DndProvider backend={HTML5Backend}>
+    <>
       {arrangeSession.state.isSelecting && arrangeSession.state.selectionRect ? (
         <div className="pointer-events-none fixed inset-0 z-[95]" aria-hidden>
           <div
@@ -427,6 +426,6 @@ export function DesktopGrid({
         />
       )}
       {backgroundMenuPortal}
-    </DndProvider>
+    </>
   );
 }

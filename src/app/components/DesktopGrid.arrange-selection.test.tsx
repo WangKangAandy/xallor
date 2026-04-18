@@ -2,6 +2,8 @@
 import { act } from "react";
 import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 import { describe, expect, it } from "vitest";
 import { AppI18nProvider } from "../i18n/AppI18n";
 import { useArrangeSession } from "./arrange/useArrangeSession";
@@ -28,16 +30,18 @@ function ArrangeSelectionHarness({
   }, [enterArrangeModeOnMount, pageId, enterArrangeMode]);
 
   return (
-    <AppI18nProvider>
-      <DesktopGrid
-        pageId={pageId}
-        arrangeSession={arrangeSession}
-        items={items}
-        setItems={setItems}
-        showLabels
-        isHydrated
-      />
-    </AppI18nProvider>
+    <DndProvider backend={HTML5Backend}>
+      <AppI18nProvider>
+        <DesktopGrid
+          pageId={pageId}
+          arrangeSession={arrangeSession}
+          items={items}
+          setItems={setItems}
+          showLabels
+          isHydrated
+        />
+      </AppI18nProvider>
+    </DndProvider>
   );
 }
 
