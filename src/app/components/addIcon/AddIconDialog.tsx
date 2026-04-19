@@ -1,6 +1,7 @@
 import { useEffect, useId } from "react";
 import { createPortal } from "react-dom";
 import { GlassSurface } from "../shared/GlassSurface";
+import { ModalScrim } from "../shared/ModalScrim";
 import { Z_ADD_ICON_DIALOG } from "../desktopGridLayers";
 import { AddIconPickerPanel } from "./AddIconPickerPanel";
 import { AddIconPreviewPanel } from "./AddIconPreviewPanel";
@@ -95,13 +96,9 @@ export function AddIconDialog({ open, onOpenChange, contextSiteId, onConfirmAdd 
       style={{ zIndex: Z_ADD_ICON_DIALOG }}
       role="presentation"
       data-ui-modal-overlay
+      data-ui-surface="add-icon"
     >
-      <button
-        type="button"
-        aria-label={t("addIcon.closeDialog")}
-        className="absolute inset-0 bg-black/35 backdrop-blur-[2px] transition-opacity"
-        onClick={handleClose}
-      />
+      <ModalScrim aria-label={t("addIcon.closeDialog")} onClick={handleClose} />
       <GlassSurface
         variant="panel"
         rounded="3xl"

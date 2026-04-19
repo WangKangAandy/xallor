@@ -28,10 +28,10 @@ export function AddIconPickerSection({
   return (
     <section className="mb-5 last:mb-0" aria-label={title}>
       <div className="mb-2 flex items-center justify-between gap-2 px-0.5">
-        <h3 className="text-sm font-semibold tracking-tight text-gray-800">{title}</h3>
+        <h3 className="text-sm font-semibold tracking-tight text-foreground">{title}</h3>
         <button
           type="button"
-          className="shrink-0 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline"
+          className="shrink-0 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground hover:underline"
         >
           {viewMoreLabel}
         </button>

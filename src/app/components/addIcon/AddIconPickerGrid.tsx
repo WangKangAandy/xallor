@@ -6,7 +6,7 @@ type AddIconPickerGridProps = {
   entries: AddIconCatalogEntry[];
   selectedId: string | null;
   onSelectId: (id: string) => void;
-/** 站点：高密度多列；组件：减少列数以获得更宽卡片。 */
+  /** 站点：高密度多列；组件：减少列数以获得更宽卡片。 */
   gridVariant: "site" | "component";
 };
 
@@ -21,7 +21,7 @@ export function AddIconPickerGrid({ entries, selectedId, onSelectId, gridVariant
   const { t } = useAppI18n();
   if (entries.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-gray-200/90 bg-white/40 px-4 py-8 text-center text-xs text-gray-500">
+      <div className="rounded-xl border border-dashed border-border bg-muted/30 px-4 py-8 text-center text-xs text-muted-foreground">
         {t("addIcon.noResults")}
       </div>
     );

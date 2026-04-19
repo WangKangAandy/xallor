@@ -20,29 +20,32 @@ type AddIconPreviewPanelProps = {
   onContinueAdding: (payload: AddIconSubmitPayload) => void;
 };
 
-/** 组件「图样示例」大图预览区（绿色底）。 */
+/** 组件「图样示例」大图预览区；色值见 `theme.css` feature: add-icon */
 const PREVIEW_PATTERN_SURFACE =
-  "rounded-xl border border-emerald-200/80 bg-emerald-50/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]";
+  "rounded-xl border shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] bg-[var(--add-icon-preview-pattern-bg)] border-[color:var(--add-icon-preview-pattern-border)]";
 
-/** 站点顶部预览卡：与早期灰底大图区一致。 */
-const SITE_PREVIEW_CARD = "rounded-xl border border-gray-100/90 bg-gray-50/50";
+/** 站点顶部预览卡 */
+const SITE_PREVIEW_CARD = "rounded-xl border border-border bg-muted/40";
 
 /** 与左侧摘要里「组件」标签同一套深绿底白字。 */
 const KIND_TAG_EMERALD = "shrink-0 rounded-md bg-emerald-600/95 px-2 py-0.5 text-[10px] font-medium text-white";
 
 const SITE_NAME_MAX = 30;
 
+const footerPrimaryBtn =
+  "rounded-xl border border-border bg-secondary px-3 py-2 text-sm font-medium text-secondary-foreground shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground disabled:cursor-not-allowed disabled:opacity-45";
+
 function siteIconOptionClasses(active: boolean, variant: "default" | "dark" | "more") {
   if (active) {
-    return "border-2 border-blue-500 ring-2 ring-blue-500/25";
+    return "border-2 border-primary ring-2 ring-ring/35";
   }
   if (variant === "more") {
-    return "border border-dashed border-gray-300 hover:border-gray-400";
+    return "border border-dashed border-border hover:border-muted-foreground/50";
   }
   if (variant === "dark") {
-    return "border border-gray-600 hover:border-gray-500";
+    return "border border-muted-foreground/40 hover:border-muted-foreground/60";
   }
-  return "border border-gray-200 hover:border-gray-300";
+  return "border border-border hover:border-muted-foreground/50";
 }
 
 /** 与下方选项行同一套规则，驱动上方预览卡大图/小图。 */
@@ -54,7 +57,7 @@ function SitePreviewHeaderIcon(props: {
   const { variant, domain, displayName } = props;
   if (variant === 3) {
     return (
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-dashed border-gray-300 bg-gray-50/80 text-sm font-medium text-gray-400">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-dashed border-border bg-muted/50 text-sm font-medium text-muted-foreground">
         ···
       </div>
     );
@@ -65,7 +68,7 @@ function SitePreviewHeaderIcon(props: {
   return (
     <div
       className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full shadow-sm ring-1 ${
-        invert ? "bg-gray-900 ring-gray-700" : "bg-white/90 ring-gray-200/80"
+        invert ? "bg-foreground ring-border" : "bg-card ring-border"
       }`}
     >
       <FaviconIcon
@@ -90,7 +93,7 @@ function SitePreviewHeroIcon(props: {
   if (variant === 3) {
     return (
       <div
-        className={`${SITE_PREVIEW_HERO_SLOT} border border-dashed border-gray-300 bg-gray-50/80 text-2xl font-medium text-gray-400`}
+        className={`${SITE_PREVIEW_HERO_SLOT} border border-dashed border-border bg-muted/50 text-2xl font-medium text-muted-foreground`}
       >
         ···
       </div>
@@ -101,8 +104,8 @@ function SitePreviewHeroIcon(props: {
   const size = small ? 36 : 48;
   return (
     <div
-      className={`${SITE_PREVIEW_HERO_SLOT} shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ${
-        invert ? "bg-gray-900 shadow-inner" : "bg-transparent"
+      className={`${SITE_PREVIEW_HERO_SLOT} shadow-[inset_0_1px_0_rgba(127,127,127,0.14)] ${
+        invert ? "bg-foreground shadow-inner" : "bg-transparent"
       }`}
     >
       <FaviconIcon
@@ -183,25 +186,25 @@ export function AddIconPreviewPanel({
     >
       <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-4 sm:px-5 sm:pb-5 sm:pt-5">
         <div className="mb-2 flex shrink-0 items-center justify-between gap-2">
-          <h2 id={previewHeadingId} className="text-sm font-semibold text-gray-900">
+          <h2 id={previewHeadingId} className="text-sm font-semibold text-foreground">
             {t("addIcon.preview")}
           </h2>
           <button
             type="button"
             aria-label={t("addIcon.closeDialog")}
-            className="rounded-full p-1.5 text-gray-500 hover:bg-gray-100/80 hover:text-gray-800"
+            className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             onClick={onClose}
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-gray-100/90 bg-white/90 shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-card/95 shadow-sm">
           <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 py-2 [scrollbar-width:thin]">
             {!selected ? (
               <>
-                <p className="text-xs leading-relaxed text-gray-500">{t("addIcon.previewHint")}</p>
-                <div className="mt-4 flex min-h-[120px] items-center justify-center rounded-xl border border-dashed border-gray-200/90 bg-gray-50/50 p-4 text-center text-xs text-gray-400">
+                <p className="text-xs leading-relaxed text-muted-foreground">{t("addIcon.previewHint")}</p>
+                <div className="mt-4 flex min-h-[120px] items-center justify-center rounded-xl border border-dashed border-border bg-muted/30 p-4 text-center text-xs text-muted-foreground">
                   {t("addIcon.unselected")}
                 </div>
               </>
@@ -218,25 +221,25 @@ export function AddIconPreviewPanel({
                         displayName={siteDisplayName}
                       />
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-gray-900">{siteDraftName || selected.name}</p>
-                        <p className="mt-0.5 truncate text-xs text-gray-500">{siteDraftUrl || selected.url}</p>
+                        <p className="truncate text-sm font-semibold text-foreground">{siteDraftName || selected.name}</p>
+                        <p className="mt-0.5 truncate text-xs text-muted-foreground">{siteDraftUrl || selected.url}</p>
                       </div>
                     </div>
                     <span className={KIND_TAG_EMERALD}>{t("addIcon.kindSite")}</span>
                   </div>
-                  <div className="flex flex-col items-center justify-center border-t border-gray-200/80 pt-3">
+                  <div className="flex flex-col items-center justify-center border-t border-border pt-3">
                     <SitePreviewHeroIcon
                       variant={siteIconVariant}
                       domain={sitePreviewDomain}
                       displayName={siteDisplayName}
                     />
-                    <p className="mt-2 text-sm font-semibold text-gray-900">{siteDraftName || selected.name}</p>
+                    <p className="mt-2 text-sm font-semibold text-foreground">{siteDraftName || selected.name}</p>
                   </div>
                 </div>
 
                 <div className="space-y-2.5">
                   <div>
-                    <label htmlFor="add-icon-site-name" className="text-xs font-medium text-gray-600">
+                    <label htmlFor="add-icon-site-name" className="text-xs font-medium text-muted-foreground">
                       {t("addIcon.fieldName")}
                     </label>
                     <div className="relative mt-1">
@@ -246,16 +249,16 @@ export function AddIconPreviewPanel({
                         value={siteDraftName}
                         maxLength={SITE_NAME_MAX}
                         onChange={(e) => setSiteDraftName(e.target.value)}
-                        className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 pr-12 text-sm text-gray-900 outline-none ring-0 transition-colors placeholder:text-gray-400 focus:border-gray-400 focus:ring-2 focus:ring-gray-400/20"
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 pr-12 text-sm text-foreground outline-none ring-0 transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/30"
                         autoComplete="off"
                       />
-                      <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] tabular-nums text-gray-400">
+                      <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] tabular-nums text-muted-foreground">
                         {siteDraftName.length}/{SITE_NAME_MAX}
                       </span>
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="add-icon-site-url" className="text-xs font-medium text-gray-600">
+                    <label htmlFor="add-icon-site-url" className="text-xs font-medium text-muted-foreground">
                       {t("addIcon.fieldUrl")}
                     </label>
                     <div className="relative mt-1">
@@ -265,11 +268,11 @@ export function AddIconPreviewPanel({
                         value={siteDraftUrl}
                         onChange={(e) => setSiteDraftUrl(e.target.value)}
                         placeholder="https://"
-                        className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-3 pr-9 text-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-gray-400 focus:ring-2 focus:ring-gray-400/20"
+                        className="w-full rounded-lg border border-border bg-background py-2 pl-3 pr-9 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/30"
                         autoComplete="off"
                       />
                       <Link2
-                        className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+                        className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
                         aria-hidden
                       />
                     </div>
@@ -277,7 +280,7 @@ export function AddIconPreviewPanel({
                 </div>
 
                 <div>
-                  <p id="add-icon-site-icon-label" className="text-xs font-medium text-gray-600">
+                  <p id="add-icon-site-icon-label" className="text-xs font-medium text-muted-foreground">
                     {t("addIcon.fieldIcon")}
                   </p>
                   <div
@@ -291,7 +294,7 @@ export function AddIconPreviewPanel({
                       aria-checked={siteIconVariant === 0}
                       aria-label={t("addIcon.iconColor")}
                       onClick={() => setSiteIconVariant(0)}
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white p-1 transition-colors ${siteIconOptionClasses(siteIconVariant === 0, "default")}`}
+                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-card p-1 transition-colors ${siteIconOptionClasses(siteIconVariant === 0, "default")}`}
                     >
                       <FaviconIcon domain={sitePreviewDomain} name={siteDisplayName} size={28} />
                     </button>
@@ -301,7 +304,7 @@ export function AddIconPreviewPanel({
                       aria-checked={siteIconVariant === 1}
                       aria-label={t("addIcon.iconInverted")}
                       onClick={() => setSiteIconVariant(1)}
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-gray-900 p-1 hover:bg-gray-800 ${siteIconOptionClasses(siteIconVariant === 1, "dark")}`}
+                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-foreground p-1 hover:bg-foreground/90 ${siteIconOptionClasses(siteIconVariant === 1, "dark")}`}
                     >
                       <FaviconIcon
                         domain={sitePreviewDomain}
@@ -316,7 +319,7 @@ export function AddIconPreviewPanel({
                       aria-checked={siteIconVariant === 2}
                       aria-label={t("addIcon.iconSmall")}
                       onClick={() => setSiteIconVariant(2)}
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white p-1 ${siteIconOptionClasses(siteIconVariant === 2, "default")}`}
+                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-card p-1 ${siteIconOptionClasses(siteIconVariant === 2, "default")}`}
                     >
                       <FaviconIcon domain={sitePreviewDomain} name={siteDisplayName} size={22} />
                     </button>
@@ -326,7 +329,7 @@ export function AddIconPreviewPanel({
                       aria-checked={siteIconVariant === 3}
                       aria-label={t("addIcon.iconMore")}
                       onClick={() => setSiteIconVariant(3)}
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-gray-50/80 text-lg font-medium text-gray-500 transition-colors hover:bg-gray-100 ${siteIconOptionClasses(siteIconVariant === 3, "more")}`}
+                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-muted/60 text-lg font-medium text-muted-foreground transition-colors hover:bg-muted ${siteIconOptionClasses(siteIconVariant === 3, "more")}`}
                     >
                       ···
                     </button>
@@ -344,29 +347,31 @@ export function AddIconPreviewPanel({
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="truncate text-sm font-semibold text-gray-900">{t(selected.nameKey)}</p>
+                      <p className="truncate text-sm font-semibold text-foreground">{t(selected.nameKey)}</p>
                       <span className={KIND_TAG_EMERALD}>{t("addIcon.kindComponent")}</span>
                     </div>
-                    <p className="mt-0.5 truncate text-xs text-gray-500">{t(selected.subtitleKey)}</p>
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">{t(selected.subtitleKey)}</p>
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-gray-600">{t("addIcon.componentSizes")}</p>
-                  <div className="mt-2 grid grid-cols-3 gap-1.5 text-center text-[10px] text-gray-600">
-                    <div className="rounded-lg border border-gray-100/90 bg-gray-50/50 py-2">{t("addIcon.sizeLarge")}</div>
-                    <div className="rounded-lg border border-gray-100/90 bg-gray-50/50 py-2">{t("addIcon.sizeMedium")}</div>
-                    <div className="rounded-lg border border-gray-100/90 bg-gray-50/50 py-2">{t("addIcon.sizeSmall")}</div>
+                  <p className="text-xs font-medium text-muted-foreground">{t("addIcon.componentSizes")}</p>
+                  <div className="mt-2 grid grid-cols-3 gap-1.5 text-center text-[10px] text-muted-foreground">
+                    <div className="rounded-lg border border-border bg-muted/40 py-2">{t("addIcon.sizeLarge")}</div>
+                    <div className="rounded-lg border border-border bg-muted/40 py-2">{t("addIcon.sizeMedium")}</div>
+                    <div className="rounded-lg border border-border bg-muted/40 py-2">{t("addIcon.sizeSmall")}</div>
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-gray-600">{t("addIcon.preview")}</p>
+                  <p className="text-xs font-medium text-muted-foreground">{t("addIcon.preview")}</p>
                   <div
-                    className={`mt-2 flex min-h-[120px] flex-1 flex-col items-center justify-center p-4 text-[11px] text-emerald-900/70 ${PREVIEW_PATTERN_SURFACE}`}
+                    className={`mt-2 flex min-h-[120px] flex-1 flex-col items-center justify-center p-4 text-[11px] text-[color:var(--add-icon-preview-pattern-text-muted)] ${PREVIEW_PATTERN_SURFACE}`}
                   >
                     <span className="text-3xl" aria-hidden>
                       {selected.widgetType === "weather" ? "⛅" : "📅"}
                     </span>
-                    <p className="mt-2 text-xs font-medium text-emerald-900/80">{t("addIcon.previewPattern")}</p>
+                    <p className="mt-2 text-xs font-medium text-[color:var(--add-icon-preview-pattern-text)]">
+                      {t("addIcon.previewPattern")}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -375,20 +380,10 @@ export function AddIconPreviewPanel({
 
           <div className="shrink-0 px-4 py-2.5">
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
-              <button
-                type="button"
-                disabled={!canSubmit}
-                className="rounded-xl border border-gray-200/90 bg-white px-3 py-2 text-sm font-medium text-gray-800 shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:bg-gray-50/90 disabled:cursor-not-allowed disabled:opacity-45"
-                onClick={handleAddClick}
-              >
+              <button type="button" disabled={!canSubmit} className={footerPrimaryBtn} onClick={handleAddClick}>
                 {t("addIcon.add")}
               </button>
-              <button
-                type="button"
-                disabled={!canSubmit}
-                className="rounded-xl border border-gray-200/90 bg-white px-3 py-2 text-sm font-medium text-gray-800 shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:bg-gray-50/90 disabled:cursor-not-allowed disabled:opacity-45"
-                onClick={handleContinueClick}
-              >
+              <button type="button" disabled={!canSubmit} className={footerPrimaryBtn} onClick={handleContinueClick}>
                 {t("addIcon.continueAdd")}
               </button>
             </div>

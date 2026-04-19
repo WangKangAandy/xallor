@@ -37,23 +37,23 @@ export function AddIconPickerPanel({
     (showSites && siteEntries.length > 0) || (showComponents && componentEntries.length > 0);
 
   return (
-    <aside className="flex h-full min-h-0 min-w-0 flex-1 flex-col border-gray-200/50 sm:border-r">
+    <aside className="flex h-full min-h-0 min-w-0 flex-1 flex-col border-border/70 sm:border-r sm:border-border">
       <div className="flex flex-col gap-3 px-4 pb-2 pt-4 sm:px-5 sm:pt-5">
-        <div className="flex items-center gap-2 rounded-2xl border border-gray-100/90 bg-white/85 px-3 py-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
-          <Search className="h-4 w-4 shrink-0 text-gray-400" aria-hidden />
+        <div className="flex items-center gap-2 rounded-2xl border border-border bg-muted/70 px-3 py-2.5 shadow-sm">
+          <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
           <input
             type="text"
             placeholder={t("addIcon.searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => onSearchQueryChange(e.target.value)}
-            className="min-w-0 flex-1 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 outline-none"
+            className="min-w-0 flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
             autoComplete="off"
           />
           {searchQuery ? (
             <button
               type="button"
               aria-label={t("addIcon.clearSearch")}
-              className="shrink-0 rounded-full p-0.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              className="shrink-0 rounded-full p-0.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
               onClick={() => onSearchQueryChange("")}
             >
               <X className="h-4 w-4" />
@@ -72,8 +72,8 @@ export function AddIconPickerPanel({
               className={[
                 "rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors",
                 pickerFilter === f.id
-                  ? "bg-white text-blue-600 shadow-sm"
-                  : "bg-transparent text-gray-600 hover:bg-white/50",
+                  ? "bg-secondary text-secondary-foreground shadow-sm"
+                  : "bg-transparent text-muted-foreground hover:bg-accent/50 hover:text-foreground",
               ].join(" ")}
             >
               {f.id === "all"
@@ -88,7 +88,7 @@ export function AddIconPickerPanel({
 
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 pb-4 sm:px-5">
         {!hasAnySection ? (
-          <div className="rounded-xl border border-dashed border-gray-300/80 bg-white/50 px-4 py-10 text-center text-xs text-gray-500">
+          <div className="rounded-xl border border-dashed border-border bg-muted/30 px-4 py-10 text-center text-xs text-muted-foreground">
             {t("addIcon.noResults")}
           </div>
         ) : (

@@ -87,6 +87,54 @@ describe("DesktopGrid add flow", () => {
   });
 
   /**
+   * 目的：深色根类下添加图标链路仍可用（依赖 `html.dark` + 语义类 / token，而非业务内主题状态）。
+   * 前置：与首条用例相同，额外为 `document.documentElement` 加上 `dark`。
+   * 预期：仍能写入 GitHub 站点项。
+   */
+  it("should_append_site_item_when_add_confirmed_under_html_dark_class", () => {
+    document.documentElement.classList.add("dark");
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    try {
+      act(() => {
+        root.render(<DesktopGridHarness />);
+      });
+
+      const openBtn = document.querySelector('button[aria-label="添加图标"]') as HTMLButtonElement | null;
+      expect(openBtn).not.toBeNull();
+      act(() => {
+        openBtn?.click();
+      });
+
+      const siteSection = document.querySelector('section[aria-label="站点"]');
+      const firstSiteTile = siteSection?.querySelector('[role="option"]') as HTMLButtonElement | null;
+      expect(firstSiteTile).not.toBeNull();
+      act(() => {
+        firstSiteTile?.click();
+      });
+
+      const addBtn = Array.from(document.querySelectorAll("button")).find((btn) => btn.textContent?.trim() === "添加") as
+        | HTMLButtonElement
+        | undefined;
+      expect(addBtn).toBeDefined();
+      act(() => {
+        addBtn?.click();
+      });
+
+      expect(document.querySelector('[role="dialog"]')).toBeNull();
+      expect(document.body.textContent).toContain("GitHub");
+    } finally {
+      act(() => {
+        root.unmount();
+      });
+      document.body.removeChild(container);
+      document.documentElement.classList.remove("dark");
+    }
+  });
+
+  /**
    * 目的：验证天气组件已打通“目录选择 -> 提交 payload -> 创建 widget item -> 网格渲染”全链路。
    * 前置：打开添加弹层，切到「组件」分区并选中「天气」，点击“添加”。
    * 预期：弹层关闭且网格中出现天气卡片内容（Tokyo, Japan）。

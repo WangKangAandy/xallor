@@ -25,6 +25,12 @@ describe("AddIconDialog", () => {
       );
     });
 
+    expect(document.querySelector('[data-ui-surface="add-icon"]')).not.toBeNull();
+    const scrim = document.querySelector(
+      '[data-ui-surface="add-icon"] > button[type="button"]',
+    ) as HTMLButtonElement | null;
+    expect(scrim?.getAttribute("style") ?? "").toContain("var(--surface-scrim-bg)");
+
     expect(document.body.textContent).toContain("添加图标");
     expect(document.body.textContent).toContain("GitHub");
     expect(document.body.textContent).toContain("预览");

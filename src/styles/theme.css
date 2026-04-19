@@ -157,6 +157,20 @@
 
   /** App 背景渐变上的极轻模糊 */
   --glass-page-veil-blur: 1px;
+
+  /**
+   * app: 模态遮罩（全屏 scrim；AddIconDialog 等消费 `var(--surface-scrim-bg)`）
+   */
+  --surface-scrim-bg: rgb(0 0 0 / 0.35);
+  --surface-scrim-backdrop-blur: 2px;
+
+  /**
+   * feature: add-icon — 仅 `src/app/components/addIcon/**` 消费；见 docs/notes/add-icon-theme-refactor-plan.md
+   */
+  --add-icon-preview-pattern-bg: rgb(236 253 245);
+  --add-icon-preview-pattern-border: rgb(167 243 208 / 0.85);
+  --add-icon-preview-pattern-text: rgb(6 78 59 / 0.88);
+  --add-icon-preview-pattern-text-muted: rgb(6 78 59 / 0.72);
 }
 
 .dark {
@@ -197,6 +211,20 @@
 
   --grid-merge-border-color: #93c5fd;
   --grid-merge-shadow: 0 0 28px rgba(147, 197, 253, 0.5);
+
+  /** dark: 大面板毛玻璃（GlassSurface variant=panel 与文件夹弹层等共用） */
+  --glass-panel-bg: rgb(15 23 42 / 0.55);
+  --glass-panel-bg-no-support: rgb(15 23 42 / 0.9);
+  --glass-panel-border: rgb(255 255 255 / 0.12);
+  --glass-panel-shadow: 0 32px 64px -12px rgb(0 0 0 / 0.55);
+
+  --surface-scrim-bg: rgb(0 0 0 / 0.55);
+
+  /* feature: add-icon — 深色下预览绿区略降饱和 */
+  --add-icon-preview-pattern-bg: oklch(0.24 0.045 166);
+  --add-icon-preview-pattern-border: oklch(0.38 0.07 166);
+  --add-icon-preview-pattern-text: oklch(0.88 0.06 166);
+  --add-icon-preview-pattern-text-muted: oklch(0.78 0.05 166);
 }
 
 @theme inline {
