@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
+import { isUnderUiModalOverlay } from "./components/arrange/uiModalOverlay";
 
 export type RestModeTriggerSource = "double-click" | "keyboard-shortcut" | "pet-button" | "manual-button";
 export type RestModeWakeSource = "mouse" | "keyboard" | "touch" | "manual-button" | "pet-interaction";
@@ -7,6 +8,7 @@ export type RestModeWakeSource = "mouse" | "keyboard" | "touch" | "manual-button
 const MOUSE_WAKE_ACCUM_DISTANCE_PX = 160;
 
 function isInteractiveElement(target: HTMLElement): boolean {
+  if (isUnderUiModalOverlay(target)) return true;
   if (target.closest("[data-rest-ignore='true']")) return true;
   if (target.closest("button,input,textarea,select,a,[role='button'],[role='option'],[role='dialog']")) return true;
   return false;

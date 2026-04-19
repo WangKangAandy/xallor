@@ -26,4 +26,30 @@ describe("isArrangeGestureExcludedStartTarget", () => {
     expect(isArrangeGestureExcludedStartTarget(child)).toBe(true);
     document.body.removeChild(root);
   });
+
+  /**
+   * 目的：侧栏等仍可用 `data-arrange-gesture-exclude` 单独声明排除。
+   */
+  it("should_exclude_descendants_when_root_has_data_arrange_gesture_exclude", () => {
+    const root = document.createElement("div");
+    root.setAttribute("data-arrange-gesture-exclude", "true");
+    const inner = document.createElement("div");
+    root.appendChild(inner);
+    document.body.appendChild(root);
+    expect(isArrangeGestureExcludedStartTarget(inner)).toBe(true);
+    document.body.removeChild(root);
+  });
+
+  /**
+   * 目的：统一契约 `data-ui-modal-overlay` — 任意子节点（含非 button 文案区）均不发起整理起手。
+   */
+  it("should_exclude_descendants_under_data_ui_modal_overlay", () => {
+    const root = document.createElement("div");
+    root.setAttribute("data-ui-modal-overlay", "true");
+    const inner = document.createElement("div");
+    root.appendChild(inner);
+    document.body.appendChild(root);
+    expect(isArrangeGestureExcludedStartTarget(inner)).toBe(true);
+    document.body.removeChild(root);
+  });
 });

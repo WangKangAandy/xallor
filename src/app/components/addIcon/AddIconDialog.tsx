@@ -94,6 +94,7 @@ export function AddIconDialog({ open, onOpenChange, contextSiteId, onConfirmAdd 
       className="fixed inset-0 flex items-center justify-center overflow-x-hidden p-3 sm:p-4"
       style={{ zIndex: Z_ADD_ICON_DIALOG }}
       role="presentation"
+      data-ui-modal-overlay
     >
       <button
         type="button"

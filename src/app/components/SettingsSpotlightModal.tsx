@@ -62,7 +62,13 @@ export function SettingsSpotlightModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 md:p-10">
+    <div
+      className="fixed inset-0 z-[120] flex items-center justify-center p-6 md:p-10"
+      role="dialog"
+      aria-modal="true"
+      aria-label={t("settings.title")}
+      data-ui-modal-overlay
+    >
       <button
         type="button"
         aria-label={t("settings.close")}

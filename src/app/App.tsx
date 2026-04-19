@@ -75,7 +75,7 @@ function AppContent() {
 
       <div
         className={`transition-[filter,opacity,transform] duration-300 ${
-          isSettingsOpen ? "brightness-75 saturate-75 blur-[2px]" : ""
+          isSettingsOpen ? "pointer-events-none brightness-75 saturate-75 blur-[2px]" : ""
         }`}
       >
         <div

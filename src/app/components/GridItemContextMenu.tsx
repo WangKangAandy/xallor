@@ -22,6 +22,7 @@ export function GridItemContextMenu({ menuRef, left, top, entries, onEntrySelect
     <GlassSurface
       ref={menuRef as Ref<HTMLDivElement>}
       data-grid-context-menu
+      data-ui-modal-overlay
       rounded="xl"
       className="fixed w-max min-w-[120px] max-w-[min(280px,calc(100vw-16px))] overflow-hidden py-1.5"
       style={{ left, top, zIndex: Z_GRID_CONTEXT_MENU }}

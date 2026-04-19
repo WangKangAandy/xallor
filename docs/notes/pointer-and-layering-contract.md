@@ -21,6 +21,20 @@
   - 不得依赖 `mousedown` 作为协作组件的唯一触发来源。
 - 手势与业务组件交互时，优先通过统一 hook 或显式协议（data-testid / data-attribute）对齐。
 
+### 2.1) 模态叠层与 `document` 捕获整理起手（统一契约）
+
+整理框选在 `document` **capture** 阶段监听 `pointerdown`（见 `useArrangeGestureController`），早于模态内多数子节点。仅依赖 `button/input/...` 排除不够：**模态内普通 div/标题**仍会命中起手逻辑。
+
+**系统规则（必须遵守）**：凡「盖住主桌面、不应让背后手势生效」的叠层，在最外层可命中指针的容器上加 **`data-ui-modal-overlay`**（见 `src/app/components/arrange/uiModalOverlay.ts`）。  
+`getArrangeGestureExclusionReason` 与 **`useRestModeController` 双击小憩**均通过 **`isUnderUiModalOverlay`** 识别，**一处标记，两处生效**。
+
+与旧属性的关系：
+
+- **`data-arrange-gesture-exclude`**：仍保留，用于侧栏等**非模态**但需排除整理的区域。
+- **`role="dialog"`**：无障碍语义；**不能**单独替代 `data-ui-modal-overlay`（整理排除列表历史上未包含所有 dialog 变体）。
+
+**纵深防御**：需要阻断滚轮/点击落到背后主列时，可在 App 层对主内容包 **`pointer-events-none`**（如设置打开时）；与 `data-ui-modal-overlay` 互补，而非替代。
+
 ## 3) Stacking Context 层级约束
 
 - 注意：`transform/translate/opacity/filter` 会创建新的 stacking context。

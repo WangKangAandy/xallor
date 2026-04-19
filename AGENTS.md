@@ -56,6 +56,7 @@ src/
 - **样式**：优先 Tailwind 类名；主题变量在 `src/styles/theme.css` 与 Tailwind 配置链路中。
 - **类型**：根目录 [`tsconfig.json`](tsconfig.json) 已启用 `strict`；新增 `.ts`/`.tsx` 时保持与周围文件一致的模块解析方式。
 - **图片与外链**：注意 `App.tsx` 等处的 Unsplash 等外部 URL；替换资源时考虑版权与加载失败（可参考 `figma/ImageWithFallback.tsx`）。
+- **全屏/强模态叠层**：在最外层可命中指针的容器上加 **`data-ui-modal-overlay`**，否则 `document` 捕获的整理框选与 App 根双击小憩可能仍穿透到背后；契约见 `src/app/components/arrange/uiModalOverlay.ts` 与 `docs/notes/pointer-and-layering-contract.md` §2.1。
 
 ## 常用命令
 
