@@ -5,6 +5,7 @@ import { act } from "react";
 import { describe, expect, it } from "vitest";
 import { createRoot } from "react-dom/client";
 import { AppI18nProvider } from "../i18n/AppI18n";
+import { UiPreferencesProvider } from "../preferences";
 import { SettingsSpotlightModal } from "./SettingsSpotlightModal";
 
 describe("SettingsSpotlightModal", () => {
@@ -21,19 +22,22 @@ describe("SettingsSpotlightModal", () => {
     act(() => {
       root.render(
         <AppI18nProvider>
-          <SettingsSpotlightModal
-            open
-            onClose={() => {}}
-            layoutMode="default"
-            onLayoutModeChange={() => {}}
-            openLinksInNewTab={false}
-            onOpenLinksInNewTabChange={() => {}}
-          />
+          <UiPreferencesProvider>
+            <SettingsSpotlightModal
+              open
+              onClose={() => {}}
+              layoutMode="default"
+              onLayoutModeChange={() => {}}
+              openLinksInNewTab={false}
+              onOpenLinksInNewTabChange={() => {}}
+            />
+          </UiPreferencesProvider>
         </AppI18nProvider>,
       );
     });
 
     expect(document.body.textContent).toContain("语言");
+    expect(document.body.textContent).not.toContain("布局");
 
     act(() => {
       document.querySelector<HTMLButtonElement>('[data-testid="settings-nav-appearance"]')?.click();
@@ -41,7 +45,9 @@ describe("SettingsSpotlightModal", () => {
 
     expect(document.body.textContent).toContain("主题");
     expect(document.body.textContent).toContain("壁纸");
+    expect(document.body.textContent).toContain("布局");
     expect(document.querySelector('[data-testid="settings-appearance-theme-system"]')).toBeTruthy();
+    expect(document.querySelector('[data-testid="settings-layout-mode-default"]')).toBeTruthy();
 
     act(() => {
       root.unmount();

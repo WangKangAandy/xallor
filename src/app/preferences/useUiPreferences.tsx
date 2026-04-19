@@ -2,11 +2,23 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
+import { applyColorScheme, subscribePrefersColorSchemeChange } from "../theme";
+import { matchesPrefersColorSchemeDark, resolveColorScheme } from "../theme/resolveColorScheme";
 import type { LayoutMode } from "./layoutTypes";
+import {
+  parseStoredColorScheme,
+  UI_COLOR_SCHEME_STORAGE_KEY,
+  type ColorSchemePreference,
+} from "./colorSchemeStorage";
+
+export type { ColorSchemePreference } from "./colorSchemeStorage";
+export { parseStoredColorScheme, UI_COLOR_SCHEME_STORAGE_KEY } from "./colorSchemeStorage";
 
 export const UI_LAYOUT_STORAGE_KEY = "xallor_ui_layout";
 export const UI_OPEN_LINKS_IN_NEW_TAB_STORAGE_KEY = "xallor_ui_open_links_in_new_tab";
@@ -33,11 +45,17 @@ function readInitialOpenLinksInNewTab(): boolean {
   );
 }
 
+function readInitialColorScheme(): ColorSchemePreference {
+  return parseStoredColorScheme(globalThis.localStorage?.getItem(UI_COLOR_SCHEME_STORAGE_KEY) ?? null);
+}
+
 export type UiPreferencesContextValue = {
   layoutMode: LayoutMode;
   setLayoutMode: (mode: LayoutMode) => void;
   openLinksInNewTab: boolean;
   setOpenLinksInNewTab: (value: boolean) => void;
+  colorScheme: ColorSchemePreference;
+  setColorScheme: (pref: ColorSchemePreference) => void;
 };
 
 const UiPreferencesContext = createContext<UiPreferencesContextValue | null>(null);
@@ -45,12 +63,35 @@ const UiPreferencesContext = createContext<UiPreferencesContextValue | null>(nul
 /**
  * UI 偏好 Provider：全应用单例状态，供 SearchBar / 网格等与设置共享。
  * 持久化仅在用户调用 setter 时写入，避免 useEffect 与外部 localStorage 竞态。
+ * 主题：`colorScheme` 变更后由 `useLayoutEffect` 调用 `applyColorScheme`；`system` 时单独订阅 `prefers-color-scheme`。
  */
 export function UiPreferencesProvider({ children }: { children: ReactNode }) {
   const [layoutMode, setLayoutModeState] = useState<LayoutMode>(() => readInitialLayoutMode());
   const [openLinksInNewTab, setOpenLinksInNewTabState] = useState<boolean>(() =>
     readInitialOpenLinksInNewTab(),
   );
+  const [colorScheme, setColorSchemeState] = useState<ColorSchemePreference>(() => readInitialColorScheme());
+  const [systemPrefersDark, setSystemPrefersDark] = useState<boolean>(() => matchesPrefersColorSchemeDark());
+
+  useEffect(() => {
+    if (colorScheme === "system") {
+      setSystemPrefersDark(matchesPrefersColorSchemeDark());
+    }
+  }, [colorScheme]);
+
+  useEffect(() => {
+    if (colorScheme !== "system") return;
+    return subscribePrefersColorSchemeChange(setSystemPrefersDark);
+  }, [colorScheme]);
+
+  const resolvedColorScheme = useMemo(
+    () => resolveColorScheme(colorScheme, systemPrefersDark),
+    [colorScheme, systemPrefersDark],
+  );
+
+  useLayoutEffect(() => {
+    applyColorScheme(resolvedColorScheme);
+  }, [resolvedColorScheme]);
 
   const setLayoutMode = useCallback((mode: LayoutMode) => {
     setLayoutModeState(mode);
@@ -62,14 +103,21 @@ export function UiPreferencesProvider({ children }: { children: ReactNode }) {
     globalThis.localStorage?.setItem(UI_OPEN_LINKS_IN_NEW_TAB_STORAGE_KEY, value ? "1" : "0");
   }, []);
 
+  const setColorScheme = useCallback((pref: ColorSchemePreference) => {
+    setColorSchemeState(pref);
+    globalThis.localStorage?.setItem(UI_COLOR_SCHEME_STORAGE_KEY, pref);
+  }, []);
+
   const value = useMemo(
     () => ({
       layoutMode,
       setLayoutMode,
       openLinksInNewTab,
       setOpenLinksInNewTab,
+      colorScheme,
+      setColorScheme,
     }),
-    [layoutMode, setLayoutMode, openLinksInNewTab, setOpenLinksInNewTab],
+    [layoutMode, setLayoutMode, openLinksInNewTab, setOpenLinksInNewTab, colorScheme, setColorScheme],
   );
 
   return <UiPreferencesContext.Provider value={value}>{children}</UiPreferencesContext.Provider>;

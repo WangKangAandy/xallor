@@ -27,7 +27,7 @@
 
 ## 路径与入口
 
-- **HTML 入口**：[index.html](index.html) → `/src/main.tsx`
+- **HTML 入口**：[index.html](index.html)（首屏主题内联脚本与 TS 算法须对齐）→ `/src/main.tsx`（`createRoot` 前 `initColorScheme()`）
 - **应用根组件**：[src/app/App.tsx](src/app/App.tsx)（布局：背景、[`Sidebar`](src/app/components/Sidebar.tsx)、[`SearchBar`](src/app/components/SearchBar.tsx)、[`MultiDesktopStrip`](src/app/components/MultiDesktopStrip.tsx) 内嵌 [`DesktopGrid`](src/app/components/DesktopGrid.tsx)）
 - **路径别名**：`@` → `src`（在 Vite 中配置；导入示例：`import X from '@/app/...'`）
 
@@ -38,7 +38,8 @@ src/
   main.tsx                 # createRoot 挂载
   app/
     App.tsx                # 页面壳与主布局
-    preferences/           # UI 偏好：layoutMode、openLinksInNewTab；UiPreferencesProvider
+    preferences/           # UI 偏好：layoutMode、openLinksInNewTab、colorScheme；UiPreferencesProvider
+    theme/                 # 亮暗：`applyColorScheme`（html.dark + color-scheme）、`xallor:theme-change` 仅 resolved 变化时派发；见 docs/notes/theme-color-scheme-implementation-plan.md
     navigation/          # 外链打开：openExternalUrlImpl、useOpenExternalUrl
     components/            # 业务组件（桌面网格、侧栏、搜索等）
       figma/               # 与导出相关的辅助（如 ImageWithFallback）
@@ -54,6 +55,7 @@ src/
 
 - **组件**：函数组件；与现有文件一致地使用双引号或单引号（当前混用，新代码跟随邻近文件）。
 - **样式**：优先 Tailwind 类名；主题变量在 `src/styles/theme.css` 与 Tailwind 配置链路中。
+- **亮暗主题**：用户偏好存 `UiPreferences.colorScheme`；DOM 仅由 `src/app/theme/applyColorScheme.ts` 写 `html.dark` 与 `document.documentElement.style.colorScheme`；`xallor:theme-change` **仅**在 `resolved` 相对上次成功 apply **发生变化**时派发（幂等早退不得派发）；`system` 时 `matchMedia` 监听须单实例 + cleanup。详见 `docs/notes/theme-color-scheme-implementation-plan.md`。
 - **类型**：根目录 [`tsconfig.json`](tsconfig.json) 已启用 `strict`；新增 `.ts`/`.tsx` 时保持与周围文件一致的模块解析方式。
 - **图片与外链**：注意 `App.tsx` 等处的 Unsplash 等外部 URL；替换资源时考虑版权与加载失败（可参考 `figma/ImageWithFallback.tsx`）。
 - **全屏/强模态叠层**：在最外层可命中指针的容器上加 **`data-ui-modal-overlay`**，否则 `document` 捕获的整理框选与 App 根双击小憩可能仍穿透到背后；契约见 `src/app/components/arrange/uiModalOverlay.ts` 与 `docs/notes/pointer-and-layering-contract.md` §2.1。

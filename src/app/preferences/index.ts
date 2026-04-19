@@ -1,3 +1,5 @@
+export type { ColorSchemePreference } from "./colorSchemeStorage";
+export { parseStoredColorScheme, UI_COLOR_SCHEME_STORAGE_KEY } from "./colorSchemeStorage";
 export type { LayoutCapabilities, LayoutMode } from "./layoutTypes";
 export { getLayoutCapabilities } from "./layoutCapabilities";
 export {

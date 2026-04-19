@@ -13,6 +13,7 @@ import { useState, type ReactNode } from "react";
 import { DEFAULT_NEW_TAB_BACKGROUND_URL } from "./feedback";
 import { useAppI18n, type AppLocale } from "../i18n/AppI18n";
 import type { LayoutMode } from "../preferences";
+import { useUiPreferences } from "../preferences";
 import { SegmentedControl } from "./shared/SegmentedControl";
 
 type SettingsSpotlightModalProps = {
@@ -70,8 +71,10 @@ function SettingsToggleRow({
   return (
     <div className="flex min-w-0 items-center justify-between gap-3 py-2">
       <div className="min-w-0 pr-2">
-        <div className="text-sm">{title}</div>
-        {description ? <div className="break-words text-xs text-slate-500">{description}</div> : null}
+        <div className="text-sm text-slate-900 dark:text-slate-100">{title}</div>
+        {description ? (
+          <div className="break-words text-xs text-slate-500 dark:text-slate-400">{description}</div>
+        ) : null}
       </div>
       <button
         type="button"
@@ -111,8 +114,8 @@ function SettingsRangeRow({
   return (
     <div className="space-y-2 pt-1">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm text-slate-700">{label}</span>
-        <span className="text-xs tabular-nums text-slate-500">{valueLabel}</span>
+        <span className="text-sm text-slate-700 dark:text-slate-200">{label}</span>
+        <span className="text-xs tabular-nums text-slate-500 dark:text-slate-400">{valueLabel}</span>
       </div>
       <input
         type="range"
@@ -120,16 +123,22 @@ function SettingsRangeRow({
         max={max}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-200/90 accent-sky-500"
+        className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-200/90 accent-sky-500 dark:bg-slate-600/80"
       />
     </div>
   );
 }
 
-/** 外观页：控件状态仅用于面板内展示，后续可接入 preferences。 */
-function SettingsAppearancePanel() {
+/** 外观页：主题与布局走 `UiPreferences`；其余控件仍为本地示意，可后续接入 preferences。 */
+function SettingsAppearancePanel({
+  layoutMode,
+  onLayoutModeChange,
+}: {
+  layoutMode: LayoutMode;
+  onLayoutModeChange: (mode: LayoutMode) => void;
+}) {
   const { t } = useAppI18n();
-  const [theme, setTheme] = useState<"light" | "dark" | "system">("system");
+  const { colorScheme, setColorScheme } = useUiPreferences();
   const [wallpaperBlur, setWallpaperBlur] = useState(true);
   const [autoDimWallpaper, setAutoDimWallpaper] = useState(true);
   const [blurStrength, setBlurStrength] = useState(42);
@@ -139,12 +148,12 @@ function SettingsAppearancePanel() {
   const [glassEffect, setGlassEffect] = useState(true);
 
   return (
-    <div className="min-w-0 max-w-full space-y-6 px-6 pb-6 pt-4 text-slate-800">
-      <div className="min-w-0 space-y-4 overflow-hidden rounded-2xl border border-slate-200/70 bg-white/72 p-4">
+    <div className="min-w-0 max-w-full space-y-6 px-6 pb-6 pt-4 text-slate-800 dark:text-slate-100">
+      <div className="min-w-0 space-y-4 overflow-hidden rounded-2xl border border-slate-200/70 bg-white/72 p-4 dark:border-slate-600/60 dark:bg-slate-800/75">
         <div className="text-sm font-medium">{t("settings.appearanceTheme")}</div>
         <SegmentedControl<"light" | "dark" | "system">
-          value={theme}
-          onChange={setTheme}
+          value={colorScheme}
+          onChange={setColorScheme}
           ariaLabel={t("settings.appearanceTheme")}
           options={[
             { value: "light", label: t("settings.appearanceThemeLight"), testId: "settings-appearance-theme-light" },
@@ -158,13 +167,15 @@ function SettingsAppearancePanel() {
         />
       </div>
 
-      <div className="min-w-0 space-y-4 overflow-hidden rounded-2xl border border-slate-200/70 bg-white/72 p-4">
+      <div className="min-w-0 space-y-4 overflow-hidden rounded-2xl border border-slate-200/70 bg-white/72 p-4 dark:border-slate-600/60 dark:bg-slate-800/75">
         <div className="min-w-0">
           <div className="text-sm font-medium">{t("settings.appearanceWallpaper")}</div>
-          <div className="mt-1 break-words text-xs text-slate-500">{t("settings.appearanceWallpaperHint")}</div>
+          <div className="mt-1 break-words text-xs text-slate-500 dark:text-slate-400">
+            {t("settings.appearanceWallpaperHint")}
+          </div>
         </div>
         {/* 固定宽高比容器 + 绝对定位图片：彻底切断 intrinsic 宽度参与布局 */}
-        <div className="relative mx-auto aspect-[5/2] w-full max-w-[280px] overflow-hidden rounded-xl border border-slate-200/80 bg-slate-100/50 shadow-inner">
+        <div className="relative mx-auto aspect-[5/2] w-full max-w-[280px] overflow-hidden rounded-xl border border-slate-200/80 bg-slate-100/50 shadow-inner dark:border-slate-600/60 dark:bg-slate-900/50">
           <img
             src={DEFAULT_NEW_TAB_BACKGROUND_URL}
             alt=""
@@ -176,11 +187,11 @@ function SettingsAppearancePanel() {
         </div>
         <button
           type="button"
-          className="rounded-lg border border-slate-200 bg-white/85 px-3 py-2 text-xs font-medium text-slate-700 shadow-sm transition-colors hover:bg-white"
+          className="rounded-lg border border-slate-200 bg-white/85 px-3 py-2 text-xs font-medium text-slate-700 shadow-sm transition-colors hover:bg-white dark:border-slate-600 dark:bg-slate-700/90 dark:text-slate-100 dark:hover:bg-slate-600/90"
         >
           {t("settings.appearancePickWallpaper")}
         </button>
-        <div className="h-px bg-slate-200/70" />
+        <div className="h-px bg-slate-200/70 dark:bg-slate-600/50" />
         <SettingsToggleRow
           title={t("settings.appearanceWallpaperBlur")}
           description={t("settings.appearanceWallpaperBlurDesc")}
@@ -205,8 +216,32 @@ function SettingsAppearancePanel() {
         />
       </div>
 
-      <div className="min-w-0 space-y-3 overflow-hidden rounded-2xl border border-slate-200/70 bg-white/72 p-4">
+      <div className="min-w-0 space-y-3 overflow-hidden rounded-2xl border border-slate-200/70 bg-white/72 p-4 dark:border-slate-600/60 dark:bg-slate-800/75">
         <div className="text-sm font-medium">{t("settings.appearanceLayoutSection")}</div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+          <div>
+            <div className="text-sm font-medium">{t("settings.layoutMode")}</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">{t("settings.layoutModeDesc")}</div>
+          </div>
+          <SegmentedControl<LayoutMode>
+            value={layoutMode}
+            onChange={onLayoutModeChange}
+            options={[
+              {
+                value: "default",
+                label: t("settings.layoutOptionDefault"),
+                testId: "settings-layout-mode-default",
+              },
+              {
+                value: "minimal",
+                label: t("settings.layoutOptionMinimal"),
+                testId: "settings-layout-mode-minimal",
+              },
+            ]}
+            ariaLabel={t("settings.layoutMode")}
+          />
+        </div>
+        <div className="h-px bg-slate-200/70 dark:bg-slate-600/50" />
         <SettingsToggleRow
           title={t("settings.appearanceShowSearchBar")}
           description={t("settings.appearanceShowSearchBarDesc")}
@@ -223,7 +258,7 @@ function SettingsAppearancePanel() {
           max={100}
         />
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-          <span className="text-sm text-slate-700">{t("settings.appearanceIconShape")}</span>
+          <span className="text-sm text-slate-700 dark:text-slate-200">{t("settings.appearanceIconShape")}</span>
           <SegmentedControl<"medium" | "large">
             value={iconShape}
             onChange={setIconShape}
@@ -242,7 +277,7 @@ function SettingsAppearancePanel() {
             ]}
           />
         </div>
-        <div className="h-px bg-slate-200/70" />
+        <div className="h-px bg-slate-200/70 dark:bg-slate-600/50" />
         <SettingsToggleRow
           title={t("settings.appearanceGlassEffect")}
           description={t("settings.appearanceGlassEffectDesc")}
@@ -259,7 +294,9 @@ function SettingsComingSoonBody() {
   const { t } = useAppI18n();
   return (
     <div className="flex flex-col items-center justify-center px-6 py-24">
-      <p className="max-w-sm text-center text-sm leading-relaxed text-slate-500">{t("settings.sectionComingSoon")}</p>
+      <p className="max-w-sm text-center text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+        {t("settings.sectionComingSoon")}
+      </p>
     </div>
   );
 }
@@ -280,12 +317,12 @@ export function SettingsSpotlightModal({
   let mainBody: ReactNode;
   if (activeSection === "general") {
     mainBody = (
-      <div className="min-w-0 max-w-full space-y-6 px-6 pb-6 pt-4 text-slate-800">
-        <div className="space-y-3 rounded-2xl border border-slate-200/70 bg-white/72 p-4">
+      <div className="min-w-0 max-w-full space-y-6 px-6 pb-6 pt-4 text-slate-800 dark:text-slate-100">
+        <div className="space-y-3 rounded-2xl border border-slate-200/70 bg-white/72 p-4 dark:border-slate-600/60 dark:bg-slate-800/75">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
             <div>
               <div className="text-sm font-medium">{t("settings.language")}</div>
-              <div className="text-xs text-slate-500">{t("settings.languageDesc")}</div>
+              <div className="text-xs text-slate-500 dark:text-slate-400">{t("settings.languageDesc")}</div>
             </div>
             <SegmentedControl<AppLocale>
               value={locale}
@@ -305,35 +342,11 @@ export function SettingsSpotlightModal({
               ariaLabel={t("settings.language")}
             />
           </div>
-          <div className="h-px bg-slate-200/70" />
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-            <div>
-              <div className="text-sm font-medium">{t("settings.layoutMode")}</div>
-              <div className="text-xs text-slate-500">{t("settings.layoutModeDesc")}</div>
-            </div>
-            <SegmentedControl<LayoutMode>
-              value={layoutMode}
-              onChange={onLayoutModeChange}
-              options={[
-                {
-                  value: "default",
-                  label: t("settings.layoutOptionDefault"),
-                  testId: "settings-layout-mode-default",
-                },
-                {
-                  value: "minimal",
-                  label: t("settings.layoutOptionMinimal"),
-                  testId: "settings-layout-mode-minimal",
-                },
-              ]}
-              ariaLabel={t("settings.layoutMode")}
-            />
-          </div>
-          <div className="h-px bg-slate-200/70" />
+          <div className="h-px bg-slate-200/70 dark:bg-slate-600/50" />
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
             <div>
               <div className="text-sm font-medium">{t("settings.linkOpenBehavior")}</div>
-              <div className="text-xs text-slate-500">{t("settings.linkOpenBehaviorDesc")}</div>
+              <div className="text-xs text-slate-500 dark:text-slate-400">{t("settings.linkOpenBehaviorDesc")}</div>
             </div>
             <SegmentedControl<"1" | "0">
               value={openLinksInNewTab ? "1" : "0"}
@@ -353,28 +366,28 @@ export function SettingsSpotlightModal({
               ariaLabel={t("settings.linkOpenBehavior")}
             />
           </div>
-          <div className="h-px bg-slate-200/70" />
+          <div className="h-px bg-slate-200/70 dark:bg-slate-600/50" />
           <div className="flex items-center justify-between gap-3">
             <div>
               <div className="text-sm font-medium">{t("settings.openOnStartup")}</div>
-              <div className="text-xs text-slate-500">{t("settings.openOnStartupDesc")}</div>
+              <div className="text-xs text-slate-500 dark:text-slate-400">{t("settings.openOnStartupDesc")}</div>
             </div>
-            <button className="rounded-lg border border-slate-200 bg-white/85 px-3 py-1.5 text-xs text-slate-600">
+            <button className="rounded-lg border border-slate-200 bg-white/85 px-3 py-1.5 text-xs text-slate-600 dark:border-slate-600 dark:bg-slate-700/90 dark:text-slate-200">
               {t("settings.newTabPage")}
             </button>
           </div>
         </div>
 
-        <div className="space-y-2 rounded-2xl border border-slate-200/70 bg-white/72 p-4">
+        <div className="space-y-2 rounded-2xl border border-slate-200/70 bg-white/72 p-4 dark:border-slate-600/60 dark:bg-slate-800/75">
           <div className="mb-2 flex items-center gap-2 text-sm font-medium">
-            <Bell className="h-4 w-4 text-slate-500" />
+            <Bell className="h-4 w-4 text-slate-500 dark:text-slate-400" />
             {t("settings.startupContent")}
           </div>
           {TOGGLES.map((item) => (
             <div key={item.titleKey} className="flex items-center justify-between gap-3 py-2">
               <div>
-                <div className="text-sm">{t(item.titleKey)}</div>
-                <div className="text-xs text-slate-500">{t(item.descKey)}</div>
+                <div className="text-sm text-slate-900 dark:text-slate-100">{t(item.titleKey)}</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">{t(item.descKey)}</div>
               </div>
               <span
                 className={`inline-flex h-6 w-10 items-center rounded-full p-0.5 transition-colors ${
@@ -393,7 +406,7 @@ export function SettingsSpotlightModal({
       </div>
     );
   } else if (activeSection === "appearance") {
-    mainBody = <SettingsAppearancePanel />;
+    mainBody = <SettingsAppearancePanel layoutMode={layoutMode} onLayoutModeChange={onLayoutModeChange} />;
   } else {
     mainBody = <SettingsComingSoonBody />;
   }
@@ -423,10 +436,10 @@ export function SettingsSpotlightModal({
         宽度：视口与 920px 取小；高度：min(620px, 100vh-5rem) 作「关于」类短页基准，不随 tab 变高；长内容仅在右侧 scrollbar-none 区域滚动。
       */}
       <div className="relative z-10 flex w-full min-w-0 justify-center">
-        <div className="flex h-[min(620px,calc(100vh-5rem))] max-h-[calc(100vh-5rem)] w-[min(920px,calc(100vw-4rem))] max-w-full min-w-0 flex-col overflow-hidden rounded-[24px] border border-white/55 bg-white/90 shadow-[0_30px_90px_rgba(2,6,23,0.5),0_12px_32px_rgba(15,23,42,0.38)] backdrop-blur-xl">
+        <div className="flex h-[min(620px,calc(100vh-5rem))] max-h-[calc(100vh-5rem)] w-[min(920px,calc(100vw-4rem))] max-w-full min-w-0 flex-col overflow-hidden rounded-[24px] border border-white/55 bg-white/90 shadow-[0_30px_90px_rgba(2,6,23,0.5),0_12px_32px_rgba(15,23,42,0.38)] backdrop-blur-xl dark:border-slate-600/50 dark:bg-slate-900/95">
           <div className="grid h-full min-h-0 min-w-0 flex-1 grid-cols-[250px_minmax(0,1fr)] grid-rows-1">
-            <aside className="flex h-full min-h-0 flex-col overflow-y-auto border-r border-slate-200/65 bg-white/58 px-4 py-5 scrollbar-none">
-            <div className="mb-4 px-2 text-lg font-semibold text-slate-800">{t("settings.title")}</div>
+            <aside className="flex h-full min-h-0 flex-col overflow-y-auto border-r border-slate-200/65 bg-white/58 px-4 py-5 scrollbar-none dark:border-slate-700/80 dark:bg-slate-900/70">
+            <div className="mb-4 px-2 text-lg font-semibold text-slate-800 dark:text-slate-100">{t("settings.title")}</div>
             <nav className="space-y-1" aria-label={t("settings.title")}>
               {SECTIONS.map(({ id, labelKey, Icon }) => {
                 const active = id === activeSection;
@@ -437,7 +450,9 @@ export function SettingsSpotlightModal({
                     data-testid={`settings-nav-${id}`}
                     aria-current={active ? "true" : undefined}
                     className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm transition-colors ${
-                      active ? "bg-slate-900/8 text-slate-900" : "text-slate-700 hover:bg-slate-900/5"
+                      active
+                        ? "bg-slate-900/8 text-slate-900 dark:bg-white/10 dark:text-slate-100"
+                        : "text-slate-700 hover:bg-slate-900/5 dark:text-slate-300 dark:hover:bg-white/5"
                     }`}
                     onClick={() => setActiveSection(id)}
                   >
@@ -450,21 +465,21 @@ export function SettingsSpotlightModal({
             </aside>
 
             <section className="relative flex h-full min-h-0 min-w-0 flex-col">
-            <div className="flex min-w-0 shrink-0 items-center gap-3 border-b border-slate-200/65 px-6 py-4">
+            <div className="flex min-w-0 shrink-0 items-center gap-3 border-b border-slate-200/65 px-6 py-4 dark:border-slate-700/80">
               <div className="relative min-w-0 flex-1">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                 <input
                   readOnly
                   value=""
                   placeholder={t("settings.searchPlaceholder")}
-                  className="w-full rounded-xl border border-slate-200 bg-white/70 py-2 pl-9 pr-3 text-sm text-slate-700 outline-none"
+                  className="w-full rounded-xl border border-slate-200 bg-white/70 py-2 pl-9 pr-3 text-sm text-slate-700 outline-none dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-200 dark:placeholder:text-slate-500"
                 />
               </div>
               <button
                 type="button"
                 data-testid="settings-modal-close"
                 aria-label={t("settings.close")}
-                className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-900/5 hover:text-slate-600"
+                className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-900/5 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-white/10 dark:hover:text-slate-300"
                 onClick={onClose}
               >
                 <X className="h-4 w-4" />

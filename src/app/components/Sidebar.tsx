@@ -40,7 +40,7 @@ export function Sidebar({ onOpenSettings }: SidebarProps) {
         }}
       >
         {MENU_ITEMS.map((item) => (
-          <div key={item.labelKey} className="h-[4px] w-[4px] rounded-full bg-white/70" />
+          <div key={item.labelKey} className="h-[4px] w-[4px] rounded-full bg-white/70 dark:bg-slate-400/60" />
         ))}
       </div>
 
@@ -73,11 +73,11 @@ export function Sidebar({ onOpenSettings }: SidebarProps) {
                 {MENU_ITEMS.map(({ Icon, labelKey }) => (
                   <button
                     key={labelKey}
-                    className="group relative flex h-12 w-12 items-center justify-center rounded-2xl transition-all hover:bg-white/30"
+                    className="group relative flex h-12 w-12 items-center justify-center rounded-2xl transition-all hover:bg-white/30 dark:hover:bg-white/10"
                     title={t(labelKey)}
                     onClick={() => handleMenuClick(labelKey)}
                   >
-                    <Icon className="h-5 w-5 text-gray-700" strokeWidth={1.5} />
+                    <Icon className="h-5 w-5 text-gray-700 dark:text-slate-200" strokeWidth={1.5} />
                     <span className="pointer-events-none absolute left-full ml-3 whitespace-nowrap rounded-lg bg-gray-800 px-3 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
                       {t(labelKey)}
                     </span>

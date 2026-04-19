@@ -181,14 +181,14 @@ export function SearchBar() {
           </div>
           {/* Right-pointing chevron rotates down when open */}
           <ChevronRight
-            className="w-3.5 h-3.5 text-gray-500 transition-transform duration-300"
+            className="h-3.5 w-3.5 text-gray-500 transition-transform duration-300 dark:text-slate-400"
             style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}
             strokeWidth={2.5}
           />
         </button>
 
         {/* Divider */}
-        <div className="w-px h-5 bg-gray-400/40 shrink-0" />
+        <div className="h-5 w-px shrink-0 bg-gray-400/40 dark:bg-slate-500/50" />
 
         {/* Text Input */}
         <input
@@ -197,7 +197,7 @@ export function SearchBar() {
           onChange={e => setQuery(e.target.value)}
           onKeyDown={handleSearch}
           placeholder={`用 ${selected.name} 搜索…`}
-          className="flex-1 bg-transparent outline-none placeholder-gray-400 text-gray-800 min-w-0"
+          className="min-w-0 flex-1 bg-transparent text-gray-800 outline-none placeholder-gray-400 dark:text-slate-100 dark:placeholder:text-slate-500"
         />
       </GlassSurface>
 
@@ -215,8 +215,8 @@ export function SearchBar() {
               <button
                 key={engine.id}
                 onClick={() => handleSelectEngine(engine)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all hover:bg-white/60 text-left ${
-                  selected.id === engine.id ? 'bg-white/60' : ''
+                className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all hover:bg-white/60 dark:hover:bg-white/10 ${
+                  selected.id === engine.id ? "bg-white/60 dark:bg-white/15" : ""
                 }`}
               >
                 <FaviconIcon
@@ -226,7 +226,7 @@ export function SearchBar() {
                   className="rounded-sm object-contain"
                   style={{ imageRendering: 'auto' }}
                 />
-                <span className="text-sm text-gray-700 flex-1 whitespace-nowrap">{engine.name}</span>
+                <span className="flex-1 whitespace-nowrap text-sm text-gray-700 dark:text-slate-200">{engine.name}</span>
                 {selected.id === engine.id && (
                   <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
                 )}
