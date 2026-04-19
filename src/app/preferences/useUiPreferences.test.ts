@@ -8,6 +8,7 @@ import {
   UI_COLOR_SCHEME_STORAGE_KEY,
   UI_LAYOUT_STORAGE_KEY,
   UI_OPEN_LINKS_IN_NEW_TAB_STORAGE_KEY,
+  UI_SEARCH_ENGINE_STORAGE_KEY,
 } from "./useUiPreferences";
 
 describe("parseStoredLayoutMode", () => {
@@ -41,6 +42,7 @@ describe("useUiPreferences storage contract", () => {
     globalThis.localStorage?.removeItem(UI_LAYOUT_STORAGE_KEY);
     globalThis.localStorage?.removeItem(UI_OPEN_LINKS_IN_NEW_TAB_STORAGE_KEY);
     globalThis.localStorage?.removeItem(UI_COLOR_SCHEME_STORAGE_KEY);
+    globalThis.localStorage?.removeItem(UI_SEARCH_ENGINE_STORAGE_KEY);
   });
 
   /**
@@ -50,5 +52,6 @@ describe("useUiPreferences storage contract", () => {
     expect(UI_LAYOUT_STORAGE_KEY).toBe("xallor_ui_layout");
     expect(UI_OPEN_LINKS_IN_NEW_TAB_STORAGE_KEY).toBe("xallor_ui_open_links_in_new_tab");
     expect(UI_COLOR_SCHEME_STORAGE_KEY).toBe("xallor_ui_color_scheme");
+    expect(UI_SEARCH_ENGINE_STORAGE_KEY).toBe("xallor_ui_search_engine");
   });
 });

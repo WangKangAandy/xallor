@@ -54,4 +54,103 @@ describe("SettingsSpotlightModal", () => {
     });
     document.body.removeChild(container);
   });
+
+  /**
+   * 目的：通用页可切换默认搜索引擎，确保设置入口能驱动全局偏好。
+   * 前置：设置弹层打开在「通用」。
+   * 预期：点击触发器展开小框并选择 Google 后，触发器文案更新为 Google。
+   */
+  it("should_update_default_search_engine_label_when_engine_option_selected_in_general_section", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    act(() => {
+      root.render(
+        <AppI18nProvider>
+          <UiPreferencesProvider>
+            <SettingsSpotlightModal
+              open
+              onClose={() => {}}
+              layoutMode="default"
+              onLayoutModeChange={() => {}}
+              openLinksInNewTab={false}
+              onOpenLinksInNewTabChange={() => {}}
+            />
+          </UiPreferencesProvider>
+        </AppI18nProvider>,
+      );
+    });
+
+    const trigger = document.querySelector(
+      '[data-testid="settings-default-search-engine-trigger"]',
+    ) as HTMLButtonElement | null;
+    expect(trigger).not.toBeNull();
+    expect(trigger?.textContent).toContain("百度");
+
+    act(() => {
+      trigger?.click();
+    });
+
+    const option = document.querySelector(
+      '[data-testid="settings-default-search-engine-option-google"]',
+    ) as HTMLButtonElement | null;
+    expect(option).not.toBeNull();
+
+    act(() => {
+      option?.click();
+    });
+
+    expect(trigger?.textContent).toContain("Google");
+
+    act(() => {
+      root.unmount();
+    });
+    document.body.removeChild(container);
+  });
+
+  /**
+   * 目的：点击面板外遮罩应关闭设置，防止 z-index/容器命中调整后回归。
+   * 前置：弹层打开，`onClose` 回调可被观测。
+   * 预期：点击覆盖层（非面板区域）触发 `onClose` 一次。
+   */
+  it("should_close_when_backdrop_clicked_outside_panel", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    let closeCount = 0;
+
+    act(() => {
+      root.render(
+        <AppI18nProvider>
+          <UiPreferencesProvider>
+            <SettingsSpotlightModal
+              open
+              onClose={() => {
+                closeCount += 1;
+              }}
+              layoutMode="default"
+              onLayoutModeChange={() => {}}
+              openLinksInNewTab={false}
+              onOpenLinksInNewTabChange={() => {}}
+            />
+          </UiPreferencesProvider>
+        </AppI18nProvider>,
+      );
+    });
+
+    const backdrop = document.querySelector('button[aria-label="关闭"]') as HTMLButtonElement | null;
+    expect(backdrop).not.toBeNull();
+
+    act(() => {
+      backdrop?.click();
+    });
+
+    expect(closeCount).toBe(1);
+
+    act(() => {
+      root.unmount();
+    });
+    document.body.removeChild(container);
+  });
 });

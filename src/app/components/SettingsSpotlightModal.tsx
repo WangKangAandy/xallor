@@ -15,6 +15,11 @@ import { useAppI18n, type AppLocale } from "../i18n/AppI18n";
 import type { LayoutMode } from "../preferences";
 import { useUiPreferences } from "../preferences";
 import { SegmentedControl } from "./shared/SegmentedControl";
+import {
+  getAllSearchEngines,
+  getSearchEngineById,
+  resolveSearchEngineId,
+} from "../search/searchEngineRegistry";
 
 type SettingsSpotlightModalProps = {
   open: boolean;
@@ -310,7 +315,13 @@ export function SettingsSpotlightModal({
   onOpenLinksInNewTabChange,
 }: SettingsSpotlightModalProps) {
   const { locale, setLocale, t } = useAppI18n();
+  const { selectedSearchEngineId, setSearchEngine } = useUiPreferences();
   const [activeSection, setActiveSection] = useState<SettingsSectionId>("general");
+  const [searchEnginePickerOpen, setSearchEnginePickerOpen] = useState(false);
+  const availableSearchEngines = getAllSearchEngines();
+  const selectedSearchEngine =
+    getSearchEngineById(selectedSearchEngineId, availableSearchEngines) ??
+    getSearchEngineById(resolveSearchEngineId(null, availableSearchEngines), availableSearchEngines);
 
   if (!open) return null;
 
@@ -341,6 +352,52 @@ export function SettingsSpotlightModal({
               ]}
               ariaLabel={t("settings.language")}
             />
+          </div>
+          <div className="h-px bg-slate-200/70 dark:bg-slate-600/50" />
+          <div className="relative flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+            <div>
+              <div className="text-sm font-medium">{t("settings.defaultSearchEngine")}</div>
+              <div className="text-xs text-slate-500 dark:text-slate-400">{t("settings.defaultSearchEngineDesc")}</div>
+            </div>
+            <button
+              type="button"
+              data-testid="settings-default-search-engine-trigger"
+              className="rounded-lg border border-slate-200 bg-white/85 px-3 py-1.5 text-xs text-slate-600 transition-colors hover:bg-white dark:border-slate-600 dark:bg-slate-700/90 dark:text-slate-200 dark:hover:bg-slate-600/90"
+              onClick={() => setSearchEnginePickerOpen((v) => !v)}
+            >
+              {selectedSearchEngine?.name ?? "百度"}
+            </button>
+            {searchEnginePickerOpen ? (
+              <div
+                className="absolute right-0 top-[calc(100%+0.5rem)] z-20 min-w-[180px] overflow-hidden rounded-xl border border-slate-200/80 bg-white/95 p-1.5 shadow-xl dark:border-slate-600 dark:bg-slate-800/95"
+                role="listbox"
+                aria-label={t("settings.chooseSearchEngine")}
+              >
+                {availableSearchEngines.map((engine) => {
+                  const active = engine.id === selectedSearchEngine?.id;
+                  return (
+                    <button
+                      key={engine.id}
+                      type="button"
+                      role="option"
+                      aria-selected={active}
+                      data-testid={`settings-default-search-engine-option-${engine.id}`}
+                      className={`flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-xs transition-colors ${
+                        active
+                          ? "bg-sky-500/12 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300"
+                          : "text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700/70"
+                      }`}
+                      onClick={() => {
+                        setSearchEngine(engine.id);
+                        setSearchEnginePickerOpen(false);
+                      }}
+                    >
+                      <span>{engine.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
           </div>
           <div className="h-px bg-slate-200/70 dark:bg-slate-600/50" />
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
@@ -435,8 +492,8 @@ export function SettingsSpotlightModal({
       {/*
         宽度：视口与 920px 取小；高度：min(620px, 100vh-5rem) 作「关于」类短页基准，不随 tab 变高；长内容仅在右侧 scrollbar-none 区域滚动。
       */}
-      <div className="relative z-10 flex w-full min-w-0 justify-center">
-        <div className="flex h-[min(620px,calc(100vh-5rem))] max-h-[calc(100vh-5rem)] w-[min(920px,calc(100vw-4rem))] max-w-full min-w-0 flex-col overflow-hidden rounded-[24px] border border-white/55 bg-white/90 shadow-[0_30px_90px_rgba(2,6,23,0.5),0_12px_32px_rgba(15,23,42,0.38)] backdrop-blur-xl dark:border-slate-600/50 dark:bg-slate-900/95">
+      <div className="pointer-events-none relative z-10 flex w-full min-w-0 justify-center">
+        <div className="pointer-events-auto flex h-[min(620px,calc(100vh-5rem))] max-h-[calc(100vh-5rem)] w-[min(920px,calc(100vw-4rem))] max-w-full min-w-0 flex-col overflow-hidden rounded-[24px] border border-white/55 bg-white/90 shadow-[0_30px_90px_rgba(2,6,23,0.5),0_12px_32px_rgba(15,23,42,0.38)] backdrop-blur-xl dark:border-slate-600/50 dark:bg-slate-900/95">
           <div className="grid h-full min-h-0 min-w-0 flex-1 grid-cols-[250px_minmax(0,1fr)] grid-rows-1">
             <aside className="flex h-full min-h-0 flex-col overflow-y-auto border-r border-slate-200/65 bg-white/58 px-4 py-5 scrollbar-none dark:border-slate-700/80 dark:bg-slate-900/70">
             <div className="mb-4 px-2 text-lg font-semibold text-slate-800 dark:text-slate-100">{t("settings.title")}</div>

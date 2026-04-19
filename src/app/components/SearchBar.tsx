@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, KeyboardEvent } from 'react';
+import { useState, useRef, useEffect, KeyboardEvent } from "react";
 import { useOpenExternalUrl } from '../navigation';
 import { ChevronRight, Plus, X, Check } from 'lucide-react';
 import { loadSearchPayload, saveSearchPayload } from '../storage/repository';
@@ -6,21 +6,13 @@ import { FaviconIcon } from './shared/FaviconIcon';
 import { GlassSurface } from './shared/GlassSurface';
 import { Z_SEARCH_BAR, Z_SEARCH_DROPDOWN } from './desktopGridLayers';
 import { useDismissOnPointerDownOutside } from './useDismissOnPointerDownOutside';
-
-interface SearchEngine {
-  id: string;
-  name: string;
-  domain: string;
-  searchUrl: string;
-}
-
-const DEFAULT_ENGINES: SearchEngine[] = [
-  { id: 'google',     name: 'Google',     domain: 'google.com',       searchUrl: 'https://www.google.com/search?q=' },
-  { id: 'bing',       name: 'Bing',       domain: 'bing.com',         searchUrl: 'https://www.bing.com/search?q=' },
-  { id: 'duckduckgo', name: 'DuckDuckGo', domain: 'duckduckgo.com',   searchUrl: 'https://duckduckgo.com/?q=' },
-  { id: 'baidu',      name: '百度',        domain: 'baidu.com',        searchUrl: 'https://www.baidu.com/s?wd=' },
-  { id: 'brave',      name: 'Brave',      domain: 'search.brave.com', searchUrl: 'https://search.brave.com/search?q=' },
-];
+import { useUiPreferences } from "../preferences";
+import {
+  getAllSearchEngines,
+  getSearchEngineById,
+  resolveSearchEngineId,
+  type SearchEngine,
+} from "../search/searchEngineRegistry";
 
 interface AddEngineFormProps {
   onAdd: (engine: SearchEngine) => void;
@@ -84,27 +76,28 @@ function AddEngineForm({ onAdd, onCancel }: AddEngineFormProps) {
 
 export function SearchBar() {
   const openUrl = useOpenExternalUrl();
-  const [engines, setEngines] = useState<SearchEngine[]>(DEFAULT_ENGINES);
-  const [selected, setSelected] = useState<SearchEngine>(DEFAULT_ENGINES[0]);
+  const { selectedSearchEngineId, setSearchEngine } = useUiPreferences();
+  const initialEngines = getAllSearchEngines();
+  const [engines, setEngines] = useState<SearchEngine[]>(initialEngines);
   const [isOpen, setIsOpen] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [query, setQuery] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
   const hydratedRef = useRef(false);
+  const selected =
+    getSearchEngineById(selectedSearchEngineId, engines) ??
+    getSearchEngineById(resolveSearchEngineId(null, engines), engines) ??
+    initialEngines[0];
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const persisted = await loadSearchPayload({
-        engines: DEFAULT_ENGINES,
-        selectedEngineId: DEFAULT_ENGINES[0].id,
+        engines: getAllSearchEngines(),
+        selectedEngineId: selectedSearchEngineId,
       });
       if (cancelled) return;
       setEngines(persisted.engines);
-      const selectedEngine = persisted.engines.find((item) => item.id === persisted.selectedEngineId) ?? persisted.engines[0];
-      if (selectedEngine) {
-        setSelected(selectedEngine);
-      }
       hydratedRef.current = true;
     })();
     return () => {
@@ -113,15 +106,20 @@ export function SearchBar() {
   }, []);
 
   useEffect(() => {
+    if (engines.length === 0) return;
+    const resolved = resolveSearchEngineId(selectedSearchEngineId, engines);
+    if (resolved !== selectedSearchEngineId) {
+      setSearchEngine(resolved);
+    }
+  }, [engines, selectedSearchEngineId, setSearchEngine]);
+
+  useEffect(() => {
     if (!hydratedRef.current || engines.length === 0) return;
-    const timer = globalThis.setTimeout(() => {
-      void saveSearchPayload({
-        engines,
-        selectedEngineId: selected.id,
-      });
-    }, 400);
-    return () => globalThis.clearTimeout(timer);
-  }, [engines, selected]);
+    void saveSearchPayload({
+      engines,
+      selectedEngineId: selected.id,
+    });
+  }, [engines, selected.id]);
 
   useDismissOnPointerDownOutside(containerRef, isOpen || showAddForm, () => {
     setIsOpen(false);
@@ -138,7 +136,7 @@ export function SearchBar() {
   };
 
   const handleSelectEngine = (engine: SearchEngine) => {
-    setSelected(engine);
+    setSearchEngine(engine.id);
     setIsOpen(false);
     setShowAddForm(false);
   };

@@ -16,12 +16,14 @@ import {
   UI_COLOR_SCHEME_STORAGE_KEY,
   type ColorSchemePreference,
 } from "./colorSchemeStorage";
+import { resolveSearchEngineId } from "../search/searchEngineRegistry";
 
 export type { ColorSchemePreference } from "./colorSchemeStorage";
 export { parseStoredColorScheme, UI_COLOR_SCHEME_STORAGE_KEY } from "./colorSchemeStorage";
 
 export const UI_LAYOUT_STORAGE_KEY = "xallor_ui_layout";
 export const UI_OPEN_LINKS_IN_NEW_TAB_STORAGE_KEY = "xallor_ui_open_links_in_new_tab";
+export const UI_SEARCH_ENGINE_STORAGE_KEY = "xallor_ui_search_engine";
 
 /** 供单测与存储迁移；非法值一律回退 default。 */
 export function parseStoredLayoutMode(raw: string | null): LayoutMode {
@@ -49,6 +51,10 @@ function readInitialColorScheme(): ColorSchemePreference {
   return parseStoredColorScheme(globalThis.localStorage?.getItem(UI_COLOR_SCHEME_STORAGE_KEY) ?? null);
 }
 
+function readInitialSearchEngineId(): string {
+  return resolveSearchEngineId(globalThis.localStorage?.getItem(UI_SEARCH_ENGINE_STORAGE_KEY) ?? null);
+}
+
 export type UiPreferencesContextValue = {
   layoutMode: LayoutMode;
   setLayoutMode: (mode: LayoutMode) => void;
@@ -56,6 +62,8 @@ export type UiPreferencesContextValue = {
   setOpenLinksInNewTab: (value: boolean) => void;
   colorScheme: ColorSchemePreference;
   setColorScheme: (pref: ColorSchemePreference) => void;
+  selectedSearchEngineId: string;
+  setSearchEngine: (id: string) => void;
 };
 
 const UiPreferencesContext = createContext<UiPreferencesContextValue | null>(null);
@@ -71,6 +79,7 @@ export function UiPreferencesProvider({ children }: { children: ReactNode }) {
     readInitialOpenLinksInNewTab(),
   );
   const [colorScheme, setColorSchemeState] = useState<ColorSchemePreference>(() => readInitialColorScheme());
+  const [selectedSearchEngineId, setSelectedSearchEngineId] = useState<string>(() => readInitialSearchEngineId());
   const [systemPrefersDark, setSystemPrefersDark] = useState<boolean>(() => matchesPrefersColorSchemeDark());
 
   useEffect(() => {
@@ -108,6 +117,12 @@ export function UiPreferencesProvider({ children }: { children: ReactNode }) {
     globalThis.localStorage?.setItem(UI_COLOR_SCHEME_STORAGE_KEY, pref);
   }, []);
 
+  const setSearchEngine = useCallback((id: string) => {
+    const resolved = resolveSearchEngineId(id);
+    setSelectedSearchEngineId(resolved);
+    globalThis.localStorage?.setItem(UI_SEARCH_ENGINE_STORAGE_KEY, resolved);
+  }, []);
+
   const value = useMemo(
     () => ({
       layoutMode,
@@ -116,8 +131,19 @@ export function UiPreferencesProvider({ children }: { children: ReactNode }) {
       setOpenLinksInNewTab,
       colorScheme,
       setColorScheme,
+      selectedSearchEngineId,
+      setSearchEngine,
     }),
-    [layoutMode, setLayoutMode, openLinksInNewTab, setOpenLinksInNewTab, colorScheme, setColorScheme],
+    [
+      layoutMode,
+      setLayoutMode,
+      openLinksInNewTab,
+      setOpenLinksInNewTab,
+      colorScheme,
+      setColorScheme,
+      selectedSearchEngineId,
+      setSearchEngine,
+    ],
   );
 
   return <UiPreferencesContext.Provider value={value}>{children}</UiPreferencesContext.Provider>;
