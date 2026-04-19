@@ -18,6 +18,8 @@ type SettingsSpotlightModalProps = {
   onClose: () => void;
   layoutMode: LayoutMode;
   onLayoutModeChange: (mode: LayoutMode) => void;
+  openLinksInNewTab: boolean;
+  onOpenLinksInNewTabChange: (value: boolean) => void;
 };
 
 const SECTIONS = [
@@ -53,6 +55,8 @@ export function SettingsSpotlightModal({
   onClose,
   layoutMode,
   onLayoutModeChange,
+  openLinksInNewTab,
+  onOpenLinksInNewTabChange,
 }: SettingsSpotlightModalProps) {
   const { locale, setLocale, t } = useAppI18n();
   if (!open) return null;
@@ -167,6 +171,30 @@ export function SettingsSpotlightModal({
                       },
                     ]}
                     ariaLabel={t("settings.layoutMode")}
+                  />
+                </div>
+                <div className="h-px bg-slate-200/70" />
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                  <div>
+                    <div className="text-sm font-medium">{t("settings.linkOpenBehavior")}</div>
+                    <div className="text-xs text-slate-500">{t("settings.linkOpenBehaviorDesc")}</div>
+                  </div>
+                  <SegmentedControl<"1" | "0">
+                    value={openLinksInNewTab ? "1" : "0"}
+                    onChange={(v) => onOpenLinksInNewTabChange(v === "1")}
+                    options={[
+                      {
+                        value: "1",
+                        label: t("settings.linkOpenNewTab"),
+                        testId: "settings-link-open-new-tab",
+                      },
+                      {
+                        value: "0",
+                        label: t("settings.linkOpenSameTab"),
+                        testId: "settings-link-open-same-tab",
+                      },
+                    ]}
+                    ariaLabel={t("settings.linkOpenBehavior")}
                   />
                 </div>
                 <div className="h-px bg-slate-200/70" />

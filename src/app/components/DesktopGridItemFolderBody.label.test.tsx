@@ -6,6 +6,7 @@ import { createRoot } from "react-dom/client";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { describe, expect, it } from "vitest";
+import { UiPreferencesTestProvider } from "../preferences/UiPreferencesTestProvider";
 import { DesktopGridItemFolderBody, type FolderTileChrome } from "./DesktopGridItemFolderBody";
 import type { FolderItem } from "./desktopGridTypes";
 
@@ -50,6 +51,7 @@ describe("DesktopGridItemFolderBody label visibility", () => {
     act(() => {
       root.render(
         <DndProvider backend={HTML5Backend}>
+          <UiPreferencesTestProvider>
           <DesktopGridItemFolderBody
             item={FOLDER_ITEM}
             isMergeTarget={false}
@@ -60,6 +62,7 @@ describe("DesktopGridItemFolderBody label visibility", () => {
             onRename={() => {}}
             onOpenFolder={() => {}}
           />
+          </UiPreferencesTestProvider>
         </DndProvider>,
       );
     });

@@ -3,7 +3,7 @@ import { DEFAULT_NEW_TAB_BACKGROUND_URL, RemoteBackgroundImage } from "./compone
 import { SettingsSpotlightModal } from "./components/SettingsSpotlightModal";
 import { GlassSurface } from "./components/shared/GlassSurface";
 import { AppI18nProvider, useAppI18n } from "./i18n/AppI18n";
-import { getLayoutCapabilities, useUiPreferences } from "./preferences";
+import { getLayoutCapabilities, UiPreferencesProvider, useUiPreferences } from "./preferences";
 import { useRestModeController } from "./useRestModeController";
 
 const SearchBar = lazy(async () => {
@@ -53,7 +53,7 @@ function SearchBarFallback() {
 function AppContent() {
   const { isResting, handleDoubleClickCapture } = useRestModeController();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const { layoutMode, setLayoutMode } = useUiPreferences();
+  const { layoutMode, setLayoutMode, openLinksInNewTab, setOpenLinksInNewTab } = useUiPreferences();
   const capabilities = useMemo(() => getLayoutCapabilities(layoutMode), [layoutMode]);
 
   return (
@@ -129,6 +129,8 @@ function AppContent() {
         onClose={() => setIsSettingsOpen(false)}
         layoutMode={layoutMode}
         onLayoutModeChange={setLayoutMode}
+        openLinksInNewTab={openLinksInNewTab}
+        onOpenLinksInNewTabChange={setOpenLinksInNewTab}
       />
     </div>
   );
@@ -137,7 +139,9 @@ function AppContent() {
 export default function App() {
   return (
     <AppI18nProvider>
-      <AppContent />
+      <UiPreferencesProvider>
+        <AppContent />
+      </UiPreferencesProvider>
     </AppI18nProvider>
   );
 }

@@ -1,5 +1,6 @@
 import { createPortal } from "react-dom";
 import { useDrag } from "react-dnd";
+import { useOpenExternalUrl } from "../navigation";
 import type { FolderItem, Site } from "./desktopGridTypes";
 import { EditableLabel, Favicon } from "./DesktopGridItemPrimitives";
 import { GlassSurface } from "./shared/GlassSurface";
@@ -27,6 +28,7 @@ function FolderInnerItem({
   onArrangeToggleSelect?: () => void;
   onDeleteSite?: () => void;
 }) {
+  const openUrl = useOpenExternalUrl();
   const [{ isDragging }, drag, dragPreview] = useDrag({
     type: "ITEM",
     item: () => {
@@ -47,16 +49,36 @@ function FolderInnerItem({
         ref={drag}
         data-testid={`folder-inner-draggable-${encodeURIComponent(site.url)}`}
         href={site.url}
-        target="_blank"
-        rel="noopener noreferrer"
         onClick={(e) => {
-          if (isDragging || isArrangeMode) {
+          if (isDragging) {
             e.preventDefault();
             e.stopPropagation();
+            return;
           }
           if (isArrangeMode) {
+            e.preventDefault();
+            e.stopPropagation();
             onArrangeToggleSelect?.();
+            return;
           }
+          e.preventDefault();
+          openUrl(site.url, e);
+        }}
+        onAuxClick={(e) => {
+          if (e.button !== 1) return;
+          if (isDragging) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          }
+          if (isArrangeMode) {
+            e.preventDefault();
+            e.stopPropagation();
+            onArrangeToggleSelect?.();
+            return;
+          }
+          e.preventDefault();
+          openUrl(site.url, e);
         }}
         className={[
           `group flex flex-col items-center ${showLabels ? "justify-start" : "justify-center"} w-[100px] ${showLabels ? "gap-2" : "gap-0"} cursor-grab active:cursor-grabbing ${isDragging ? "opacity-0" : "opacity-100"}`,

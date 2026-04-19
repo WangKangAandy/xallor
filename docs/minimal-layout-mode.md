@@ -11,19 +11,19 @@
 - **极简模式**是用户的**常驻布局偏好**，不是临时「退出某状态」的开关。
 - 开启后主内容区**仅保留搜索框**（第一版）；**侧栏与默认模式一致**（交互、层级、从侧栏打开设置等**不因极简而改变**）。**多桌面条、网格**不渲染或等价隐藏。
 - **搜索框在视口中的位置与默认模式一致**（由外层布局/容器保证，不因「极简」而整体挪位）。
-- 用户通过**通用设置**（与语言等并列）在 `default` / `minimal` 之间切换；实现上为**分段按钮**（`aria-pressed`），避免受控 `<select>` 在自动化与部分环境下与 React 状态不同步。**不单独设计「退出极简」的独立交互**——改回默认布局即可。
+- 用户通过**通用设置**（与语言等并列）在 **`default`（界面文案「网格」）** / **`minimal`（「极简」）** 之间切换；实现上为**分段按钮**（`aria-pressed`），`data-testid` 仍为 `settings-layout-mode-default`（指枚举值，非界面词）。**不单独设计「退出极简」的独立交互**——切回网格布局即可。
 
 ### 1.1 与整理模式（网格会话）的关系
 
 - **极简下不存在整理模式**：整理模式依赖主区多桌面与 [`DesktopGrid`](../src/app/components/DesktopGrid.tsx)（含 [`useArrangeSession`](../src/app/components/arrange/useArrangeSession.ts)、手势控制器等）。极简**不挂载** [`MultiDesktopStrip`](../src/app/components/MultiDesktopStrip.tsx)，因此**没有**进入整理、框选、批量操作等入口，**语义上整理模式不适用**。
-- **生命周期**：整理会话随条带/网格组件挂载而存在；切到极简后条带卸载，会话**不再存活**（不是「后台挂起」）。切回默认布局、条带重新挂载时，整理会话为**新的初始状态**（与冷打开默认布局一致，通常为未进入整理）。
+- **生命周期**：整理会话随条带/网格组件挂载而存在；切到极简后条带卸载，会话**不再存活**（不是「后台挂起」）。切回网格布局（`layoutMode`=`default`）、条带重新挂载时，整理会话为**新的初始状态**（与冷打开网格布局一致，通常为未进入整理）。
 - **切换布局 = 强制退出整理（契约）**：从 `default` 切到 `minimal` 在语义上等价于 **退出整理会话**（与按 Esc 退出同类：不保留框选/整理态）。详见 §10.2。
 - **与 `layoutMode` 正交**：`ui.layoutMode` 描述持久布局偏好；**不要**把 `isArrangeMode` 并进 `layoutMode`。实现边界见 §8.1、§10.2。
 
 ### 1.2 与小憩模式的关系
 
 - **正交**：`isResting`（小憩）与 `layoutMode`（极简）分开建模；不在本文档合并。
-- **交互**：进入/退出小憩**不改变**用户的 `layoutMode` 持久偏好；极简下仍可进入小憩，行为与默认布局一致（同一 [`useRestModeController`](../src/app/useRestModeController.ts)）。若极简下主区更空、误触小憩增多，可再单独立项优化。
+- **交互**：进入/退出小憩**不改变**用户的 `layoutMode` 持久偏好；极简下仍可进入小憩，行为与网格布局一致（同一 [`useRestModeController`](../src/app/useRestModeController.ts)）。若极简下主区更空、误触小憩增多，可再单独立项优化。
 
 ---
 
@@ -47,21 +47,23 @@
 
 ## 4. 设置入口与持久化
 
-- **入口**：通用设置面板中一项（与语言等并列）。
-- **第一版持久化**：`localStorage` + hook；对外以 **`useUiPreferences`** 为**唯一读口**，业务组件**不要**直接读写 `localStorage` 键（与当前 [`AppI18n`](../src/app/i18n/AppI18n.tsx) 单独持 `locale` 并存时，迁移期可接受，但新增 UI 偏好键应走同一出口）。首版只持久化 `layoutMode`；`locale` 仍走 `xallor_locale`，后续迁入同一层（见 §10.1）。  
-- **写入时机（已实现）**：`xallor_ui_layout` **仅在用户调用 `setLayoutMode` 时写入**，不在 `useEffect` 中随 `layoutMode` 同步回写，避免与 E2E/迁移脚本等**外部写入**同一键时产生竞态。
-- **演进路径（建议写进代码注释/模块头）**  
-  - **v1**：`localStorage` + `useUiPreferences` hook（当前）  
-  - **v2**：`useUiPreferences` + **React Context**（缓解 prop drilling、多实例）  
-  - **v3**：可接 **Zustand / 全局 store**（仍保持同一 hook 或门面 API，避免业务层跟着换库）  
-  若未来需要快捷键、URL 参数、多设备同步，优先落在 **v2/v3** 的同一门面之后。
+- **入口**：通用设置面板中一项（与语言、打开方式等并列）。
+- **持久化与 Provider（已实现）**：[`UiPreferencesProvider`](../src/app/preferences/useUiPreferences.tsx) 包裹应用根，**`useUiPreferences`** 经 React Context 提供全树单例状态（已覆盖原 §4「v2」方向）。业务组件**不要**直接读写下列 `localStorage` 键。`locale` 仍由 [`AppI18n`](../src/app/i18n/AppI18n.tsx) 单独持 `xallor_locale`，与 UI 偏好并存。  
+  - **`xallor_ui_layout`**：`layoutMode`（`"default"` \| `"minimal"` 字面量），**仅在 `setLayoutMode` 时写入**。  
+  - **`xallor_ui_open_links_in_new_tab`**：`"1"` / `"0"`，**仅在 `setOpenLinksInNewTab` 时写入**；外链统一经 **`useOpenExternalUrl`**，详见 [`navigation-behavior-layer.md`](./notes/navigation-behavior-layer.md)。  
+- **写入时机**：上述键**均无**「`useEffect` 随 state 同步回写」逻辑，避免与 E2E / 外部脚本竞态。
+- **演进路径**  
+  - **v1**：`localStorage` + 单 hook（已演进）  
+  - **v2**：Context 单例（**已落地**：`UiPreferencesProvider`）  
+  - **v3**：可接 **Zustand** 等（仍保持 `useUiPreferences` 门面）  
+  若未来需要快捷键、URL 参数、多设备同步，优先落在 **v3** 的同一门面之后。
 
 ---
 
 ## 5. 非目标（第一版可明确不做）
 
 - 不承诺第一版即接入全局状态库（除非团队另有决定）。
-- 不单独做与「改回默认布局」重复的「退出极简」按钮/流程。
+- 不单独做与「切回网格布局」重复的「退出极简」按钮/流程。
 
 ---
 
@@ -76,11 +78,12 @@
 
 | 区域 | 说明 |
 |------|------|
-| 应用根布局 | [`src/app/App.tsx`](../src/app/App.tsx)：`getLayoutCapabilities` + `capabilities.showDesktop` 控制是否渲染 `MultiDesktopStrip`；主区桌面容器 `data-testid="desktop-main-slot"`（仅 `default` 时存在） |
-| UI 偏好 | [`src/app/preferences/`](../src/app/preferences/)：`layoutTypes.ts`、`layoutCapabilities.ts`、`useUiPreferences.ts`（`UI_LAYOUT_STORAGE_KEY` = `xallor_ui_layout`）、[`index.ts`](../src/app/preferences/index.ts) |
-| 搜索条 | [`src/app/components/SearchBar.tsx`](../src/app/components/SearchBar.tsx) |
-| 通用设置 / 国际化 | [`SettingsSpotlightModal.tsx`](../src/app/components/SettingsSpotlightModal.tsx)（布局：`data-testid` = `settings-layout-mode-default` / `settings-layout-mode-minimal`，关闭：`settings-modal-close`；遮罩与内容 `z-index` 分层避免误点）、[`AppI18n.tsx`](../src/app/i18n/AppI18n.tsx)、[`messages.ts`](../src/app/i18n/messages.ts)（`settings.layoutMode*` 等） |
-| E2E | [`e2e/minimal-layout.spec.ts`](../e2e/minimal-layout.spec.ts)：`addInitScript` 预置 `minimal` 后验证无桌面；极简下通过「默认」按钮恢复桌面 |
+| 应用根布局 | [`src/app/App.tsx`](../src/app/App.tsx)：`AppI18nProvider` → **`UiPreferencesProvider`** → `AppContent`；`getLayoutCapabilities` + `capabilities.showDesktop` 控制是否渲染 `MultiDesktopStrip`；主区桌面容器 `data-testid="desktop-main-slot"`（仅 `layoutMode`=`default` 时存在） |
+| UI 偏好 | [`src/app/preferences/`](../src/app/preferences/)：`layoutTypes.ts`、`layoutCapabilities.ts`、[`useUiPreferences.tsx`](../src/app/preferences/useUiPreferences.tsx)（`UI_LAYOUT_STORAGE_KEY`、`UI_OPEN_LINKS_IN_NEW_TAB_STORAGE_KEY`）、[`index.ts`](../src/app/preferences/index.ts)；单测包裹 [`UiPreferencesTestProvider.tsx`](../src/app/preferences/UiPreferencesTestProvider.tsx) |
+| 导航打开外链 | [`src/app/navigation/`](../src/app/navigation/)：`openExternalUrl.ts`、`useOpenExternalUrl.ts`（契约见 [`navigation-behavior-layer.md`](./notes/navigation-behavior-layer.md)） |
+| 搜索条 | [`src/app/components/SearchBar.tsx`](../src/app/components/SearchBar.tsx)（搜索提交经 `useOpenExternalUrl`） |
+| 通用设置 / 国际化 | [`SettingsSpotlightModal.tsx`](../src/app/components/SettingsSpotlightModal.tsx)（布局分段：文案「网格 / 极简」；`data-testid` = `settings-layout-mode-default` / `settings-layout-mode-minimal`；打开方式：`settings-link-open-*`；关闭：`settings-modal-close`）、[`AppI18n.tsx`](../src/app/i18n/AppI18n.tsx)、[`messages.ts`](../src/app/i18n/messages.ts) |
+| E2E | [`e2e/minimal-layout.spec.ts`](../e2e/minimal-layout.spec.ts)：`addInitScript` 预置 `minimal` 后验证无桌面；极简下通过「网格」分段（`settings-layout-mode-default`）恢复桌面 |
 
 ---
 
@@ -121,12 +124,11 @@
 
 ### 10.1 需要怎么调整当前代码（按文件）
 
-1. **新增 UI 偏好层（统一入口）**  
-   - 新增 `src/app/preferences/`（如 `uiPreferences.ts` + hook，命名可微调），定义：  
-     - `LayoutMode = "default" | "minimal"`  
-     - `UiPreferences`（首版至少含 `layoutMode`；`locale` 可后续迁入）  
-     - **`getLayoutCapabilities(layoutMode)`**（或 `resolveLayoutCapabilities(context)`，见 §10.2）：对外**始终是函数**，首版内部可用静态表实现，避免未来 role / flag / agent 接入时推翻调用方。  
-   - 新增 **`useUiPreferences`**（或 `useUiLayout`）：统一读写 `localStorage`、非法值回退、并作为**唯一**偏好读口（禁止业务组件散落 `localStorage.getItem('xallor_ui_layout')`）。
+1. **新增 UI 偏好层（统一入口）** — **已落地**  
+   - 目录：`src/app/preferences/`（`layoutTypes`、`layoutCapabilities`、**`useUiPreferences.tsx`** + **`UiPreferencesProvider`**）。  
+   - `LayoutMode = "default" | "minimal"`；另含 **`openLinksInNewTab`** 与 `xallor_ui_open_links_in_new_tab`（外链打开方式，见 [`navigation-behavior-layer.md`](./notes/navigation-behavior-layer.md)）。  
+   - **`getLayoutCapabilities(layoutMode)`**（见 §10.2）：对外为函数。  
+   - **`useUiPreferences`**：Context 单例 + `localStorage`、非法值回退、**唯一**偏好读口（禁止业务散落 `getItem('xallor_ui_layout')` 等）。
 
 2. **重构 `App.tsx` 为 Shell + 显式 Slot**  
    - 保留当前背景层、侧栏层、小憩逻辑（`useRestModeController`）不变。  
@@ -175,7 +177,7 @@
 
 ## 11. 已实现行为与测试约定（与当前代码同步）
 
-以下与 `main` 上实现一致，供评审与回归对照；若代码与本文冲突，以**代码与单测/E2E**为准并回改本节。
+以下与仓库**当前实现**一致，供评审与回归对照；若代码与本文冲突，以**代码与单测/E2E**为准并回改本节。
 
 | 主题 | 约定 |
 |------|------|
@@ -185,6 +187,7 @@
 | 能力 | `getLayoutCapabilities(layoutMode)`：`minimal` → `showDesktop: false`、`allowArrange: false` |
 | `App.tsx` | 依 `capabilities.showDesktop` 决定是否挂载 `MultiDesktopStrip`；主区桌面容器 **`data-testid="desktop-main-slot"`**（仅 `default` 时出现） |
 | 设置 UI | 通用设置内「布局模式」为**分段按钮**；`data-testid`：**`settings-layout-mode-default`**、**`settings-layout-mode-minimal`**；关闭：**`settings-modal-close`** |
-| E2E | [`e2e/minimal-layout.spec.ts`](../e2e/minimal-layout.spec.ts)：① 预置 `minimal` 后首屏无桌面；② 极简下切回默认并断言桌面恢复（不依赖首屏后再改 storage + reload 的脆弱路径） |
-| i18n | [`messages.ts`](../src/app/i18n/messages.ts) 中 `settings.layoutMode`、`settings.layoutModeDesc`、`settings.layoutOptionDefault`、`settings.layoutOptionMinimal` 等 |
+| E2E | [`e2e/minimal-layout.spec.ts`](../e2e/minimal-layout.spec.ts)：① 预置 `minimal` 后首屏无桌面；② 极简下切回「网格」（`layoutMode`=`default`）并断言桌面恢复（不依赖首屏后再改 storage + reload 的脆弱路径） |
+| i18n | [`messages.ts`](../src/app/i18n/messages.ts)：布局分段文案为 **网格 / 极简**（英文 Grid / Minimal）；打开方式为 **打开方式** 等 key（见导航文档 §7） |
+| 链接打开偏好 | 同 `navigation-behavior-layer.md`；`openLinksInNewTab` 与 `layoutMode` 同源 `useUiPreferences` |
 

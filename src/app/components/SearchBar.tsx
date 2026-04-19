@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, KeyboardEvent } from 'react';
+import { useOpenExternalUrl } from '../navigation';
 import { ChevronRight, Plus, X, Check } from 'lucide-react';
 import { loadSearchPayload, saveSearchPayload } from '../storage/repository';
 import { FaviconIcon } from './shared/FaviconIcon';
@@ -82,6 +83,7 @@ function AddEngineForm({ onAdd, onCancel }: AddEngineFormProps) {
 }
 
 export function SearchBar() {
+  const openUrl = useOpenExternalUrl();
   const [engines, setEngines] = useState<SearchEngine[]>(DEFAULT_ENGINES);
   const [selected, setSelected] = useState<SearchEngine>(DEFAULT_ENGINES[0]);
   const [isOpen, setIsOpen] = useState(false);
@@ -131,7 +133,7 @@ export function SearchBar() {
       const url = selected.searchUrl.includes('%s')
         ? selected.searchUrl.replace('%s', encodeURIComponent(query.trim()))
         : selected.searchUrl + encodeURIComponent(query.trim());
-      window.open(url, '_blank');
+      openUrl(url, e);
     }
   };
 

@@ -6,6 +6,7 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { describe, expect, it } from "vitest";
 import { AppI18nProvider } from "../i18n/AppI18n";
+import { UiPreferencesTestProvider } from "../preferences/UiPreferencesTestProvider";
 import { useArrangeSession } from "./arrange/useArrangeSession";
 import { DesktopGrid } from "./DesktopGrid";
 import type { GridItemType } from "./desktopGridTypes";
@@ -16,7 +17,9 @@ function DesktopGridHarness() {
   return (
     <DndProvider backend={HTML5Backend}>
       <AppI18nProvider>
-        <DesktopGrid arrangeSession={arrangeSession} items={items} setItems={setItems} showLabels isHydrated />
+        <UiPreferencesTestProvider>
+          <DesktopGrid arrangeSession={arrangeSession} items={items} setItems={setItems} showLabels isHydrated />
+        </UiPreferencesTestProvider>
       </AppI18nProvider>
     </DndProvider>
   );

@@ -38,9 +38,11 @@ src/
   main.tsx                 # createRoot 挂载
   app/
     App.tsx                # 页面壳与主布局
+    preferences/           # UI 偏好：layoutMode、openLinksInNewTab；UiPreferencesProvider
+    navigation/          # 外链打开：openExternalUrlImpl、useOpenExternalUrl
     components/            # 业务组件（桌面网格、侧栏、搜索等）
       figma/               # 与导出相关的辅助（如 ImageWithFallback）
-      shared/              # 如 FaviconIcon 等共享小组件
+      shared/              # 如 FaviconIcon、SegmentedControl 等共享小组件
   styles/
     index.css              # 聚合 fonts / tailwind / theme
     tailwind.css, theme.css, fonts.css

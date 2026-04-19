@@ -28,7 +28,7 @@ test.describe("minimal layout mode", () => {
   });
 
   /**
-   * 目的：极简态下从设置切回「默认」后恢复桌面；控件 aria-pressed 反映当前 layoutMode。
+   * 目的：极简态下从设置切回「网格」后恢复桌面；控件 aria-pressed 反映当前 layoutMode（枚举仍为 default）。
    * 使用与上例相同的 init 写入 minimal，避免首屏后再改 storage 与首帧竞态。
    */
   test("should_restore_desktop_when_switching_to_default_from_minimal_in_settings", async ({ page }) => {

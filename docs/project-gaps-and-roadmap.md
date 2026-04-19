@@ -19,6 +19,7 @@
 | 体积与结构拆分 | [`v2-volume-and-maintainability.md`](./v2-volume-and-maintainability.md)（含构建基线） |
 | 工程基线 | 根目录 `tsconfig.json`、`eslint.config.js`；CI：[`../.github/workflows/ci.yml`](../.github/workflows/ci.yml) |
 | UI 极简布局（v1） | [`minimal-layout-mode.md`](./minimal-layout-mode.md)；实现：`src/app/preferences/`、`SettingsSpotlightModal`、E2E [`e2e/minimal-layout.spec.ts`](../e2e/minimal-layout.spec.ts) |
+| 链接打开方式（v1） | [`notes/navigation-behavior-layer.md`](./notes/navigation-behavior-layer.md)；实现：`src/app/navigation/`、`useUiPreferences`（`xallor_ui_open_links_in_new_tab`）、`SearchBar` / 网格站点与文件夹 |
 
 ---
 
@@ -74,4 +75,5 @@
 | [`glass-theme-unification-plan.md`](./glass-theme-unification-plan.md) | 毛玻璃 token + `GlassSurface` 渐进统一 |
 | [`favicon-load-optimization-plan.md`](./favicon-load-optimization-plan.md) | 远程资源策略层（Favicon 首期）与缓存/加载加速计划 |
 | [`minimal-layout-mode.md`](./minimal-layout-mode.md) | 极简布局模式：主区仅搜索、侧栏不变；`layoutMode` 与分层约定 |
+| [`notes/navigation-behavior-layer.md`](./notes/navigation-behavior-layer.md) | 外链打开方式：`openExternalUrlImpl`、`useOpenExternalUrl`、存储与整理边界 |
 | [`package.json`](../package.json) | `build` / `typecheck` / `lint` / `test:run` |

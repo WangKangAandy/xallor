@@ -14,16 +14,18 @@ vi.mock("./useRestModeController", () => ({
   }),
 }));
 
-vi.mock("./preferences", () => ({
-  getLayoutCapabilities: (mode: string) =>
-    mode === "minimal"
-      ? { showDesktop: false, allowArrange: false }
-      : { showDesktop: true, allowArrange: true },
-  useUiPreferences: () => ({
-    layoutMode: "default" as const,
-    setLayoutMode: vi.fn(),
-  }),
-}));
+vi.mock("./preferences", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./preferences")>();
+  return {
+    ...actual,
+    useUiPreferences: () => ({
+      layoutMode: "default" as const,
+      setLayoutMode: vi.fn(),
+      openLinksInNewTab: true,
+      setOpenLinksInNewTab: vi.fn(),
+    }),
+  };
+});
 
 describe("App sidebar layer", () => {
   let host: HTMLDivElement | null = null;

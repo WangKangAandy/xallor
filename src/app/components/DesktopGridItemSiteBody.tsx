@@ -1,3 +1,4 @@
+import { useOpenExternalUrl } from "../navigation";
 import type { SiteItem } from "./desktopGridTypes";
 import { Favicon } from "./DesktopGridItemPrimitives";
 import { GridDesktopCardSurface } from "./GridDesktopCardSurface";
@@ -18,6 +19,7 @@ export function DesktopGridItemSiteBody({
   showLabels: boolean;
   onRename: (newName: string) => void;
 }) {
+  const openUrl = useOpenExternalUrl();
   const v = item.site.iconVariant ?? 0;
   const invert = v === 1;
   const small = v === 2;
@@ -25,7 +27,10 @@ export function DesktopGridItemSiteBody({
 
   return (
     <div
-      onClick={() => window.open(item.site.url, "_blank")}
+      onClick={(e) => {
+        if (isArrangeMode) return;
+        openUrl(item.site.url, e);
+      }}
       className="relative flex flex-col items-center justify-center w-full h-full pointer-events-auto cursor-pointer group/site"
     >
       <GridDesktopCardSurface
