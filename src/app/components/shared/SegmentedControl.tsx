@@ -26,7 +26,7 @@ export function SegmentedControl<T extends string>({
   className,
 }: SegmentedControlProps<T>) {
   const rootClass = [
-    "inline-flex shrink-0 gap-0.5 rounded-lg border border-slate-200 bg-slate-100/80 p-0.5",
+    "inline-flex min-w-0 max-w-full shrink flex-wrap gap-0.5 rounded-lg border border-slate-200 bg-slate-100/80 p-0.5 sm:flex-nowrap",
     className,
   ]
     .filter(Boolean)
