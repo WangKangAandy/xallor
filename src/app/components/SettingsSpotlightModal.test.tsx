@@ -9,6 +9,24 @@ import { UiPreferencesProvider } from "../preferences";
 import { SettingsSpotlightModal } from "./SettingsSpotlightModal";
 
 describe("SettingsSpotlightModal", () => {
+  function getBaseProps() {
+    return {
+      open: true,
+      onClose: () => {},
+      layoutMode: "default" as const,
+      onLayoutModeChange: () => {},
+      openLinksInNewTab: false,
+      onOpenLinksInNewTabChange: () => {},
+      hiddenSpaceEnabled: false,
+      hiddenItems: [],
+      onEnableHiddenSpace: async () => {},
+      onDisableHiddenSpace: async () => true,
+      onVerifyHiddenPassword: async () => true,
+      onRemoveHiddenItems: () => {},
+      onRestoreHiddenItems: () => {},
+      isMinimalMode: false,
+    };
+  }
   /**
    * 目的：侧栏「外观」可切换主区；避免导航仅为装饰、外观页无法验收。
    * 前置：设置弹层打开，默认在「通用」。
@@ -24,12 +42,7 @@ describe("SettingsSpotlightModal", () => {
         <AppI18nProvider>
           <UiPreferencesProvider>
             <SettingsSpotlightModal
-              open
-              onClose={() => {}}
-              layoutMode="default"
-              onLayoutModeChange={() => {}}
-              openLinksInNewTab={false}
-              onOpenLinksInNewTabChange={() => {}}
+              {...getBaseProps()}
             />
           </UiPreferencesProvider>
         </AppI18nProvider>,
@@ -70,12 +83,7 @@ describe("SettingsSpotlightModal", () => {
         <AppI18nProvider>
           <UiPreferencesProvider>
             <SettingsSpotlightModal
-              open
-              onClose={() => {}}
-              layoutMode="default"
-              onLayoutModeChange={() => {}}
-              openLinksInNewTab={false}
-              onOpenLinksInNewTabChange={() => {}}
+              {...getBaseProps()}
             />
           </UiPreferencesProvider>
         </AppI18nProvider>,
@@ -125,14 +133,10 @@ describe("SettingsSpotlightModal", () => {
         <AppI18nProvider>
           <UiPreferencesProvider>
             <SettingsSpotlightModal
-              open
+              {...getBaseProps()}
               onClose={() => {
                 closeCount += 1;
               }}
-              layoutMode="default"
-              onLayoutModeChange={() => {}}
-              openLinksInNewTab={false}
-              onOpenLinksInNewTabChange={() => {}}
             />
           </UiPreferencesProvider>
         </AppI18nProvider>,
@@ -153,4 +157,5 @@ describe("SettingsSpotlightModal", () => {
     });
     document.body.removeChild(container);
   });
+
 });

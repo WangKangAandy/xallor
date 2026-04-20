@@ -18,6 +18,7 @@ export type GridItemCardFrameProps = {
   /** 与 {@link onDeleteItem} 同时提供时启用右键菜单。 */
   itemId?: string;
   onDeleteItem?: (id: string) => void;
+  onHideItem?: (id: string) => void;
   onEnterArrangeMode?: () => void;
   isArrangeMode?: boolean;
   isArrangeSelected?: boolean;
@@ -46,6 +47,7 @@ export const GridItemCardFrame = forwardRef<HTMLDivElement, GridItemCardFramePro
     folderResize,
     itemId,
     onDeleteItem,
+    onHideItem,
     onEnterArrangeMode,
     isArrangeMode = false,
     isArrangeSelected: _isArrangeSelected = false,
@@ -55,7 +57,7 @@ export const GridItemCardFrame = forwardRef<HTMLDivElement, GridItemCardFramePro
   ref,
 ) {
   const { isBorderHovered, setIsBorderHovered, isResizing, startResize } = folderResize;
-  const { onContextMenu, portal } = useGridItemContextMenu(itemId ?? "", onDeleteItem, onEnterArrangeMode);
+  const { onContextMenu, portal } = useGridItemContextMenu(itemId ?? "", onDeleteItem, onHideItem, onEnterArrangeMode);
 
   return (
     <Fragment>

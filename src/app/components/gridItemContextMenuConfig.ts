@@ -13,8 +13,16 @@ export function getGridItemContextMenuEntries(
   itemId: string,
   onDeleteItem?: (id: string) => void,
   onEnterArrangeMode?: () => void,
+  onHideItem?: (id: string) => void,
 ): GridContextMenuEntry[] {
   const entries: GridContextMenuEntry[] = [];
+  if (onHideItem) {
+    entries.push({
+      id: "hide",
+      label: "隐藏",
+      onSelect: () => onHideItem(itemId),
+    });
+  }
   if (onDeleteItem) {
     entries.push({
       id: "remove",

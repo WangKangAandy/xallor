@@ -33,6 +33,7 @@ export function WidgetRenderer(props: DesktopGridItemProps) {
     showLabels,
     onRename,
     onDeleteItem,
+    onHideItem,
     onEnterArrangeMode,
     isArrangeMode,
     isArrangeSelected,
@@ -61,6 +62,7 @@ export function WidgetRenderer(props: DesktopGridItemProps) {
         showLabels={showLabels}
         onRename={onRename}
         onDeleteItem={onDeleteItem}
+        onHideItem={onHideItem}
         onEnterArrangeMode={onEnterArrangeMode}
         isArrangeMode={isArrangeMode}
         isArrangeSelected={isArrangeSelected}
@@ -78,6 +80,7 @@ export function WidgetRenderer(props: DesktopGridItemProps) {
         onRename={onRename}
         onOpenFolder={onOpenFolder}
         onDeleteItem={onDeleteItem}
+        onHideItem={onHideItem}
         onEnterArrangeMode={onEnterArrangeMode}
         isArrangeMode={isArrangeMode}
         isArrangeSelected={isArrangeSelected}

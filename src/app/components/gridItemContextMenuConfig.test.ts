@@ -33,4 +33,15 @@ describe("getGridItemContextMenuEntries", () => {
     expect(onDelete).toHaveBeenCalledWith("item-1");
     expect(onArrange).toHaveBeenCalledTimes(1);
   });
+
+  /**
+   * 目的：提供隐藏回调时应出现“隐藏”入口并携带当前 itemId。
+   */
+  it("should_invoke_hide_with_item_id_when_hide_entry_selected", () => {
+    const onHide = vi.fn();
+    const entries = getGridItemContextMenuEntries("item-hide-1", undefined, undefined, onHide);
+    expect(entries.map((e) => e.id)).toEqual(["hide"]);
+    entries[0]?.onSelect();
+    expect(onHide).toHaveBeenCalledWith("item-hide-1");
+  });
 });

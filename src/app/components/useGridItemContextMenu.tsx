@@ -8,11 +8,12 @@ import { useGridContextMenu } from "./useGridContextMenu";
 export function useGridItemContextMenu(
   itemId: string,
   onDeleteItem?: (id: string) => void,
+  onHideItem?: (id: string) => void,
   onEnterArrangeMode?: () => void,
 ) {
   const entries = useMemo(
-    () => getGridItemContextMenuEntries(itemId, onDeleteItem, onEnterArrangeMode),
-    [itemId, onDeleteItem, onEnterArrangeMode],
+    () => getGridItemContextMenuEntries(itemId, onDeleteItem, onEnterArrangeMode, onHideItem),
+    [itemId, onDeleteItem, onHideItem, onEnterArrangeMode],
   );
   return useGridContextMenu(entries);
 }

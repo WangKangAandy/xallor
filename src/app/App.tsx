@@ -1,10 +1,13 @@
 import { lazy, Suspense, useMemo, useState } from "react";
 import { DEFAULT_NEW_TAB_BACKGROUND_URL, RemoteBackgroundImage } from "./components/feedback";
 import { SettingsSpotlightModal } from "./components/SettingsSpotlightModal";
+import { GlassMessageDialog } from "./components/shared/GlassMessageDialog";
 import { GlassSurface } from "./components/shared/GlassSurface";
 import { AppI18nProvider, useAppI18n } from "./i18n/AppI18n";
 import { getLayoutCapabilities, UiPreferencesProvider, useUiPreferences } from "./preferences";
 import { useRestModeController } from "./useRestModeController";
+import { useHiddenSpace } from "./hiddenSpace/useHiddenSpace";
+import type { GridItemType, SiteItem } from "./components/desktopGridTypes";
 
 const SearchBar = lazy(async () => {
   const m = await import("./components/SearchBar");
@@ -55,6 +58,36 @@ function AppContent() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { layoutMode, setLayoutMode, openLinksInNewTab, setOpenLinksInNewTab } = useUiPreferences();
   const capabilities = useMemo(() => getLayoutCapabilities(layoutMode), [layoutMode]);
+  const hiddenSpace = useHiddenSpace();
+  const [restoreQueue, setRestoreQueue] = useState<SiteItem[]>([]);
+  const [appMessage, setAppMessage] = useState<
+    | null
+    | { variant: "alert"; message: string }
+    | { variant: "confirm-folder"; resolve: (ok: boolean) => void }
+  >(null);
+
+  const handleRequestHideItem = async (item: GridItemType) => {
+    if (!hiddenSpace.isEnabled) {
+      setAppMessage({ variant: "alert", message: "隐藏空间未开启，请在设置中先开启该功能" });
+      return false;
+    }
+    if (item.type === "widget") return false;
+    if (item.type === "folder" && !hiddenSpace.folderWarned) {
+      const ok = await new Promise<boolean>((resolve) => {
+        queueMicrotask(() => {
+          setAppMessage({ variant: "confirm-folder", resolve });
+        });
+      });
+      if (!ok) return false;
+      hiddenSpace.markFolderWarned();
+    }
+    if (item.type === "site") {
+      hiddenSpace.hideCandidates([{ type: "site", item }]);
+    } else {
+      hiddenSpace.hideCandidates([{ type: "folder", item }]);
+    }
+    return true;
+  };
 
   return (
     <div
@@ -114,7 +147,14 @@ function AppContent() {
                 }`}
               >
                 <Suspense fallback={<MultiDesktopFallback />}>
-                  <MultiDesktopStrip />
+                  <MultiDesktopStrip
+                    onRequestHideItem={handleRequestHideItem}
+                    restoreItems={restoreQueue}
+                    onRestoreApplied={(ids) => {
+                      hiddenSpace.removeHiddenItemsByIds(ids);
+                      setRestoreQueue([]);
+                    }}
+                  />
                 </Suspense>
               </div>
             ) : null}
@@ -131,7 +171,52 @@ function AppContent() {
         onLayoutModeChange={setLayoutMode}
         openLinksInNewTab={openLinksInNewTab}
         onOpenLinksInNewTabChange={setOpenLinksInNewTab}
+        hiddenSpaceEnabled={hiddenSpace.isEnabled}
+        hiddenItems={hiddenSpace.hiddenItems}
+        onEnableHiddenSpace={hiddenSpace.enableWithPassword}
+        onDisableHiddenSpace={async (password) => {
+          const ok = await hiddenSpace.verifyPassword(password);
+          if (!ok) return false;
+          hiddenSpace.clearAllAndDisable();
+          return true;
+        }}
+        onVerifyHiddenPassword={hiddenSpace.verifyPassword}
+        onRemoveHiddenItems={hiddenSpace.removeHiddenItemsByIds}
+        onRestoreHiddenItems={(items) => setRestoreQueue(items)}
+        isMinimalMode={layoutMode === "minimal"}
+        folderHintResetVisible={hiddenSpace.isDev}
+        onResetFolderHint={hiddenSpace.resetFolderWarnedInDev}
       />
+
+      {appMessage?.variant === "alert" ? (
+        <GlassMessageDialog
+          open
+          message={appMessage.message}
+          variant="alert"
+          confirmLabel="知道了"
+          onConfirm={() => setAppMessage(null)}
+        />
+      ) : null}
+      {appMessage?.variant === "confirm-folder" ? (
+        <GlassMessageDialog
+          open
+          title="隐藏文件夹"
+          message="隐藏文件夹后，原文件夹会被删除，内部图标会按单图标形式移入隐藏空间，且不保留原文件夹结构。是否继续？"
+          variant="confirm"
+          cancelLabel="取消"
+          confirmLabel="继续"
+          onCancel={() => {
+            const { resolve } = appMessage;
+            setAppMessage(null);
+            resolve(false);
+          }}
+          onConfirm={() => {
+            const { resolve } = appMessage;
+            setAppMessage(null);
+            resolve(true);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

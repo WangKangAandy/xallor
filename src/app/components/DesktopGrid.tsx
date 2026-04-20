@@ -40,6 +40,7 @@ export type DesktopGridProps = {
   onChangeWidgetLayout?: (layout: WidgetPageLayoutState) => void;
   onToggleAutoCompact?: (enabled: boolean) => void;
   onChangeConflictStrategy?: (strategy: WidgetConflictStrategy) => void;
+  onHideItem?: (id: string) => void;
 };
 
 function GridDropZone({
@@ -89,6 +90,7 @@ export function DesktopGrid({
   onChangeWidgetLayout: _onChangeWidgetLayout,
   onToggleAutoCompact,
   onChangeConflictStrategy,
+  onHideItem,
 }: DesktopGridProps) {
   const { t } = useAppI18n();
   const pinnedItemIds = useMemo(
@@ -374,6 +376,7 @@ export function DesktopGrid({
                       showLabels={showLabels}
                       onRename={handleRename}
                       onDeleteItem={handleDeleteItem}
+                      onHideItem={onHideItem}
                       onEnterArrangeMode={handleEnterArrangeMode}
                       isArrangeMode={arrangeSession.state.isArrangeMode}
                       isArrangeSelected={

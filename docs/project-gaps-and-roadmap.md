@@ -42,6 +42,15 @@
     - `RemoteBackgroundImage` 作为第二个 consumer 接入（`w=` 双分辨率竞速 + 每候选超时 + `background` 成功记忆）  
   - 待完成：  
     - 持续采样与阶段报告（前后对比固化，验证 p90 是否随 F3 下降）
+- **隐藏图标空间（新增，产品能力里程碑）**：功能设计与实施顺序见 [`notes/hidden-icons-space-plan.md`](./notes/hidden-icons-space-plan.md)。  
+  - 目标：右键隐藏、设置开关+密码、隐藏空间浏览与批量操作、极简模式下“可浏览不可恢复”。  
+  - 约束：本期为可用版（本地存储 + 简化密码规则），后续再接云同步与安全增强。
+- **设置导航二级化（新增，信息架构里程碑）**：导航草案见 [`notes/settings-secondary-navigation-plan.md`](./notes/settings-secondary-navigation-plan.md)。  
+  - 目标：一级分组点击后就地展开二级入口（如外观 -> 主题/壁纸/布局与样式），降低定位成本。  
+  - 原则：仅做两层、同一时刻只展开一个一级分组、主区与二级锚点对齐。
+- **设置搜索功能（新增，设置可达性里程碑）**：实施方案见 [`notes/settings-search-implementation-plan.md`](./notes/settings-search-implementation-plan.md)。  
+  - 目标：支持关键词检索并自动定位到对应设置项，降低“知道要改什么但找不到入口”的成本。  
+  - 路线：先交付输入+匹配+定位 MVP，再逐步接入结果高亮与二级导航联动。
 - **错误与加载（基线已落地，可随功能扩展）**：展示层提供 [`RemoteContentPlaceholder`](../src/app/components/feedback/RemoteContentPlaceholder.tsx)（加载 / 失败 / 成功）；`storage/repository` 仅数据与校验（见文件头注释），**不**渲染占位组件。未来天气等 API 接入时包一层 `phase` 即可。
 - **多桌面网格挂载策略（未做，后续迭代）**：当前 [`MultiDesktopStrip`](../src/app/components/MultiDesktopStrip.tsx) 对每一页都挂载完整 [`DesktopGrid`](../src/app/components/DesktopGrid.tsx)（各含 `DndProvider`）；页数已由 [`MAX_DESKTOP_PAGES`](../src/app/storage/multiPageLimits.ts) 限制。计划在条带层改为 **「访问过则缓存」**：已访问过的页保留实例（隐藏未激活页），未访问页用占位撑布局，在**少重复 mount、保留页内临时状态**与**内存占用**之间折中；**不**采用「仅挂载当前页」以免反复切页时体验过糙。实现时机另排，不阻塞当前主线。
 - **毛玻璃视觉统一（持续，工程化）**：已有 [`GlassSurface`](../src/app/components/shared/GlassSurface.tsx) 与右键菜单接入；全站仍有多处手写 `backdrop-blur` / `bg-white/`。**分阶段**把 token 收束到 `theme.css` 变量并迁移高流量组件，见 [`glass-theme-unification-plan.md`](./glass-theme-unification-plan.md)。
@@ -74,6 +83,9 @@
 | [`current-structural-gaps.md`](./current-structural-gaps.md) | 开工整理模式前的结构性不足与治理门槛 |
 | [`glass-theme-unification-plan.md`](./glass-theme-unification-plan.md) | 毛玻璃 token + `GlassSurface` 渐进统一 |
 | [`favicon-load-optimization-plan.md`](./favicon-load-optimization-plan.md) | 远程资源策略层（Favicon 首期）与缓存/加载加速计划 |
+| [`notes/hidden-icons-space-plan.md`](./notes/hidden-icons-space-plan.md) | 隐藏图标空间：开启/关闭状态机、密码流程、批量操作与极简模式约束 |
+| [`notes/settings-secondary-navigation-plan.md`](./notes/settings-secondary-navigation-plan.md) | 设置二级导航：一级分组展开、二级入口映射、分阶段落地方案 |
+| [`notes/settings-search-implementation-plan.md`](./notes/settings-search-implementation-plan.md) | 设置搜索：索引模型、匹配与定位策略、分阶段交付与测试清单 |
 | [`minimal-layout-mode.md`](./minimal-layout-mode.md) | 极简布局模式：主区仅搜索、侧栏不变；`layoutMode` 与分层约定 |
 | [`notes/navigation-behavior-layer.md`](./notes/navigation-behavior-layer.md) | 外链打开方式：`openExternalUrlImpl`、`useOpenExternalUrl`、存储与整理边界 |
 | [`package.json`](../package.json) | `build` / `typecheck` / `lint` / `test:run` |

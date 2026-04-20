@@ -9,7 +9,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { DEFAULT_NEW_TAB_BACKGROUND_URL } from "./feedback";
 import { useAppI18n, type AppLocale } from "../i18n/AppI18n";
 import type { LayoutMode } from "../preferences";
@@ -20,6 +20,10 @@ import {
   getSearchEngineById,
   resolveSearchEngineId,
 } from "../search/searchEngineRegistry";
+import type { SiteItem } from "./desktopGridTypes";
+import { Favicon } from "./DesktopGridItemPrimitives";
+import { GlassMessageDialog } from "./shared/GlassMessageDialog";
+import { useOpenExternalUrl } from "../navigation";
 
 type SettingsSpotlightModalProps = {
   open: boolean;
@@ -28,6 +32,16 @@ type SettingsSpotlightModalProps = {
   onLayoutModeChange: (mode: LayoutMode) => void;
   openLinksInNewTab: boolean;
   onOpenLinksInNewTabChange: (value: boolean) => void;
+  hiddenSpaceEnabled: boolean;
+  hiddenItems: SiteItem[];
+  onEnableHiddenSpace: (password: string) => Promise<void>;
+  onDisableHiddenSpace: (password: string) => Promise<boolean>;
+  onVerifyHiddenPassword: (password: string) => Promise<boolean>;
+  onRemoveHiddenItems: (ids: string[]) => void;
+  onRestoreHiddenItems: (items: SiteItem[]) => void;
+  isMinimalMode: boolean;
+  folderHintResetVisible?: boolean;
+  onResetFolderHint?: () => void;
 };
 
 const SECTIONS = [
@@ -313,11 +327,49 @@ export function SettingsSpotlightModal({
   onLayoutModeChange,
   openLinksInNewTab,
   onOpenLinksInNewTabChange,
+  hiddenSpaceEnabled,
+  hiddenItems,
+  onEnableHiddenSpace,
+  onDisableHiddenSpace,
+  onVerifyHiddenPassword,
+  onRemoveHiddenItems,
+  onRestoreHiddenItems,
+  isMinimalMode,
+  folderHintResetVisible = false,
+  onResetFolderHint,
 }: SettingsSpotlightModalProps) {
   const { locale, setLocale, t } = useAppI18n();
   const { selectedSearchEngineId, setSearchEngine } = useUiPreferences();
   const [activeSection, setActiveSection] = useState<SettingsSectionId>("general");
   const [searchEnginePickerOpen, setSearchEnginePickerOpen] = useState(false);
+  const [passwordDraft, setPasswordDraft] = useState("");
+  const [passwordConfirmDraft, setPasswordConfirmDraft] = useState("");
+  const [verifyPasswordDraft, setVerifyPasswordDraft] = useState("");
+  const [verifiedPassword, setVerifiedPassword] = useState("");
+  const [selectedHiddenIds, setSelectedHiddenIds] = useState<Set<string>>(new Set());
+  const [isHiddenEditing, setIsHiddenEditing] = useState(false);
+  const [dialog, setDialog] = useState<"none" | "enable" | "verify-open" | "verify-disable" | "confirm-disable" | "panel">(
+    "none",
+  );
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [hiddenDeleteConfirmOpen, setHiddenDeleteConfirmOpen] = useState(false);
+  const openExternalUrl = useOpenExternalUrl();
+
+  useEffect(() => {
+    if (activeSection === "privacy") return;
+    setDialog("none");
+    setIsHiddenEditing(false);
+    setSelectedHiddenIds(new Set());
+    setHiddenDeleteConfirmOpen(false);
+  }, [activeSection]);
+
+  useEffect(() => {
+    if (open) return;
+    setDialog("none");
+    setIsHiddenEditing(false);
+    setSelectedHiddenIds(new Set());
+    setHiddenDeleteConfirmOpen(false);
+  }, [open]);
   const availableSearchEngines = getAllSearchEngines();
   const selectedSearchEngine =
     getSearchEngineById(selectedSearchEngineId, availableSearchEngines) ??
@@ -464,11 +516,223 @@ export function SettingsSpotlightModal({
     );
   } else if (activeSection === "appearance") {
     mainBody = <SettingsAppearancePanel layoutMode={layoutMode} onLayoutModeChange={onLayoutModeChange} />;
+  } else if (activeSection === "privacy") {
+    mainBody = (
+      <div className="min-w-0 max-w-full space-y-6 px-6 pb-6 pt-4 text-slate-800 dark:text-slate-100">
+        <div className="space-y-3 rounded-2xl border border-slate-200/70 bg-white/72 p-4 dark:border-slate-600/60 dark:bg-slate-800/75">
+          <div className="flex items-center justify-between gap-3 py-2">
+            <div>
+              <div className="text-sm font-medium">隐藏空间</div>
+              <div className="text-xs text-slate-500 dark:text-slate-400">启用后可将内容隐藏到受密码保护的空间</div>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={hiddenSpaceEnabled}
+              data-testid="settings-hidden-space-toggle"
+              className={`relative inline-flex h-6 w-10 shrink-0 items-center rounded-full p-0.5 transition-colors ${
+                hiddenSpaceEnabled ? "bg-sky-500/90" : "bg-slate-300"
+              }`}
+              onClick={() => {
+                setPasswordError(null);
+                setVerifyPasswordDraft("");
+                setDialog(hiddenSpaceEnabled ? "verify-disable" : "enable");
+              }}
+            >
+              <span
+                className={`pointer-events-none h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                  hiddenSpaceEnabled ? "translate-x-4" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
+          {hiddenSpaceEnabled ? (
+            <>
+              <div className="h-px bg-slate-200/70 dark:bg-slate-600/50" />
+              <div className="flex items-center justify-between gap-3 py-2">
+                <div>
+                  <div className="text-sm font-medium">浏览隐藏空间</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">输入密码后可查看并管理隐藏图标</div>
+                </div>
+                <button
+                  type="button"
+                  data-testid="settings-hidden-space-open-panel"
+                  className="rounded-lg border border-slate-200 bg-white/85 px-3 py-1.5 text-xs text-slate-600 transition-colors hover:bg-white dark:border-slate-600 dark:bg-slate-700/90 dark:text-slate-200 dark:hover:bg-slate-600/90"
+                  onClick={() => {
+                    setPasswordError(null);
+                    setVerifyPasswordDraft("");
+                    setDialog("verify-open");
+                  }}
+                >
+                  进入
+                </button>
+              </div>
+              {folderHintResetVisible ? (
+                <>
+                  <div className="h-px bg-slate-200/70 dark:bg-slate-600/50" />
+                  <div className="flex items-center justify-between gap-3 py-2">
+                    <div>
+                      <div className="text-sm font-medium">重置隐藏文件夹提示</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">
+                        仅开发模式可见，用于重新触发首次确认弹窗
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="rounded-lg border border-slate-200 bg-white/85 px-3 py-1.5 text-xs text-slate-600 transition-colors hover:bg-white dark:border-slate-600 dark:bg-slate-700/90 dark:text-slate-200 dark:hover:bg-slate-600/90"
+                      onClick={() => onResetFolderHint?.()}
+                    >
+                      重置
+                    </button>
+                  </div>
+                </>
+              ) : null}
+            </>
+          ) : null}
+        </div>
+        {hiddenSpaceEnabled && dialog === "panel" ? (
+          <div className="space-y-3 rounded-2xl border border-slate-200/70 bg-white/72 p-4 dark:border-slate-600/60 dark:bg-slate-800/75">
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-sm font-medium">隐藏空间</div>
+              <div className="flex items-center gap-2">
+                {isHiddenEditing && hiddenItems.length > 0 ? (
+                  <button
+                    type="button"
+                    className="rounded-md border border-slate-200 px-2 py-1 text-xs dark:border-slate-600"
+                    onClick={() => {
+                      if (selectedHiddenIds.size === hiddenItems.length) {
+                        setSelectedHiddenIds(new Set());
+                        return;
+                      }
+                      setSelectedHiddenIds(new Set(hiddenItems.map((item) => item.id)));
+                    }}
+                  >
+                    {selectedHiddenIds.size === hiddenItems.length ? "全部取消" : "全选"}
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  disabled={hiddenItems.length === 0}
+                  className="rounded-md border border-slate-200 px-2 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-600"
+                  onClick={() => {
+                    if (isHiddenEditing) {
+                      setIsHiddenEditing(false);
+                      setSelectedHiddenIds(new Set());
+                      return;
+                    }
+                    setIsHiddenEditing(true);
+                  }}
+                >
+                  {isHiddenEditing ? "完成" : "编辑"}
+                </button>
+                <button
+                  type="button"
+                  className="rounded-md border border-slate-200 px-2 py-1 text-xs dark:border-slate-600"
+                  onClick={() => {
+                    setDialog("none");
+                    setIsHiddenEditing(false);
+                    setSelectedHiddenIds(new Set());
+                  }}
+                >
+                  收起
+                </button>
+              </div>
+            </div>
+            <div className="max-h-72 overflow-y-auto pr-1">
+              {hiddenItems.length === 0 ? (
+                <div className="text-xs text-slate-500 dark:text-slate-400">暂无隐藏图标</div>
+              ) : (
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] justify-items-center gap-x-6 gap-y-6 py-2">
+                  {hiddenItems.map((item) => {
+                    const selected = selectedHiddenIds.has(item.id);
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className="group relative flex w-[100px] flex-col items-center gap-2"
+                        onClick={(e) => {
+                          if (isHiddenEditing) {
+                            e.preventDefault();
+                            setSelectedHiddenIds((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(item.id)) next.delete(item.id);
+                              else next.add(item.id);
+                              return next;
+                            });
+                            return;
+                          }
+                          openExternalUrl(item.site.url, e);
+                        }}
+                      >
+                        <div
+                          className="flex h-[84px] w-[84px] items-center justify-center rounded-[24px] border border-slate-200/70 bg-white/75 shadow-sm transition-transform duration-200 group-hover:scale-105 dark:border-slate-600/70 dark:bg-slate-700/80"
+                          style={
+                            isHiddenEditing && selected
+                              ? {
+                                  boxShadow: "inset 0 0 0 2px rgba(59,130,246,0.95), inset 0 0 0 3px rgba(255,255,255,0.2)",
+                                }
+                              : undefined
+                          }
+                        >
+                          <Favicon domain={item.site.domain} name={item.site.name} size={48} />
+                        </div>
+                        <div className="w-[100px] truncate text-center text-[13px] font-medium text-slate-700 dark:text-slate-200">
+                          {item.site.name}
+                        </div>
+                        {isHiddenEditing ? (
+                          <div
+                            className={`absolute right-1 top-1 h-4 w-4 rounded border ${
+                              selected
+                                ? "border-sky-500 bg-sky-500"
+                                : "border-slate-300 bg-white dark:border-slate-500 dark:bg-slate-800"
+                            }`}
+                            aria-hidden
+                          />
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            {isHiddenEditing ? (
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  disabled={selectedHiddenIds.size === 0 || isMinimalMode}
+                  className="rounded-lg border border-slate-200 bg-white/85 px-3 py-1.5 text-xs text-slate-700 transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-700/90 dark:text-slate-200 dark:hover:bg-slate-600/90"
+                  onClick={() =>
+                    onRestoreHiddenItems(hiddenItems.filter((item) => selectedHiddenIds.has(item.id)))
+                  }
+                  title={isMinimalMode ? "极简模式下不可恢复到主页面，请切换为默认模式" : undefined}
+                >
+                  暴露到主页面
+                </button>
+                <button
+                  type="button"
+                  disabled={selectedHiddenIds.size === 0}
+                  className="rounded-lg border border-red-200 bg-red-50/90 px-3 py-1.5 text-xs text-red-600 transition-colors hover:bg-red-100/90 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-500/30 dark:bg-red-500/20 dark:text-red-200"
+                  onClick={() => setHiddenDeleteConfirmOpen(true)}
+                >
+                  删除
+                </button>
+                {isMinimalMode ? (
+                  <div className="text-xs text-amber-600 dark:text-amber-300">
+                    极简模式下不可恢复到主页面，请切换为默认模式
+                    </div>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+    );
   } else {
     mainBody = <SettingsComingSoonBody />;
   }
 
   return (
+    <>
     <div
       className="fixed inset-0 z-[120] flex items-center justify-center overflow-x-hidden p-6 md:p-10"
       role="dialog"
@@ -546,10 +810,218 @@ export function SettingsSpotlightModal({
             <div className="scrollbar-none min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain">
               {mainBody}
             </div>
+            {dialog !== "none" && dialog !== "panel" ? (
+              <div className="absolute inset-0 z-30 flex items-center justify-center bg-slate-900/35 p-6" data-ui-modal-overlay>
+                <div className="w-full max-w-sm rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xl dark:border-slate-600 dark:bg-slate-800">
+                  {dialog === "enable" ? (
+                    <div className="space-y-3">
+                      <div className="text-sm font-medium">开启隐藏空间</div>
+                      <input
+                        type="password"
+                        value={passwordDraft}
+                        onChange={(e) => setPasswordDraft(e.target.value)}
+                        onKeyDown={async (e) => {
+                          if (e.key !== "Enter") return;
+                          e.preventDefault();
+                          if (passwordDraft.length < 4) {
+                            setPasswordError("密码长度至少 4 位");
+                            return;
+                          }
+                          if (passwordDraft !== passwordConfirmDraft) {
+                            setPasswordError("两次输入密码不一致");
+                            return;
+                          }
+                          await onEnableHiddenSpace(passwordDraft);
+                          setDialog("none");
+                          setPasswordDraft("");
+                          setPasswordConfirmDraft("");
+                          setPasswordError(null);
+                        }}
+                        placeholder="请输入密码（至少 4 位）"
+                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-700"
+                      />
+                      <input
+                        type="password"
+                        value={passwordConfirmDraft}
+                        onChange={(e) => setPasswordConfirmDraft(e.target.value)}
+                        onKeyDown={async (e) => {
+                          if (e.key !== "Enter") return;
+                          e.preventDefault();
+                          if (passwordDraft.length < 4) {
+                            setPasswordError("密码长度至少 4 位");
+                            return;
+                          }
+                          if (passwordDraft !== passwordConfirmDraft) {
+                            setPasswordError("两次输入密码不一致");
+                            return;
+                          }
+                          await onEnableHiddenSpace(passwordDraft);
+                          setDialog("none");
+                          setPasswordDraft("");
+                          setPasswordConfirmDraft("");
+                          setPasswordError(null);
+                        }}
+                        placeholder="请再次输入密码"
+                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-700"
+                      />
+                      {passwordError ? <div className="text-xs text-red-500">{passwordError}</div> : null}
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs dark:border-slate-600"
+                          onClick={() => {
+                            setDialog("none");
+                            setPasswordDraft("");
+                            setPasswordConfirmDraft("");
+                            setPasswordError(null);
+                          }}
+                        >
+                          取消
+                        </button>
+                        <button
+                          type="button"
+                          className="rounded-lg bg-sky-500 px-3 py-1.5 text-xs text-white"
+                          onClick={async () => {
+                            if (passwordDraft.length < 4) {
+                              setPasswordError("密码长度至少 4 位");
+                              return;
+                            }
+                            if (passwordDraft !== passwordConfirmDraft) {
+                              setPasswordError("两次输入密码不一致");
+                              return;
+                            }
+                            await onEnableHiddenSpace(passwordDraft);
+                            setDialog("none");
+                            setPasswordDraft("");
+                            setPasswordConfirmDraft("");
+                            setPasswordError(null);
+                          }}
+                        >
+                          开启
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                  {dialog === "verify-open" || dialog === "verify-disable" ? (
+                    <div className="space-y-3">
+                      <div className="text-sm font-medium">请输入隐藏空间密码</div>
+                      <input
+                        type="password"
+                        value={verifyPasswordDraft}
+                        onChange={(e) => setVerifyPasswordDraft(e.target.value)}
+                        onKeyDown={async (e) => {
+                          if (e.key !== "Enter") return;
+                          e.preventDefault();
+                          const ok = await onVerifyHiddenPassword(verifyPasswordDraft);
+                          if (!ok) {
+                            setPasswordError("密码错误");
+                            return;
+                          }
+                          if (dialog === "verify-open") {
+                            setIsHiddenEditing(false);
+                            setSelectedHiddenIds(new Set());
+                            setDialog("panel");
+                          } else {
+                            setVerifiedPassword(verifyPasswordDraft);
+                            setDialog("confirm-disable");
+                          }
+                          setVerifyPasswordDraft("");
+                          setPasswordError(null);
+                        }}
+                        placeholder="请输入密码"
+                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-700"
+                      />
+                      {passwordError ? <div className="text-xs text-red-500">{passwordError}</div> : null}
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs dark:border-slate-600"
+                          onClick={() => {
+                            setDialog("none");
+                            setVerifyPasswordDraft("");
+                            setPasswordError(null);
+                          }}
+                        >
+                          取消
+                        </button>
+                        <button
+                          type="button"
+                          className="rounded-lg bg-sky-500 px-3 py-1.5 text-xs text-white"
+                          onClick={async () => {
+                            const ok = await onVerifyHiddenPassword(verifyPasswordDraft);
+                            if (!ok) {
+                              setPasswordError("密码错误");
+                              return;
+                            }
+                            if (dialog === "verify-open") {
+                              setIsHiddenEditing(false);
+                              setSelectedHiddenIds(new Set());
+                              setDialog("panel");
+                            } else {
+                              setVerifiedPassword(verifyPasswordDraft);
+                              setDialog("confirm-disable");
+                            }
+                            setVerifyPasswordDraft("");
+                            setPasswordError(null);
+                          }}
+                        >
+                          确认
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                  {dialog === "confirm-disable" ? (
+                    <div className="space-y-3">
+                      <div className="text-sm font-medium">关闭后将清空所有隐藏图标及密码，且不可恢复</div>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs dark:border-slate-600"
+                          onClick={() => setDialog("none")}
+                        >
+                          取消
+                        </button>
+                        <button
+                          type="button"
+                          className="rounded-lg bg-red-500 px-3 py-1.5 text-xs text-white"
+                          onClick={async () => {
+                            const ok = await onDisableHiddenSpace(verifiedPassword);
+                            if (!ok) return;
+                            setSelectedHiddenIds(new Set());
+                            setVerifiedPassword("");
+                            setDialog("none");
+                          }}
+                        >
+                          确认关闭
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
             </section>
           </div>
         </div>
       </div>
     </div>
+
+    <GlassMessageDialog
+      open={hiddenDeleteConfirmOpen}
+      overlayClassName="z-[130]"
+      title="删除隐藏图标"
+      message="确认删除所选隐藏图标吗？"
+      variant="confirm"
+      cancelLabel="取消"
+      confirmLabel="删除"
+      confirmDestructive
+      onCancel={() => setHiddenDeleteConfirmOpen(false)}
+      onConfirm={() => {
+        onRemoveHiddenItems(Array.from(selectedHiddenIds));
+        setSelectedHiddenIds(new Set());
+        setHiddenDeleteConfirmOpen(false);
+      }}
+    />
+    </>
   );
 }

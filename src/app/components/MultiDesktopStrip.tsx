@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import type { MultiPageGridState } from "../storage/types";
@@ -13,17 +13,24 @@ import { useArrangeSession } from "./arrange/useArrangeSession";
 import { useDesktopPageIndicator } from "./useDesktopPageIndicator";
 import { useDesktopStripWheel } from "./useDesktopStripWheel";
 import { useMultiPageGridPersistence } from "./useMultiPageGridPersistence";
+import type { GridItemType, SiteItem } from "./desktopGridTypes";
 
 const FALLBACK: MultiPageGridState = {
   pages: [defaultFirstGridPagePayload()],
   activePageIndex: 0,
 };
 
+type MultiDesktopStripProps = {
+  onRequestHideItem?: (item: GridItemType) => boolean | Promise<boolean>;
+  restoreItems?: SiteItem[];
+  onRestoreApplied?: (ids: string[]) => void;
+};
+
 /**
  * 横向多桌面：在桌面区域纵向滚轮向下 → 下一页（到末页则新建空白页）；向上 → 上一页。
  * 指示条与滚轮逻辑见 `useDesktopPageIndicator`、`useDesktopStripWheel`。
  */
-export function MultiDesktopStrip() {
+export function MultiDesktopStrip({ onRequestHideItem, restoreItems = [], onRestoreApplied }: MultiDesktopStripProps) {
   const arrangeSession = useArrangeSession();
   const runtimeRegistryRef = useRef<Map<string, ArrangeGestureGridRuntime>>(new Map());
   const {
@@ -67,6 +74,32 @@ export function MultiDesktopStrip() {
   const getGridRuntimes = useCallback(() => Array.from(runtimeRegistryRef.current.values()), []);
   useArrangeGestureController({ arrangeSession, getGridRuntimes });
 
+  const pendingRestoreIds = restoreItems.map((item) => item.id).join("|");
+  // 统一将恢复项追加到最后一页末尾；当前网格为自动流布局，不保留原始位置与文件夹结构。
+  useEffect(() => {
+    if (restoreItems.length === 0) return;
+    const lastPage = pages[pages.length - 1];
+    if (!lastPage) return;
+    applyMultiPageItemsPatch({
+      [lastPage.pageId]: (prev) => [...prev, ...restoreItems],
+    });
+    onRestoreApplied?.(restoreItems.map((item) => item.id));
+  }, [pendingRestoreIds, restoreItems, pages, applyMultiPageItemsPatch, onRestoreApplied]);
+
+  const handleHideItem = useCallback(
+    async (pageId: string, itemId: string) => {
+      const page = pages.find((p) => p.pageId === pageId);
+      const item = page?.items.find((entry) => entry.id === itemId);
+      if (!item || !onRequestHideItem) return;
+      const accepted = await onRequestHideItem(item);
+      if (!accepted) return;
+      applyMultiPageItemsPatch({
+        [pageId]: (prev) => prev.filter((entry) => entry.id !== itemId),
+      });
+    },
+    [pages, onRequestHideItem, applyMultiPageItemsPatch],
+  );
+
   return (
     <DndProvider backend={HTML5Backend}>
       <div
@@ -104,6 +137,9 @@ export function MultiDesktopStrip() {
                   onChangeWidgetLayout={(layout) => setPageWidgetLayout(page.pageId, layout)}
                   onToggleAutoCompact={(enabled) => setPageAutoCompactEnabled(page.pageId, enabled)}
                   onChangeConflictStrategy={(strategy) => setPageConflictStrategy(page.pageId, strategy)}
+                  onHideItem={(itemId) => {
+                    void handleHideItem(page.pageId, itemId);
+                  }}
                 />
               </div>
             </div>
