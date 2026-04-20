@@ -52,6 +52,8 @@ export function Sidebar({ onOpenSettings }: SidebarProps) {
         <div
           data-testid="sidebar-hover-zone"
           data-arrange-gesture-exclude="true"
+          data-context-entity="true"
+          data-context-entity-type="sidebar"
           className="pointer-events-auto flex items-stretch"
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}

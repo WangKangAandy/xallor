@@ -42,18 +42,21 @@ function AddEngineForm({ onAdd, onCancel }: AddEngineFormProps) {
         placeholder="名称 (e.g. Bing)"
         value={name}
         onChange={e => setName(e.target.value)}
+        data-context-native="true"
         className="w-full text-xs glass-input-fill rounded-lg px-2.5 py-1.5 outline-none placeholder-gray-400 text-gray-700"
       />
       <input
         placeholder="域名 (e.g. bing.com)"
         value={domain}
         onChange={e => setDomain(e.target.value)}
+        data-context-native="true"
         className="w-full text-xs glass-input-fill rounded-lg px-2.5 py-1.5 outline-none placeholder-gray-400 text-gray-700"
       />
       <input
         placeholder="搜索URL (以 %s 代替关键词)"
         value={url}
         onChange={e => setUrl(e.target.value)}
+        data-context-native="true"
         className="w-full text-xs glass-input-fill rounded-lg px-2.5 py-1.5 outline-none placeholder-gray-400 text-gray-700"
       />
       <div className="flex gap-2 pt-1">
@@ -152,6 +155,8 @@ export function SearchBar() {
       style={{ zIndex: Z_SEARCH_BAR }}
       ref={containerRef}
       data-search-bar-root="true"
+      data-context-entity="true"
+      data-context-entity-type="search"
     >
       {/* Search Input Row */}
       <GlassSurface variant="bar" rounded="full" className="flex w-full items-center gap-3 px-5 py-4">
@@ -194,6 +199,7 @@ export function SearchBar() {
           value={query}
           onChange={e => setQuery(e.target.value)}
           onKeyDown={handleSearch}
+          data-context-native="true"
           placeholder={`用 ${selected.name} 搜索…`}
           className="min-w-0 flex-1 bg-transparent text-gray-800 outline-none placeholder-gray-400 dark:text-slate-100 dark:placeholder:text-slate-500"
         />

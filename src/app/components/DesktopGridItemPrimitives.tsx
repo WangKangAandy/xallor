@@ -106,6 +106,7 @@ export function EditableLabel({
             type="text"
             value={value}
             placeholder={initialName}
+            data-context-native="true"
             maxLength={15}
             onChange={(e) => setValue(e.target.value)}
             onBlur={handleSave}
@@ -135,6 +136,7 @@ export function EditableLabel({
           type="text"
           value={value}
           placeholder={initialName}
+          data-context-native="true"
           maxLength={15}
           onChange={(e) => setValue(e.target.value)}
           onBlur={handleSave}

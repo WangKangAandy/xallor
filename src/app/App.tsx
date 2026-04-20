@@ -1,8 +1,10 @@
 import { lazy, Suspense, useMemo, useState } from "react";
 import { DEFAULT_NEW_TAB_BACKGROUND_URL, RemoteBackgroundImage } from "./components/feedback";
 import { SettingsSpotlightModal } from "./components/SettingsSpotlightModal";
+import { ENTER_ARRANGE_FROM_BACKGROUND_EVENT } from "./components/contextMenuEvents";
 import { GlassMessageDialog } from "./components/shared/GlassMessageDialog";
 import { GlassSurface } from "./components/shared/GlassSurface";
+import { useGridBackgroundContextMenu } from "./components/useGridBackgroundContextMenu";
 import { AppI18nProvider, useAppI18n } from "./i18n/AppI18n";
 import { getLayoutCapabilities, UiPreferencesProvider, useUiPreferences } from "./preferences";
 import { useRestModeController } from "./useRestModeController";
@@ -60,6 +62,10 @@ function AppContent() {
   const capabilities = useMemo(() => getLayoutCapabilities(layoutMode), [layoutMode]);
   const hiddenSpace = useHiddenSpace();
   const [restoreQueue, setRestoreQueue] = useState<SiteItem[]>([]);
+  const { onContextMenu: onDesktopBackgroundContextMenu, portal: desktopBackgroundMenuPortal } =
+    useGridBackgroundContextMenu(() => {
+      window.dispatchEvent(new Event(ENTER_ARRANGE_FROM_BACKGROUND_EVENT));
+    });
   const [appMessage, setAppMessage] = useState<
     | null
     | { variant: "alert"; message: string }
@@ -142,7 +148,8 @@ function AppContent() {
             {capabilities.showDesktop ? (
               <div
                 data-testid="desktop-main-slot"
-                className={`relative z-10 w-full flex-1 flex min-h-0 justify-center max-w-[1200px] xl:max-w-[1280px] transition-all duration-700 ${
+                onContextMenu={onDesktopBackgroundContextMenu}
+                className={`relative z-10 w-full flex-1 flex min-h-0 justify-center transition-all duration-700 ${
                   isResting ? "opacity-0 translate-y-2" : "opacity-100 translate-y-0 delay-150"
                 }`}
               >
@@ -217,6 +224,7 @@ function AppContent() {
           }}
         />
       ) : null}
+      {desktopBackgroundMenuPortal}
     </div>
   );
 }

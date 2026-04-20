@@ -10,6 +10,7 @@ import { DesktopPageDotsRow } from "./DesktopPageDotsRow";
 import { DESKTOP_SLIDE_MS } from "./multiDesktopStripConstants";
 import { useArrangeGestureController } from "./arrange/useArrangeGestureController";
 import { useArrangeSession } from "./arrange/useArrangeSession";
+import { ENTER_ARRANGE_FROM_BACKGROUND_EVENT } from "./contextMenuEvents";
 import { useDesktopPageIndicator } from "./useDesktopPageIndicator";
 import { useDesktopStripWheel } from "./useDesktopStripWheel";
 import { useMultiPageGridPersistence } from "./useMultiPageGridPersistence";
@@ -99,6 +100,15 @@ export function MultiDesktopStrip({ onRequestHideItem, restoreItems = [], onRest
     },
     [pages, onRequestHideItem, applyMultiPageItemsPatch],
   );
+  const handleEnterArrangeMode = useCallback(() => {
+    const active = pages[activePageIndex];
+    arrangeSession.enterArrangeMode(active?.pageId ?? "__single_page__");
+  }, [arrangeSession, pages, activePageIndex]);
+  useEffect(() => {
+    const onEnterArrange = () => handleEnterArrangeMode();
+    window.addEventListener(ENTER_ARRANGE_FROM_BACKGROUND_EVENT, onEnterArrange);
+    return () => window.removeEventListener(ENTER_ARRANGE_FROM_BACKGROUND_EVENT, onEnterArrange);
+  }, [handleEnterArrangeMode]);
 
   return (
     <DndProvider backend={HTML5Backend}>

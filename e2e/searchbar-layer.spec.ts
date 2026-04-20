@@ -45,4 +45,21 @@ test.describe("searchbar layering and close behavior", () => {
 
     await expect(bingOption).toHaveCount(0);
   });
+
+  /**
+   * 目的：桌面条带空白区右键应统一弹出背景菜单，避免落到浏览器原生菜单。
+   */
+  test("should open background context menu when right_clicking_blank_area_in_main_slot", async ({ page }) => {
+    await page.goto("/");
+    const mainSlot = page.getByTestId("desktop-main-slot");
+    await expect(mainSlot).toBeVisible({ timeout: 10000 });
+
+    const box = await mainSlot.boundingBox();
+    expect(box).not.toBeNull();
+    if (!box) return;
+    await page.mouse.click(box.x + box.width - 12, box.y + box.height / 2, { button: "right" });
+
+    await expect(page.getByRole("menu", { name: "图标操作" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "整理模式" })).toBeVisible();
+  });
 });

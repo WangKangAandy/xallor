@@ -10,6 +10,15 @@ type MenuPos = { x: number; y: number };
 const MENU_MIN_WIDTH = 128;
 const MENU_MIN_HEIGHT = 44;
 
+const EDITABLE_SELECTOR = [
+  "input",
+  "textarea",
+  "[contenteditable='true']",
+  "[data-context-native='true']",
+  "[data-allow-native-context='true']",
+].join(",");
+const CONTEXT_DISABLED_SELECTOR = "[data-context-disabled='true']";
+
 function clampMenuPosition(x: number, y: number) {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
@@ -17,6 +26,13 @@ function clampMenuPosition(x: number, y: number) {
     left: Math.max(8, Math.min(x, vw - MENU_MIN_WIDTH - 8)),
     top: Math.max(8, Math.min(y, vh - MENU_MIN_HEIGHT - 8)),
   };
+}
+
+export function shouldBypassCustomContextMenu(target: HTMLElement | null): boolean {
+  if (!target) return false;
+  if (target.closest(CONTEXT_DISABLED_SELECTOR)) return true;
+  if (target.closest(EDITABLE_SELECTOR)) return true;
+  return false;
 }
 
 /**
@@ -32,6 +48,7 @@ export function useGridContextMenu(entries: GridContextMenuEntry[]) {
   const onContextMenu = useCallback(
     (e: React.MouseEvent) => {
       if (!hasEntries) return;
+      if (shouldBypassCustomContextMenu(e.target as HTMLElement | null)) return;
       e.preventDefault();
       e.stopPropagation();
       setMenu({ x: e.clientX, y: e.clientY });

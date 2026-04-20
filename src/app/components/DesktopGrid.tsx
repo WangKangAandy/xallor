@@ -17,7 +17,6 @@ import {
   resolveBatchDragIds,
 } from "./arrange/arrangeCommands";
 import type { ArrangeGestureGridRuntime } from "./arrange/useArrangeGestureController";
-import { useGridBackgroundContextMenu } from "./useGridBackgroundContextMenu";
 import {
   resolveCompactionStrategy,
   resolveConflictStrategy,
@@ -272,8 +271,6 @@ export function DesktopGrid({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [arrangeSession, arrangeSession.state.isArrangeMode, handleDeleteSelectedInArrangeMode]);
-  const { onContextMenu: onBackgroundContextMenu, portal: backgroundMenuPortal } =
-    useGridBackgroundContextMenu(handleEnterArrangeMode);
   // 网格项 z-index 数值见 desktopGridLayers.ts（DesktopGridItem inline style）
   return (
     <>
@@ -338,7 +335,6 @@ export function DesktopGrid({
             ) : null}
           </div>
           <div
-            onContextMenu={onBackgroundContextMenu}
             style={{
               paddingBottom: "100px",
               width: "100%",
@@ -428,7 +424,6 @@ export function DesktopGrid({
           }}
         />
       )}
-      {backgroundMenuPortal}
     </>
   );
 }

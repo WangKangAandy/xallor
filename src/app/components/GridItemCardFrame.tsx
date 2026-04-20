@@ -64,6 +64,7 @@ export const GridItemCardFrame = forwardRef<HTMLDivElement, GridItemCardFramePro
       <div
         ref={ref}
         data-grid-item-id={itemId}
+        data-context-entity="true"
         onContextMenu={onContextMenu}
         onClickCapture={(event) => {
           if (!isArrangeMode || !itemId) return;
