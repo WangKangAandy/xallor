@@ -1,5 +1,10 @@
 import { lazy, Suspense, useMemo, useState } from "react";
-import { DEFAULT_NEW_TAB_BACKGROUND_URL, RemoteBackgroundImage } from "./components/feedback";
+import {
+  DEFAULT_NEW_TAB_BACKGROUND_URL,
+  downloadWallpaper,
+  getCurrentWallpaperSource,
+  RemoteBackgroundImage,
+} from "./components/feedback";
 import { SettingsSpotlightModal } from "./components/SettingsSpotlightModal";
 import { ENTER_ARRANGE_FROM_BACKGROUND_EVENT } from "./components/contextMenuEvents";
 import { GlassMessageDialog } from "./components/shared/GlassMessageDialog";
@@ -62,10 +67,48 @@ function AppContent() {
   const capabilities = useMemo(() => getLayoutCapabilities(layoutMode), [layoutMode]);
   const hiddenSpace = useHiddenSpace();
   const [restoreQueue, setRestoreQueue] = useState<SiteItem[]>([]);
+  const [isDownloadingWallpaper, setIsDownloadingWallpaper] = useState(false);
   const { onContextMenu: onDesktopBackgroundContextMenu, portal: desktopBackgroundMenuPortal } =
-    useGridBackgroundContextMenu(() => {
-      window.dispatchEvent(new Event(ENTER_ARRANGE_FROM_BACKGROUND_EVENT));
-    });
+    useGridBackgroundContextMenu(
+      () => {
+        window.dispatchEvent(new Event(ENTER_ARRANGE_FROM_BACKGROUND_EVENT));
+      },
+      async () => {
+        if (isDownloadingWallpaper) return;
+        setIsDownloadingWallpaper(true);
+        try {
+          const source =
+            getCurrentWallpaperSource() ?? {
+              kind: "unknown" as const,
+              url: DEFAULT_NEW_TAB_BACKGROUND_URL,
+            };
+          const result = await downloadWallpaper(source);
+          if (result.ok && result.mode === "download") {
+            setAppMessage({ variant: "alert", message: "壁纸已开始下载" });
+            return;
+          }
+          if (result.ok && result.mode === "fallback-opened") {
+            setAppMessage({ variant: "alert", message: "自动下载失败，已打开原图，可手动保存" });
+            return;
+          }
+          if (!result.ok && result.reason === "popup-blocked") {
+            setAppMessage({
+              variant: "alert",
+              message: "自动下载失败，浏览器拦截了新窗口，请允许弹窗后重试",
+            });
+            return;
+          }
+          if (!result.ok && result.reason === "invalid-url") {
+            setAppMessage({ variant: "alert", message: "背景地址无效，无法下载" });
+            return;
+          }
+          setAppMessage({ variant: "alert", message: "下载失败，请稍后重试" });
+        } finally {
+          setIsDownloadingWallpaper(false);
+        }
+      },
+      isDownloadingWallpaper,
+    );
   const [appMessage, setAppMessage] = useState<
     | null
     | { variant: "alert"; message: string }
@@ -135,7 +178,7 @@ function AppContent() {
           <div className="w-full flex flex-col items-center transition-all duration-700 xl:scale-[1.02] 2xl:scale-[1.05] xl:origin-top flex-1">
             {/* Search Bar */}
             <div
-              className={`relative z-20 w-full max-w-[640px] xl:max-w-[680px] 2xl:max-w-[720px] mb-12 flex justify-center flex-shrink-0 transition-all duration-700 ${
+              className={`relative z-20 w-full max-w-[640px] xl:max-w-[680px] 2xl:max-w-[720px] mb-20 flex justify-center flex-shrink-0 transition-all duration-700 ${
                 isResting ? "opacity-0 -translate-y-2" : "opacity-100 translate-y-0 delay-75"
               }`}
             >

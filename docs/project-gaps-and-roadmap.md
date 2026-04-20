@@ -51,6 +51,13 @@
 - **设置搜索功能（新增，设置可达性里程碑）**：实施方案见 [`notes/settings-search-implementation-plan.md`](./notes/settings-search-implementation-plan.md)。  
   - 目标：支持关键词检索并自动定位到对应设置项，降低“知道要改什么但找不到入口”的成本。  
   - 路线：先交付输入+匹配+定位 MVP，再逐步接入结果高亮与二级导航联动。
+- **交互系统蓝图（新增，契约治理里程碑）**：系统蓝图见 [`notes/interaction-system-blueprint.md`](./notes/interaction-system-blueprint.md)，右键命中契约见 [`notes/context-menu-surface-contract.md`](./notes/context-menu-surface-contract.md)。  
+  - 目标：统一 pointer/layering、context menu、modal 阻断、输入语义保留等跨组件交互规则。  
+  - 路线：先固化契约与回归边界，再逐步收敛到统一交互守卫。
+  - TODO（整理态退出统一）：评估并实现“整理态下右击工作区统一退出整理模式”的行为，建议约束为仅作用于整理上下文（桌面/卡片/文件夹层），不覆盖输入区与设置类模态；补 E2E 回归用例锁定边界。
+- **空白区右键下载壁纸（新增，体验增强里程碑）**：实现方案见 [`notes/download-wallpaper-context-menu-plan.md`](./notes/download-wallpaper-context-menu-plan.md)。  
+  - 目标：在空白区菜单新增“下载壁纸”，支持图片/视频背景下载与失败回退。  
+  - 约束：仅影响空白区菜单，不改图标/文件夹菜单；优先下载当前实际背景来源，失败时结构化提示。
 - **错误与加载（基线已落地，可随功能扩展）**：展示层提供 [`RemoteContentPlaceholder`](../src/app/components/feedback/RemoteContentPlaceholder.tsx)（加载 / 失败 / 成功）；`storage/repository` 仅数据与校验（见文件头注释），**不**渲染占位组件。未来天气等 API 接入时包一层 `phase` 即可。
 - **多桌面网格挂载策略（未做，后续迭代）**：当前 [`MultiDesktopStrip`](../src/app/components/MultiDesktopStrip.tsx) 对每一页都挂载完整 [`DesktopGrid`](../src/app/components/DesktopGrid.tsx)（各含 `DndProvider`）；页数已由 [`MAX_DESKTOP_PAGES`](../src/app/storage/multiPageLimits.ts) 限制。计划在条带层改为 **「访问过则缓存」**：已访问过的页保留实例（隐藏未激活页），未访问页用占位撑布局，在**少重复 mount、保留页内临时状态**与**内存占用**之间折中；**不**采用「仅挂载当前页」以免反复切页时体验过糙。实现时机另排，不阻塞当前主线。
 - **毛玻璃视觉统一（持续，工程化）**：已有 [`GlassSurface`](../src/app/components/shared/GlassSurface.tsx) 与右键菜单接入；全站仍有多处手写 `backdrop-blur` / `bg-white/`。**分阶段**把 token 收束到 `theme.css` 变量并迁移高流量组件，见 [`glass-theme-unification-plan.md`](./glass-theme-unification-plan.md)。
@@ -86,6 +93,9 @@
 | [`notes/hidden-icons-space-plan.md`](./notes/hidden-icons-space-plan.md) | 隐藏图标空间：开启/关闭状态机、密码流程、批量操作与极简模式约束 |
 | [`notes/settings-secondary-navigation-plan.md`](./notes/settings-secondary-navigation-plan.md) | 设置二级导航：一级分组展开、二级入口映射、分阶段落地方案 |
 | [`notes/settings-search-implementation-plan.md`](./notes/settings-search-implementation-plan.md) | 设置搜索：索引模型、匹配与定位策略、分阶段交付与测试清单 |
+| [`notes/context-menu-surface-contract.md`](./notes/context-menu-surface-contract.md) | 右键命中契约：实体优先、最近命中优先、空白兜底与输入语义保留 |
+| [`notes/interaction-system-blueprint.md`](./notes/interaction-system-blueprint.md) | 交互系统蓝图：命中层、阻断层、状态层与跨文档约束关系 |
+| [`notes/download-wallpaper-context-menu-plan.md`](./notes/download-wallpaper-context-menu-plan.md) | 空白区右键“下载壁纸”：媒体无关下载、回退策略、负向测试与实施步骤 |
 | [`minimal-layout-mode.md`](./minimal-layout-mode.md) | 极简布局模式：主区仅搜索、侧栏不变；`layoutMode` 与分层约定 |
 | [`notes/navigation-behavior-layer.md`](./notes/navigation-behavior-layer.md) | 外链打开方式：`openExternalUrlImpl`、`useOpenExternalUrl`、存储与整理边界 |
 | [`package.json`](../package.json) | `build` / `typecheck` / `lint` / `test:run` |

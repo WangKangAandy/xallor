@@ -7,6 +7,7 @@ import {
   Shield,
   SlidersHorizontal,
   Sparkles,
+  UserRound,
   X,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
@@ -45,6 +46,7 @@ type SettingsSpotlightModalProps = {
 };
 
 const SECTIONS = [
+  { id: "account", labelKey: "settings.account", Icon: UserRound },
   { id: "general", labelKey: "settings.general", Icon: SlidersHorizontal },
   { id: "appearance", labelKey: "settings.appearance", Icon: Sparkles },
   { id: "search", labelKey: "settings.searchEngine", Icon: Search },
@@ -73,6 +75,9 @@ const TOGGLES = [
     enabled: false,
   },
 ] as const;
+
+/** 设置右侧主内容区统一容器样式：集中维护间距与文本色。 */
+const SETTINGS_MAIN_BODY_CLASS = "min-w-0 max-w-full space-y-6 px-6 pb-6 pt-1 text-slate-800 dark:text-slate-100";
 
 function SettingsToggleRow({
   title,
@@ -167,7 +172,7 @@ function SettingsAppearancePanel({
   const [glassEffect, setGlassEffect] = useState(true);
 
   return (
-    <div className="min-w-0 max-w-full space-y-6 px-6 pb-6 pt-4 text-slate-800 dark:text-slate-100">
+    <div className={SETTINGS_MAIN_BODY_CLASS}>
       <div className="min-w-0 space-y-4 overflow-hidden rounded-2xl border border-slate-200/70 bg-white/72 p-4 dark:border-slate-600/60 dark:bg-slate-800/75">
         <div className="text-sm font-medium">{t("settings.appearanceTheme")}</div>
         <SegmentedControl<"light" | "dark" | "system">
@@ -380,7 +385,7 @@ export function SettingsSpotlightModal({
   let mainBody: ReactNode;
   if (activeSection === "general") {
     mainBody = (
-      <div className="min-w-0 max-w-full space-y-6 px-6 pb-6 pt-4 text-slate-800 dark:text-slate-100">
+      <div className={SETTINGS_MAIN_BODY_CLASS}>
         <div className="space-y-3 rounded-2xl border border-slate-200/70 bg-white/72 p-4 dark:border-slate-600/60 dark:bg-slate-800/75">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
             <div>
@@ -518,7 +523,7 @@ export function SettingsSpotlightModal({
     mainBody = <SettingsAppearancePanel layoutMode={layoutMode} onLayoutModeChange={onLayoutModeChange} />;
   } else if (activeSection === "privacy") {
     mainBody = (
-      <div className="min-w-0 max-w-full space-y-6 px-6 pb-6 pt-4 text-slate-800 dark:text-slate-100">
+      <div className={SETTINGS_MAIN_BODY_CLASS}>
         <div className="space-y-3 rounded-2xl border border-slate-200/70 bg-white/72 p-4 dark:border-slate-600/60 dark:bg-slate-800/75">
           <div className="flex items-center justify-between gap-3 py-2">
             <div>
@@ -760,7 +765,17 @@ export function SettingsSpotlightModal({
         <div className="pointer-events-auto flex h-[min(620px,calc(100vh-5rem))] max-h-[calc(100vh-5rem)] w-[min(920px,calc(100vw-4rem))] max-w-full min-w-0 flex-col overflow-hidden rounded-[24px] border border-white/55 bg-white/90 shadow-[0_30px_90px_rgba(2,6,23,0.5),0_12px_32px_rgba(15,23,42,0.38)] backdrop-blur-xl dark:border-slate-600/50 dark:bg-slate-900/95">
           <div className="grid h-full min-h-0 min-w-0 flex-1 grid-cols-[250px_minmax(0,1fr)] grid-rows-1">
             <aside className="flex h-full min-h-0 flex-col overflow-y-auto border-r border-slate-200/65 bg-white/58 px-4 py-5 scrollbar-none dark:border-slate-700/80 dark:bg-slate-900/70">
-            <div className="mb-4 px-2 text-lg font-semibold text-slate-800 dark:text-slate-100">{t("settings.title")}</div>
+            <div className="mb-4">
+              <div className="relative min-w-0 flex-1">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                <input
+                  readOnly
+                  value=""
+                  placeholder={t("settings.searchPlaceholder")}
+                  className="w-full rounded-xl border border-slate-200 bg-white/70 py-2 pl-9 pr-3 text-sm text-slate-700 outline-none dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-200 dark:placeholder:text-slate-500"
+                />
+              </div>
+            </div>
             <nav className="space-y-1" aria-label={t("settings.title")}>
               {SECTIONS.map(({ id, labelKey, Icon }) => {
                 const active = id === activeSection;
@@ -786,16 +801,7 @@ export function SettingsSpotlightModal({
             </aside>
 
             <section className="relative flex h-full min-h-0 min-w-0 flex-col">
-            <div className="flex min-w-0 shrink-0 items-center gap-3 border-b border-slate-200/65 px-6 py-4 dark:border-slate-700/80">
-              <div className="relative min-w-0 flex-1">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
-                <input
-                  readOnly
-                  value=""
-                  placeholder={t("settings.searchPlaceholder")}
-                  className="w-full rounded-xl border border-slate-200 bg-white/70 py-2 pl-9 pr-3 text-sm text-slate-700 outline-none dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-200 dark:placeholder:text-slate-500"
-                />
-              </div>
+            <div className="flex min-w-0 shrink-0 items-center justify-end gap-3 px-6 py-4">
               <button
                 type="button"
                 data-testid="settings-modal-close"

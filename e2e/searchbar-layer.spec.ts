@@ -60,6 +60,18 @@ test.describe("searchbar layering and close behavior", () => {
     await page.mouse.click(box.x + box.width - 12, box.y + box.height / 2, { button: "right" });
 
     await expect(page.getByRole("menu", { name: "图标操作" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "下载壁纸" })).toBeVisible();
     await expect(page.getByRole("menuitem", { name: "整理模式" })).toBeVisible();
+  });
+
+  /**
+   * 目的：下载壁纸只应出现在空白菜单，不应污染图标实体右键菜单。
+   */
+  test("should_not_show_download_wallpaper_in_searchbar_context_area", async ({ page }) => {
+    await page.goto("/");
+    const searchRoot = page.locator("[data-search-bar-root]").first();
+    await expect(searchRoot).toBeVisible({ timeout: 10000 });
+    await searchRoot.click({ button: "right" });
+    await expect(page.getByRole("menuitem", { name: "下载壁纸" })).toHaveCount(0);
   });
 });

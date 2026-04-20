@@ -93,6 +93,9 @@ export function RemoteBackgroundImage({
   return (
     <img
       src={resolvedSrc}
+      data-background-media="true"
+      data-background-kind="image"
+      data-background-src={resolvedSrc}
       alt=""
       className="absolute inset-0 h-full w-full object-cover"
       onError={() => setFailed(true)}

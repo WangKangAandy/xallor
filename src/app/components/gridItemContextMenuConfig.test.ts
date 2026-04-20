@@ -35,6 +35,14 @@ describe("getGridItemContextMenuEntries", () => {
   });
 
   /**
+   * 目的：下载壁纸仅属于空白区菜单，图标菜单中不应出现 download-wallpaper。
+   */
+  it("should_not_include_download_wallpaper_entry_in_item_context_menu", () => {
+    const entries = getGridItemContextMenuEntries("site-1", vi.fn(), vi.fn(), vi.fn());
+    expect(entries.some((entry) => entry.id === "download-wallpaper")).toBe(false);
+  });
+
+  /**
    * 目的：提供隐藏回调时应出现“隐藏”入口并携带当前 itemId。
    */
   it("should_invoke_hide_with_item_id_when_hide_entry_selected", () => {

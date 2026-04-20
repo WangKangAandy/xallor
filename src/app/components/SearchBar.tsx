@@ -210,7 +210,7 @@ export function SearchBar() {
         <GlassSurface
           variant="default"
           rounded="2xl"
-          className="absolute left-0 top-full mt-3 min-w-[140px] max-w-[240px] overflow-hidden shadow-2xl"
+          className="absolute left-0 top-full mt-3 min-w-[140px] max-w-[240px] overflow-hidden shadow-[0_20px_52px_-18px_rgba(0,0,0,0.38)] border-white/70 dark:border-white/15 bg-[rgb(248_247_243_/_0.76)] dark:bg-[rgb(30_34_42_/_0.72)] backdrop-blur-[20px]"
           style={{ zIndex: Z_SEARCH_DROPDOWN }}
         >
           {/* Engine List */}
@@ -219,8 +219,8 @@ export function SearchBar() {
               <button
                 key={engine.id}
                 onClick={() => handleSelectEngine(engine)}
-                className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all hover:bg-white/60 dark:hover:bg-white/10 ${
-                  selected.id === engine.id ? "bg-white/60 dark:bg-white/15" : ""
+                className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all hover:bg-white/72 dark:hover:bg-white/12 ${
+                  selected.id === engine.id ? "bg-white/78 dark:bg-white/18" : ""
                 }`}
               >
                 <FaviconIcon
@@ -239,7 +239,7 @@ export function SearchBar() {
           </div>
 
           {/* Divider */}
-          <div className="border-t border-white/40" />
+          <div className="border-t border-white/55 dark:border-white/15" />
 
           {/* Add Custom / Form */}
           <div className="p-2">
@@ -252,7 +252,7 @@ export function SearchBar() {
               <button
                 onClick={() => setShowAddForm(true)}
                 title="添加自定义搜索引擎"
-                className="w-full flex items-center justify-center py-2 rounded-xl hover:bg-white/50 transition-all text-gray-500"
+                className="w-full flex items-center justify-center py-2 rounded-xl hover:bg-white/65 dark:hover:bg-white/12 transition-all text-gray-500"
               >
                 <div className="w-[20px] h-[20px] rounded-full border-[1.5px] border-dashed border-gray-400 flex items-center justify-center shrink-0">
                   <Plus className="w-3 h-3" strokeWidth={2.5} />
