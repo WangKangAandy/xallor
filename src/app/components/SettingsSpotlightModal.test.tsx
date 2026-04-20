@@ -118,6 +118,51 @@ describe("SettingsSpotlightModal", () => {
   });
 
   /**
+   * 目的：搜索引擎下拉展开后，点击外部区域应关闭，避免悬浮层残留。
+   * 前置：通用页展开默认搜索引擎下拉。
+   * 预期：触发外部 pointerdown 后，下拉 listbox 被移除。
+   */
+  it("should_close_search_engine_picker_when_pointerdown_outside", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    act(() => {
+      root.render(
+        <AppI18nProvider>
+          <UiPreferencesProvider>
+            <SettingsSpotlightModal
+              {...getBaseProps()}
+            />
+          </UiPreferencesProvider>
+        </AppI18nProvider>,
+      );
+    });
+
+    const trigger = document.querySelector(
+      '[data-testid="settings-default-search-engine-trigger"]',
+    ) as HTMLButtonElement | null;
+    expect(trigger).not.toBeNull();
+
+    act(() => {
+      trigger?.click();
+    });
+
+    expect(document.querySelector('[role="listbox"]')).toBeTruthy();
+
+    act(() => {
+      document.dispatchEvent(new Event("pointerdown", { bubbles: true }));
+    });
+
+    expect(document.querySelector('[role="listbox"]')).toBeNull();
+
+    act(() => {
+      root.unmount();
+    });
+    document.body.removeChild(container);
+  });
+
+  /**
    * 目的：点击面板外遮罩应关闭设置，防止 z-index/容器命中调整后回归。
    * 前置：弹层打开，`onClose` 回调可被观测。
    * 预期：点击覆盖层（非面板区域）触发 `onClose` 一次。

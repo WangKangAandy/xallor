@@ -3,12 +3,15 @@
  */
 import { afterEach, describe, expect, it } from "vitest";
 import {
+  parseStoredSearchEngineId,
+  parseStoredSidebarLayout,
   parseStoredLayoutMode,
   parseStoredOpenLinksInNewTab,
   UI_COLOR_SCHEME_STORAGE_KEY,
   UI_LAYOUT_STORAGE_KEY,
   UI_OPEN_LINKS_IN_NEW_TAB_STORAGE_KEY,
   UI_SEARCH_ENGINE_STORAGE_KEY,
+  UI_SIDEBAR_LAYOUT_STORAGE_KEY,
 } from "./useUiPreferences";
 
 describe("parseStoredLayoutMode", () => {
@@ -37,12 +40,40 @@ describe("parseStoredOpenLinksInNewTab", () => {
   });
 });
 
+describe("parseStoredSearchEngineId", () => {
+  /**
+   * 目的：自定义搜索引擎 id（如 custom-*）应被保留，避免用户选择后被强制回退到内置引擎。
+   * 预期：仅空值回退 baidu；非空字符串保持原值（trim 后）。
+   */
+  it("should_preserve_custom_engine_id_when_storage_contains_non_empty_value", () => {
+    expect(parseStoredSearchEngineId("custom-123")).toBe("custom-123");
+    expect(parseStoredSearchEngineId("  custom-searxng  ")).toBe("custom-searxng");
+    expect(parseStoredSearchEngineId("google")).toBe("google");
+    expect(parseStoredSearchEngineId("")).toBe("baidu");
+    expect(parseStoredSearchEngineId(null)).toBe("baidu");
+  });
+});
+
+describe("parseStoredSidebarLayout", () => {
+  /**
+   * 目的：侧边栏布局偏好需稳定解析，非法值回退为默认常驻。
+   */
+  it("should_fallback_to_always_visible_when_sidebar_layout_storage_is_invalid", () => {
+    expect(parseStoredSidebarLayout("auto-hide")).toBe("auto-hide");
+    expect(parseStoredSidebarLayout("always-visible")).toBe("always-visible");
+    expect(parseStoredSidebarLayout("")).toBe("always-visible");
+    expect(parseStoredSidebarLayout("invalid")).toBe("always-visible");
+    expect(parseStoredSidebarLayout(null)).toBe("always-visible");
+  });
+});
+
 describe("useUiPreferences storage contract", () => {
   afterEach(() => {
     globalThis.localStorage?.removeItem(UI_LAYOUT_STORAGE_KEY);
     globalThis.localStorage?.removeItem(UI_OPEN_LINKS_IN_NEW_TAB_STORAGE_KEY);
     globalThis.localStorage?.removeItem(UI_COLOR_SCHEME_STORAGE_KEY);
     globalThis.localStorage?.removeItem(UI_SEARCH_ENGINE_STORAGE_KEY);
+    globalThis.localStorage?.removeItem(UI_SIDEBAR_LAYOUT_STORAGE_KEY);
   });
 
   /**
@@ -53,5 +84,6 @@ describe("useUiPreferences storage contract", () => {
     expect(UI_OPEN_LINKS_IN_NEW_TAB_STORAGE_KEY).toBe("xallor_ui_open_links_in_new_tab");
     expect(UI_COLOR_SCHEME_STORAGE_KEY).toBe("xallor_ui_color_scheme");
     expect(UI_SEARCH_ENGINE_STORAGE_KEY).toBe("xallor_ui_search_engine");
+    expect(UI_SIDEBAR_LAYOUT_STORAGE_KEY).toBe("xallor_ui_sidebar_layout");
   });
 });

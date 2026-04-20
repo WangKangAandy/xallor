@@ -20,6 +20,10 @@ export type GridItemCardFrameProps = {
   onDeleteItem?: (id: string) => void;
   onHideItem?: (id: string) => void;
   onEnterArrangeMode?: () => void;
+  /** 仅图标（site）注入：临时覆盖偏好的打开方式。 */
+  onOpenInCurrentWindow?: () => void;
+  /** 仅图标（site）注入：临时覆盖偏好的打开方式。 */
+  onOpenInNewWindow?: () => void;
   isArrangeMode?: boolean;
   isArrangeSelected?: boolean;
   onArrangeToggleSelect?: () => void;
@@ -49,6 +53,8 @@ export const GridItemCardFrame = forwardRef<HTMLDivElement, GridItemCardFramePro
     onDeleteItem,
     onHideItem,
     onEnterArrangeMode,
+    onOpenInCurrentWindow,
+    onOpenInNewWindow,
     isArrangeMode = false,
     isArrangeSelected: _isArrangeSelected = false,
     onArrangeToggleSelect,
@@ -57,7 +63,14 @@ export const GridItemCardFrame = forwardRef<HTMLDivElement, GridItemCardFramePro
   ref,
 ) {
   const { isBorderHovered, setIsBorderHovered, isResizing, startResize } = folderResize;
-  const { onContextMenu, portal } = useGridItemContextMenu(itemId ?? "", onDeleteItem, onHideItem, onEnterArrangeMode);
+  const { onContextMenu, portal } = useGridItemContextMenu(
+    itemId ?? "",
+    onDeleteItem,
+    onHideItem,
+    onEnterArrangeMode,
+    onOpenInCurrentWindow,
+    onOpenInNewWindow,
+  );
 
   return (
     <Fragment>

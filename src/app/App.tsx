@@ -61,9 +61,12 @@ function SearchBarFallback() {
 }
 
 function AppContent() {
+  const { t } = useAppI18n();
   const { isResting, handleDoubleClickCapture } = useRestModeController();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const { layoutMode, setLayoutMode, openLinksInNewTab, setOpenLinksInNewTab } = useUiPreferences();
+  const [settingsInitialSection, setSettingsInitialSection] = useState<"privacy" | undefined>(undefined);
+  const { layoutMode, setLayoutMode, openLinksInNewTab, setOpenLinksInNewTab, sidebarLayout } = useUiPreferences();
+  const effectiveSidebarLayout = layoutMode === "minimal" ? "auto-hide" : sidebarLayout;
   const capabilities = useMemo(() => getLayoutCapabilities(layoutMode), [layoutMode]);
   const hiddenSpace = useHiddenSpace();
   const [restoreQueue, setRestoreQueue] = useState<SiteItem[]>([]);
@@ -112,12 +115,13 @@ function AppContent() {
   const [appMessage, setAppMessage] = useState<
     | null
     | { variant: "alert"; message: string }
+    | { variant: "alert-go-settings"; message: string }
     | { variant: "confirm-folder"; resolve: (ok: boolean) => void }
   >(null);
 
   const handleRequestHideItem = async (item: GridItemType) => {
     if (!hiddenSpace.isEnabled) {
-      setAppMessage({ variant: "alert", message: "隐藏空间未开启，请在设置中先开启该功能" });
+      setAppMessage({ variant: "alert-go-settings", message: t("app.hiddenSpaceEnableHint") });
       return false;
     }
     if (item.type === "widget") return false;
@@ -165,7 +169,13 @@ function AppContent() {
           className={`transition-opacity duration-700 ${isResting ? "opacity-0 pointer-events-none" : "opacity-100 delay-150"}`}
         >
           <Suspense fallback={<SidebarFallback />}>
-            <Sidebar onOpenSettings={() => setIsSettingsOpen(true)} />
+            <Sidebar
+              onOpenSettings={() => {
+                setSettingsInitialSection(undefined);
+                setIsSettingsOpen(true);
+              }}
+              layoutMode={effectiveSidebarLayout}
+            />
           </Suspense>
         </div>
 
@@ -217,6 +227,7 @@ function AppContent() {
       <SettingsSpotlightModal
         open={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
+        initialSection={settingsInitialSection}
         layoutMode={layoutMode}
         onLayoutModeChange={setLayoutMode}
         openLinksInNewTab={openLinksInNewTab}
@@ -243,8 +254,25 @@ function AppContent() {
           open
           message={appMessage.message}
           variant="alert"
-          confirmLabel="知道了"
+          confirmLabel={t("app.gotIt")}
+          closeAriaLabel={t("settings.close")}
           onConfirm={() => setAppMessage(null)}
+        />
+      ) : null}
+      {appMessage?.variant === "alert-go-settings" ? (
+        <GlassMessageDialog
+          open
+          message={appMessage.message}
+          variant="alert"
+          confirmLabel={t("app.goToPrivacySecurity")}
+          showCloseButton
+          closeAriaLabel={t("settings.close")}
+          onDismiss={() => setAppMessage(null)}
+          onConfirm={() => {
+            setAppMessage(null);
+            setSettingsInitialSection("privacy");
+            setIsSettingsOpen(true);
+          }}
         />
       ) : null}
       {appMessage?.variant === "confirm-folder" ? (

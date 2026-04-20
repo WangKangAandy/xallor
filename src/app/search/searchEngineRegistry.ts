@@ -28,3 +28,19 @@ export function resolveSearchEngineId(
   return engines.some((engine) => engine.id === storedId) ? (storedId as string) : "baidu";
 }
 
+const BUILTIN_ENGINE_DISPLAY_NAME: Record<string, { "zh-CN": string; "en-US": string }> = {
+  baidu: { "zh-CN": "百度", "en-US": "Baidu" },
+  google: { "zh-CN": "Google", "en-US": "Google" },
+  bing: { "zh-CN": "Bing", "en-US": "Bing" },
+  duckduckgo: { "zh-CN": "DuckDuckGo", "en-US": "DuckDuckGo" },
+  brave: { "zh-CN": "Brave", "en-US": "Brave" },
+};
+
+/**
+ * 内置引擎使用 locale 显示名；自定义引擎回退到 payload 中的 `name`。
+ */
+export function getSearchEngineDisplayName(engine: SearchEngine, locale: "zh-CN" | "en-US"): string {
+  const names = BUILTIN_ENGINE_DISPLAY_NAME[engine.id];
+  return names ? names[locale] : engine.name;
+}
+

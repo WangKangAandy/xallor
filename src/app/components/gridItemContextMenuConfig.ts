@@ -9,31 +9,63 @@ export type GridContextMenuEntry = {
   onSelect: () => void;
 };
 
+export type GridItemContextMenuLabels = {
+  openCurrentWindow: string;
+  openNewWindow: string;
+  hide: string;
+  remove: string;
+  arrangeMode: string;
+};
+
 export function getGridItemContextMenuEntries(
   itemId: string,
   onDeleteItem?: (id: string) => void,
   onEnterArrangeMode?: () => void,
   onHideItem?: (id: string) => void,
+  onOpenInCurrentWindow?: () => void,
+  onOpenInNewWindow?: () => void,
+  labels?: GridItemContextMenuLabels,
 ): GridContextMenuEntry[] {
+  const text = labels ?? {
+    openCurrentWindow: "当前窗口打开",
+    openNewWindow: "新窗口打开",
+    hide: "隐藏",
+    remove: "删除图标",
+    arrangeMode: "整理模式",
+  };
   const entries: GridContextMenuEntry[] = [];
+  if (onOpenInCurrentWindow) {
+    entries.push({
+      id: "open-current-window",
+      label: text.openCurrentWindow,
+      onSelect: onOpenInCurrentWindow,
+    });
+  }
+  if (onOpenInNewWindow) {
+    entries.push({
+      id: "open-new-window",
+      label: text.openNewWindow,
+      onSelect: onOpenInNewWindow,
+    });
+  }
   if (onHideItem) {
     entries.push({
       id: "hide",
-      label: "隐藏",
+      label: text.hide,
       onSelect: () => onHideItem(itemId),
     });
   }
   if (onDeleteItem) {
     entries.push({
       id: "remove",
-      label: "删除图标",
+      label: text.remove,
       onSelect: () => onDeleteItem(itemId),
     });
   }
   if (onEnterArrangeMode) {
     entries.push({
       id: "arrange-mode",
-      label: "整理模式",
+      label: text.arrangeMode,
       onSelect: onEnterArrangeMode,
     });
   }

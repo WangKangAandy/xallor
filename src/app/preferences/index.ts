@@ -5,10 +5,12 @@ export { getLayoutCapabilities } from "./layoutCapabilities";
 export {
   parseStoredLayoutMode,
   parseStoredOpenLinksInNewTab,
+  parseStoredSidebarLayout,
   UI_SEARCH_ENGINE_STORAGE_KEY,
   UI_LAYOUT_STORAGE_KEY,
   UI_OPEN_LINKS_IN_NEW_TAB_STORAGE_KEY,
+  UI_SIDEBAR_LAYOUT_STORAGE_KEY,
   UiPreferencesProvider,
   useUiPreferences,
 } from "./useUiPreferences";
-export type { UiPreferencesContextValue } from "./useUiPreferences";
+export type { SidebarLayoutMode, UiPreferencesContextValue } from "./useUiPreferences";

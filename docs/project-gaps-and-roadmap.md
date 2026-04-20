@@ -51,6 +51,11 @@
 - **设置搜索功能（新增，设置可达性里程碑）**：实施方案见 [`notes/settings-search-implementation-plan.md`](./notes/settings-search-implementation-plan.md)。  
   - 目标：支持关键词检索并自动定位到对应设置项，降低“知道要改什么但找不到入口”的成本。  
   - 路线：先交付输入+匹配+定位 MVP，再逐步接入结果高亮与二级导航联动。
+- **搜索输入联想（新增，搜索体验 TODO）**：当前搜索框暂不支持输入联想（autocomplete/suggestion），也暂不支持联想站内图标（本地快捷方式/文件夹内图标）能力。  
+  - TODO：后续补充「搜索词自动联想」与「站内图标联想」两条能力线，并明确其优先级与触发策略（本地优先 / 外部建议）。
+- **自定义搜索引擎管理补全（新增，搜索引擎体验里程碑）**：当前仅支持新增与选择，尚未提供删除能力。  
+  - 目标：支持删除已添加的自定义搜索引擎，并与主页搜索栏、设置“默认搜索引擎”下拉、持久化数据同步。  
+  - 约束：若删除项为当前选中引擎，需自动回退到可用默认项并保持刷新后一致。
 - **交互系统蓝图（新增，契约治理里程碑）**：系统蓝图见 [`notes/interaction-system-blueprint.md`](./notes/interaction-system-blueprint.md)，右键命中契约见 [`notes/context-menu-surface-contract.md`](./notes/context-menu-surface-contract.md)。  
   - 目标：统一 pointer/layering、context menu、modal 阻断、输入语义保留等跨组件交互规则。  
   - 路线：先固化契约与回归边界，再逐步收敛到统一交互守卫。

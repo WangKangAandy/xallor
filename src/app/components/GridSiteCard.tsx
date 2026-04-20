@@ -2,6 +2,7 @@ import type { SiteItem } from "./desktopGridTypes";
 import { DesktopGridItemSiteBody } from "./DesktopGridItemSiteBody";
 import { GridItemCardFrame } from "./GridItemCardFrame";
 import { type GridItemCardSharedCallbacks, useGridItemCard } from "./useGridItemCard";
+import { openExternalUrlImpl } from "../navigation";
 
 export type GridSiteCardProps = GridItemCardSharedCallbacks & {
   item: SiteItem;
@@ -25,6 +26,8 @@ export function GridSiteCard({ item, index, showLabels = true, onRename, onDelet
       itemId={item.id}
       onDeleteItem={onDeleteItem}
       onHideItem={onHideItem}
+      onOpenInCurrentWindow={() => openExternalUrlImpl(item.site.url, { openInNewTab: false })}
+      onOpenInNewWindow={() => openExternalUrlImpl(item.site.url, { openInNewTab: true })}
       isArrangeMode={callbacks.isArrangeMode}
       isArrangeSelected={callbacks.isArrangeSelected}
       onArrangeToggleSelect={callbacks.onArrangeToggleSelect}

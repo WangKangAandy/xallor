@@ -7,8 +7,10 @@ import { GlassSurface } from './shared/GlassSurface';
 import { Z_SEARCH_BAR, Z_SEARCH_DROPDOWN } from './desktopGridLayers';
 import { useDismissOnPointerDownOutside } from './useDismissOnPointerDownOutside';
 import { useUiPreferences } from "../preferences";
+import { useAppI18n } from "../i18n/AppI18n";
 import {
   getAllSearchEngines,
+  getSearchEngineDisplayName,
   getSearchEngineById,
   resolveSearchEngineId,
   type SearchEngine,
@@ -79,6 +81,7 @@ function AddEngineForm({ onAdd, onCancel }: AddEngineFormProps) {
 
 export function SearchBar() {
   const openUrl = useOpenExternalUrl();
+  const { locale } = useAppI18n();
   const { selectedSearchEngineId, setSearchEngine } = useUiPreferences();
   const initialEngines = getAllSearchEngines();
   const [engines, setEngines] = useState<SearchEngine[]>(initialEngines);
@@ -200,7 +203,9 @@ export function SearchBar() {
           onChange={e => setQuery(e.target.value)}
           onKeyDown={handleSearch}
           data-context-native="true"
-          placeholder={`用 ${selected.name} 搜索…`}
+          placeholder={`${locale === "en-US" ? "Search with" : "用"} ${getSearchEngineDisplayName(selected, locale)}${
+            locale === "en-US" ? "..." : " 搜索…"
+          }`}
           className="min-w-0 flex-1 bg-transparent text-gray-800 outline-none placeholder-gray-400 dark:text-slate-100 dark:placeholder:text-slate-500"
         />
       </GlassSurface>
@@ -230,7 +235,9 @@ export function SearchBar() {
                   className="rounded-sm object-contain"
                   style={{ imageRendering: 'auto' }}
                 />
-                <span className="flex-1 whitespace-nowrap text-sm text-gray-700 dark:text-slate-200">{engine.name}</span>
+                <span className="flex-1 whitespace-nowrap text-sm text-gray-700 dark:text-slate-200">
+                  {getSearchEngineDisplayName(engine, locale)}
+                </span>
                 {selected.id === engine.id && (
                   <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
                 )}

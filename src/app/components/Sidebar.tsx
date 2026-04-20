@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { LayoutDashboard, Star, Clock, User, Settings, type LucideIcon } from 'lucide-react';
 import { GlassSurface } from './shared/GlassSurface';
 import { useAppI18n } from "../i18n/AppI18n";
+import type { SidebarLayoutMode } from "../preferences";
 
 interface MenuItem {
   Icon: LucideIcon;
@@ -10,6 +11,7 @@ interface MenuItem {
 
 interface SidebarProps {
   onOpenSettings?: () => void;
+  layoutMode?: SidebarLayoutMode;
 }
 
 const MENU_ITEMS: MenuItem[] = [
@@ -20,9 +22,11 @@ const MENU_ITEMS: MenuItem[] = [
   { Icon: Settings, labelKey: "sidebar.settings" },
 ];
 
-export function Sidebar({ onOpenSettings }: SidebarProps) {
+export function Sidebar({ onOpenSettings, layoutMode = "auto-hide" }: SidebarProps) {
   const { t } = useAppI18n();
   const [hovered, setHovered] = useState(false);
+  const isAutoHide = layoutMode === "auto-hide";
+  const visible = !isAutoHide || hovered;
   const handleMenuClick = (labelKey: MenuItem["labelKey"]) => {
     if (labelKey === "sidebar.settings") {
       onOpenSettings?.();
@@ -35,7 +39,7 @@ export function Sidebar({ onOpenSettings }: SidebarProps) {
       <div
         className="fixed left-0 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-[6px] pl-[3px] pointer-events-none"
         style={{
-          opacity: hovered ? 0 : 1,
+          opacity: isAutoHide && !hovered ? 1 : 0,
           transition: 'opacity 0.3s ease',
         }}
       >
@@ -55,8 +59,12 @@ export function Sidebar({ onOpenSettings }: SidebarProps) {
           data-context-entity="true"
           data-context-entity-type="sidebar"
           className="pointer-events-auto flex items-stretch"
-          onMouseEnter={() => setHovered(true)}
-          onMouseLeave={() => setHovered(false)}
+          onMouseEnter={() => {
+            if (isAutoHide) setHovered(true);
+          }}
+          onMouseLeave={() => {
+            if (isAutoHide) setHovered(false);
+          }}
         >
           <div className="w-4 shrink-0" aria-hidden />
           <div className="flex items-center">
@@ -65,10 +73,10 @@ export function Sidebar({ onOpenSettings }: SidebarProps) {
               rounded="3xl"
               className="p-3"
               style={{
-                transform: hovered ? 'translateX(12px)' : 'translateX(-62px)',
-                opacity: hovered ? 1 : 0,
+                transform: visible ? 'translateX(12px)' : 'translateX(-62px)',
+                opacity: visible ? 1 : 0,
                 transition: 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease',
-                pointerEvents: hovered ? 'auto' : 'none',
+                pointerEvents: visible ? 'auto' : 'none',
               }}
             >
               <div className="flex flex-col gap-4">

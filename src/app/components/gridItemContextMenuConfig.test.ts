@@ -52,4 +52,18 @@ describe("getGridItemContextMenuEntries", () => {
     entries[0]?.onSelect();
     expect(onHide).toHaveBeenCalledWith("item-hide-1");
   });
+
+  /**
+   * 目的：仅当注入临时打开回调时，菜单应出现“当前窗口打开 / 新窗口打开”两项。
+   */
+  it("should_include_temporary_open_entries_when_open_handlers_provided", () => {
+    const onOpenCurrent = vi.fn();
+    const onOpenNew = vi.fn();
+    const entries = getGridItemContextMenuEntries("site-1", undefined, undefined, undefined, onOpenCurrent, onOpenNew);
+    expect(entries.slice(0, 2).map((e) => e.id)).toEqual(["open-current-window", "open-new-window"]);
+    entries[0]?.onSelect();
+    entries[1]?.onSelect();
+    expect(onOpenCurrent).toHaveBeenCalledTimes(1);
+    expect(onOpenNew).toHaveBeenCalledTimes(1);
+  });
 });

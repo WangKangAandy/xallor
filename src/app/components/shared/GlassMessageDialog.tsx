@@ -1,4 +1,5 @@
 import { GlassSurface } from "./GlassSurface";
+import { X } from "lucide-react";
 
 export type GlassMessageDialogProps = {
   open: boolean;
@@ -9,6 +10,11 @@ export type GlassMessageDialogProps = {
   variant: "alert" | "confirm";
   confirmLabel?: string;
   cancelLabel?: string;
+  /** 是否显示右上角关闭按钮（仅关闭，不执行确认动作）。 */
+  showCloseButton?: boolean;
+  /** 关闭行为（遮罩点击 + 右上角 X）；未传时沿用历史行为。 */
+  onDismiss?: () => void;
+  closeAriaLabel?: string;
   /** 危险操作用红色主按钮 */
   confirmDestructive?: boolean;
   onConfirm: () => void;
@@ -27,13 +33,20 @@ export function GlassMessageDialog({
   variant,
   confirmLabel = "确定",
   cancelLabel = "取消",
+  showCloseButton = false,
+  onDismiss,
+  closeAriaLabel = "Close",
   confirmDestructive = false,
   onConfirm,
   onCancel,
 }: GlassMessageDialogProps) {
   if (!open) return null;
 
-  const handleBackdrop = () => {
+  const handleDismiss = () => {
+    if (onDismiss) {
+      onDismiss();
+      return;
+    }
     if (variant === "confirm") onCancel?.();
     else onConfirm();
   };
@@ -48,9 +61,9 @@ export function GlassMessageDialog({
     >
       <button
         type="button"
-        aria-label="关闭"
+        aria-label={closeAriaLabel}
         className="absolute inset-0 bg-slate-900/30 backdrop-blur-[1px]"
-        onClick={handleBackdrop}
+        onClick={handleDismiss}
       />
       <GlassSurface
         variant="panel"
@@ -58,6 +71,16 @@ export function GlassMessageDialog({
         className="relative z-10 w-full max-w-[min(420px,calc(100vw-2rem))] border border-slate-200/80 p-5 shadow-2xl dark:border-slate-600/80"
         onClick={(e) => e.stopPropagation()}
       >
+        {showCloseButton ? (
+          <button
+            type="button"
+            aria-label={closeAriaLabel}
+            className="absolute right-3 top-3 rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-900/5 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-white/10 dark:hover:text-slate-300"
+            onClick={handleDismiss}
+          >
+            <X className="h-4 w-4" />
+          </button>
+        ) : null}
         {title ? (
           <div id="glass-message-dialog-title" className="mb-2 text-base font-semibold text-slate-900 dark:text-slate-100">
             {title}

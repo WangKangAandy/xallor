@@ -2,6 +2,7 @@ import type { Ref, RefObject } from "react";
 import { Z_GRID_CONTEXT_MENU } from "./desktopGridLayers";
 import type { GridContextMenuEntry } from "./gridItemContextMenuConfig";
 import { GlassSurface } from "./shared/GlassSurface";
+import { useAppI18n } from "../i18n/AppI18n";
 
 type GridItemContextMenuProps = {
   menuRef: RefObject<HTMLDivElement | null>;
@@ -16,6 +17,7 @@ type GridItemContextMenuProps = {
  * 外壳使用 {@link GlassSurface}，与搜索下拉里、天气卡等毛玻璃语言一致。
  */
 export function GridItemContextMenu({ menuRef, left, top, entries, onEntrySelect }: GridItemContextMenuProps) {
+  const { t } = useAppI18n();
   if (entries.length === 0) return null;
 
   return (
@@ -27,7 +29,7 @@ export function GridItemContextMenu({ menuRef, left, top, entries, onEntrySelect
       className="fixed w-max min-w-[120px] max-w-[min(280px,calc(100vw-16px))] overflow-hidden py-1.5"
       style={{ left, top, zIndex: Z_GRID_CONTEXT_MENU }}
       role="menu"
-      aria-label="图标操作"
+      aria-label={t("contextMenu.itemActions")}
     >
       {entries.map((entry) => (
         <button

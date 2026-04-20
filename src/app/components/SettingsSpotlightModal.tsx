@@ -10,7 +10,7 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { DEFAULT_NEW_TAB_BACKGROUND_URL } from "./feedback";
 import { useAppI18n, type AppLocale } from "../i18n/AppI18n";
 import type { LayoutMode } from "../preferences";
@@ -18,17 +18,23 @@ import { useUiPreferences } from "../preferences";
 import { SegmentedControl } from "./shared/SegmentedControl";
 import {
   getAllSearchEngines,
+  getSearchEngineDisplayName,
   getSearchEngineById,
   resolveSearchEngineId,
+  type SearchEngine,
 } from "../search/searchEngineRegistry";
 import type { SiteItem } from "./desktopGridTypes";
 import { Favicon } from "./DesktopGridItemPrimitives";
 import { GlassMessageDialog } from "./shared/GlassMessageDialog";
 import { useOpenExternalUrl } from "../navigation";
+import { loadSearchPayload } from "../storage/repository";
+import { useDismissOnPointerDownOutside } from "./useDismissOnPointerDownOutside";
 
 type SettingsSpotlightModalProps = {
   open: boolean;
   onClose: () => void;
+  /** 打开时默认定位分区；未传则回到通用。 */
+  initialSection?: SettingsSectionId;
   layoutMode: LayoutMode;
   onLayoutModeChange: (mode: LayoutMode) => void;
   openLinksInNewTab: boolean;
@@ -77,7 +83,7 @@ const TOGGLES = [
 ] as const;
 
 /** 设置右侧主内容区统一容器样式：集中维护间距与文本色。 */
-const SETTINGS_MAIN_BODY_CLASS = "min-w-0 max-w-full space-y-6 px-6 pb-6 pt-1 text-slate-800 dark:text-slate-100";
+const SETTINGS_MAIN_BODY_CLASS = "min-w-0 max-w-full space-y-6 px-6 pb-6 pt-4 text-slate-800 dark:text-slate-100";
 
 function SettingsToggleRow({
   title,
@@ -328,6 +334,7 @@ function SettingsComingSoonBody() {
 export function SettingsSpotlightModal({
   open,
   onClose,
+  initialSection,
   layoutMode,
   onLayoutModeChange,
   openLinksInNewTab,
@@ -344,7 +351,7 @@ export function SettingsSpotlightModal({
   onResetFolderHint,
 }: SettingsSpotlightModalProps) {
   const { locale, setLocale, t } = useAppI18n();
-  const { selectedSearchEngineId, setSearchEngine } = useUiPreferences();
+  const { selectedSearchEngineId, setSearchEngine, sidebarLayout, setSidebarLayout } = useUiPreferences();
   const [activeSection, setActiveSection] = useState<SettingsSectionId>("general");
   const [searchEnginePickerOpen, setSearchEnginePickerOpen] = useState(false);
   const [passwordDraft, setPasswordDraft] = useState("");
@@ -358,7 +365,12 @@ export function SettingsSpotlightModal({
   );
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [hiddenDeleteConfirmOpen, setHiddenDeleteConfirmOpen] = useState(false);
+  const [availableSearchEngines, setAvailableSearchEngines] = useState<SearchEngine[]>(() => getAllSearchEngines());
+  const searchEnginePickerRef = useRef<HTMLDivElement | null>(null);
   const openExternalUrl = useOpenExternalUrl();
+  useDismissOnPointerDownOutside(searchEnginePickerRef, searchEnginePickerOpen, () => {
+    setSearchEnginePickerOpen(false);
+  });
 
   useEffect(() => {
     if (activeSection === "privacy") return;
@@ -375,7 +387,35 @@ export function SettingsSpotlightModal({
     setSelectedHiddenIds(new Set());
     setHiddenDeleteConfirmOpen(false);
   }, [open]);
-  const availableSearchEngines = getAllSearchEngines();
+  useEffect(() => {
+    if (!open) return;
+    setActiveSection(initialSection ?? "general");
+  }, [open, initialSection]);
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    (async () => {
+      const fallback = {
+        engines: getAllSearchEngines(),
+        selectedEngineId: selectedSearchEngineId,
+      };
+      const payload = await loadSearchPayload(fallback);
+      if (cancelled) return;
+      setAvailableSearchEngines(payload.engines);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, selectedSearchEngineId]);
+
+  useEffect(() => {
+    if (availableSearchEngines.length === 0) return;
+    const resolved = resolveSearchEngineId(selectedSearchEngineId, availableSearchEngines);
+    if (resolved !== selectedSearchEngineId) {
+      setSearchEngine(resolved);
+    }
+  }, [availableSearchEngines, selectedSearchEngineId, setSearchEngine]);
+
   const selectedSearchEngine =
     getSearchEngineById(selectedSearchEngineId, availableSearchEngines) ??
     getSearchEngineById(resolveSearchEngineId(null, availableSearchEngines), availableSearchEngines);
@@ -411,7 +451,7 @@ export function SettingsSpotlightModal({
             />
           </div>
           <div className="h-px bg-slate-200/70 dark:bg-slate-600/50" />
-          <div className="relative flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+          <div ref={searchEnginePickerRef} className="relative flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
             <div>
               <div className="text-sm font-medium">{t("settings.defaultSearchEngine")}</div>
               <div className="text-xs text-slate-500 dark:text-slate-400">{t("settings.defaultSearchEngineDesc")}</div>
@@ -419,14 +459,14 @@ export function SettingsSpotlightModal({
             <button
               type="button"
               data-testid="settings-default-search-engine-trigger"
-              className="rounded-lg border border-slate-200 bg-white/85 px-3 py-1.5 text-xs text-slate-600 transition-colors hover:bg-white dark:border-slate-600 dark:bg-slate-700/90 dark:text-slate-200 dark:hover:bg-slate-600/90"
+              className="rounded-lg border border-slate-300/90 bg-white/92 px-3 py-1.5 text-xs text-slate-700 shadow-sm transition-colors hover:bg-white dark:border-slate-500/80 dark:bg-slate-700/95 dark:text-slate-100 dark:hover:bg-slate-600/95"
               onClick={() => setSearchEnginePickerOpen((v) => !v)}
             >
-              {selectedSearchEngine?.name ?? "百度"}
+              {selectedSearchEngine ? getSearchEngineDisplayName(selectedSearchEngine, locale) : locale === "en-US" ? "Baidu" : "百度"}
             </button>
             {searchEnginePickerOpen ? (
               <div
-                className="absolute right-0 top-[calc(100%+0.5rem)] z-20 min-w-[180px] overflow-hidden rounded-xl border border-slate-200/80 bg-white/95 p-1.5 shadow-xl dark:border-slate-600 dark:bg-slate-800/95"
+                className="absolute right-0 top-[calc(100%+0.5rem)] z-20 min-w-[180px] overflow-hidden rounded-xl border border-slate-300/90 bg-[rgb(251_250_247_/_0.95)] p-1.5 shadow-[0_14px_32px_-14px_rgba(15,23,42,0.34)] ring-1 ring-white/65 backdrop-blur-[10px] dark:border-slate-500/75 dark:bg-[rgb(37_44_56_/_0.96)] dark:shadow-[0_16px_34px_-16px_rgba(2,6,23,0.82)] dark:ring-white/8"
                 role="listbox"
                 aria-label={t("settings.chooseSearchEngine")}
               >
@@ -441,15 +481,15 @@ export function SettingsSpotlightModal({
                       data-testid={`settings-default-search-engine-option-${engine.id}`}
                       className={`flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-xs transition-colors ${
                         active
-                          ? "bg-sky-500/12 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300"
-                          : "text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700/70"
+                          ? "bg-sky-500/18 text-sky-800 dark:bg-sky-400/24 dark:text-sky-200"
+                          : "text-slate-700 hover:bg-slate-200/70 dark:text-slate-200 dark:hover:bg-slate-600/55"
                       }`}
                       onClick={() => {
                         setSearchEngine(engine.id);
                         setSearchEnginePickerOpen(false);
                       }}
                     >
-                      <span>{engine.name}</span>
+                      <span>{getSearchEngineDisplayName(engine, locale)}</span>
                     </button>
                   );
                 })}
@@ -478,6 +518,34 @@ export function SettingsSpotlightModal({
                 },
               ]}
               ariaLabel={t("settings.linkOpenBehavior")}
+            />
+          </div>
+          <div className="h-px bg-slate-200/70 dark:bg-slate-600/50" />
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+            <div>
+              <div className="text-sm font-medium">{t("settings.sidebarLayout")}</div>
+              <div className="text-xs text-slate-500 dark:text-slate-400">{t("settings.sidebarLayoutDesc")}</div>
+              {isMinimalMode ? (
+                <div className="mt-1 text-xs text-amber-600 dark:text-amber-300">{t("settings.sidebarLayoutLocked")}</div>
+              ) : null}
+            </div>
+            <SegmentedControl<"auto-hide" | "always-visible">
+              value={isMinimalMode ? "auto-hide" : sidebarLayout}
+              onChange={setSidebarLayout}
+              options={[
+                {
+                  value: "auto-hide",
+                  label: t("settings.sidebarLayoutAutoHide"),
+                  testId: "settings-sidebar-layout-auto-hide",
+                },
+                {
+                  value: "always-visible",
+                  label: t("settings.sidebarLayoutAlwaysVisible"),
+                  testId: "settings-sidebar-layout-always-visible",
+                },
+              ]}
+              ariaLabel={t("settings.sidebarLayout")}
+              className={isMinimalMode ? "pointer-events-none opacity-50" : undefined}
             />
           </div>
           <div className="h-px bg-slate-200/70 dark:bg-slate-600/50" />
