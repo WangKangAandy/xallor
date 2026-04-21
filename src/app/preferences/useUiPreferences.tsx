@@ -24,6 +24,7 @@ export const UI_LAYOUT_STORAGE_KEY = "xallor_ui_layout";
 export const UI_OPEN_LINKS_IN_NEW_TAB_STORAGE_KEY = "xallor_ui_open_links_in_new_tab";
 export const UI_SEARCH_ENGINE_STORAGE_KEY = "xallor_ui_search_engine";
 export const UI_SIDEBAR_LAYOUT_STORAGE_KEY = "xallor_ui_sidebar_layout";
+export const UI_GRID_ITEM_NAMES_VISIBLE_STORAGE_KEY = "xallor_ui_grid_item_names_visible";
 
 export type SidebarLayoutMode = "auto-hide" | "always-visible";
 
@@ -61,6 +62,18 @@ function readInitialSidebarLayout(): SidebarLayoutMode {
   return parseStoredSidebarLayout(globalThis.localStorage?.getItem(UI_SIDEBAR_LAYOUT_STORAGE_KEY) ?? null);
 }
 
+/** 网格名称显示读取：仅 `"0"` 为隐藏，其余回退显示。 */
+export function parseStoredGridItemNamesVisible(raw: string | null): boolean {
+  if (raw === "0") return false;
+  return true;
+}
+
+function readInitialGridItemNamesVisible(): boolean {
+  return parseStoredGridItemNamesVisible(
+    globalThis.localStorage?.getItem(UI_GRID_ITEM_NAMES_VISIBLE_STORAGE_KEY) ?? null,
+  );
+}
+
 /** 搜索引擎 id 存储读取：允许自定义 id（如 `custom-*`），仅在空值时回退默认。 */
 export function parseStoredSearchEngineId(raw: string | null): string {
   if (typeof raw === "string" && raw.trim().length > 0) return raw.trim();
@@ -84,6 +97,8 @@ export type UiPreferencesContextValue = {
   setSidebarLayout: (mode: SidebarLayoutMode) => void;
   selectedSearchEngineId: string;
   setSearchEngine: (id: string) => void;
+  gridItemNamesVisible: boolean;
+  setGridItemNamesVisible: (value: boolean) => void;
 };
 
 const UiPreferencesContext = createContext<UiPreferencesContextValue | null>(null);
@@ -101,6 +116,9 @@ export function UiPreferencesProvider({ children }: { children: ReactNode }) {
   const [colorScheme, setColorSchemeState] = useState<ColorSchemePreference>(() => readInitialColorScheme());
   const [sidebarLayout, setSidebarLayoutState] = useState<SidebarLayoutMode>(() => readInitialSidebarLayout());
   const [selectedSearchEngineId, setSelectedSearchEngineId] = useState<string>(() => readInitialSearchEngineId());
+  const [gridItemNamesVisible, setGridItemNamesVisibleState] = useState<boolean>(() =>
+    readInitialGridItemNamesVisible(),
+  );
   const [systemPrefersDark, setSystemPrefersDark] = useState<boolean>(() => matchesPrefersColorSchemeDark());
 
   useEffect(() => {
@@ -149,6 +167,11 @@ export function UiPreferencesProvider({ children }: { children: ReactNode }) {
     globalThis.localStorage?.setItem(UI_SEARCH_ENGINE_STORAGE_KEY, resolved);
   }, []);
 
+  const setGridItemNamesVisible = useCallback((value: boolean) => {
+    setGridItemNamesVisibleState(value);
+    globalThis.localStorage?.setItem(UI_GRID_ITEM_NAMES_VISIBLE_STORAGE_KEY, value ? "1" : "0");
+  }, []);
+
   const value = useMemo(
     () => ({
       layoutMode,
@@ -161,6 +184,8 @@ export function UiPreferencesProvider({ children }: { children: ReactNode }) {
       setSidebarLayout,
       selectedSearchEngineId,
       setSearchEngine,
+      gridItemNamesVisible,
+      setGridItemNamesVisible,
     }),
     [
       layoutMode,
@@ -173,6 +198,8 @@ export function UiPreferencesProvider({ children }: { children: ReactNode }) {
       setSidebarLayout,
       selectedSearchEngineId,
       setSearchEngine,
+      gridItemNamesVisible,
+      setGridItemNamesVisible,
     ],
   );
 

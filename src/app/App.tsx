@@ -65,7 +65,14 @@ function AppContent() {
   const { isResting, handleDoubleClickCapture } = useRestModeController();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [settingsInitialSection, setSettingsInitialSection] = useState<"privacy" | undefined>(undefined);
-  const { layoutMode, setLayoutMode, openLinksInNewTab, setOpenLinksInNewTab, sidebarLayout } = useUiPreferences();
+  const {
+    layoutMode,
+    setLayoutMode,
+    openLinksInNewTab,
+    setOpenLinksInNewTab,
+    sidebarLayout,
+    gridItemNamesVisible,
+  } = useUiPreferences();
   const effectiveSidebarLayout = layoutMode === "minimal" ? "auto-hide" : sidebarLayout;
   const capabilities = useMemo(() => getLayoutCapabilities(layoutMode), [layoutMode]);
   const hiddenSpace = useHiddenSpace();
@@ -210,6 +217,7 @@ function AppContent() {
                   <MultiDesktopStrip
                     onRequestHideItem={handleRequestHideItem}
                     restoreItems={restoreQueue}
+                    gridItemNamesVisible={gridItemNamesVisible}
                     onRestoreApplied={(ids) => {
                       hiddenSpace.removeHiddenItemsByIds(ids);
                       setRestoreQueue([]);

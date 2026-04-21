@@ -1,8 +1,12 @@
 import {
+  Activity,
+  ArrowRight,
+  FileText,
   Bell,
   Boxes,
   Globe,
-  MonitorCog,
+  Image,
+  ShieldCheck,
   Search,
   Shield,
   SlidersHorizontal,
@@ -10,7 +14,7 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { DEFAULT_NEW_TAB_BACKGROUND_URL } from "./feedback";
 import { useAppI18n, type AppLocale } from "../i18n/AppI18n";
 import type { LayoutMode } from "../preferences";
@@ -29,6 +33,7 @@ import { GlassMessageDialog } from "./shared/GlassMessageDialog";
 import { useOpenExternalUrl } from "../navigation";
 import { loadSearchPayload } from "../storage/repository";
 import { useDismissOnPointerDownOutside } from "./useDismissOnPointerDownOutside";
+import aboutContent from "../config/about-content.json";
 
 type SettingsSpotlightModalProps = {
   open: boolean;
@@ -55,8 +60,7 @@ const SECTIONS = [
   { id: "account", labelKey: "settings.account", Icon: UserRound },
   { id: "general", labelKey: "settings.general", Icon: SlidersHorizontal },
   { id: "appearance", labelKey: "settings.appearance", Icon: Sparkles },
-  { id: "search", labelKey: "settings.searchEngine", Icon: Search },
-  { id: "new-tab", labelKey: "settings.newTab", Icon: MonitorCog },
+  { id: "wallpaper", labelKey: "settings.wallpaper", Icon: Image },
   { id: "widgets", labelKey: "settings.widgets", Icon: Boxes },
   { id: "privacy", labelKey: "settings.privacySecurity", Icon: Shield },
   { id: "about", labelKey: "settings.about", Icon: Globe },
@@ -168,19 +172,22 @@ function SettingsAppearancePanel({
   onLayoutModeChange: (mode: LayoutMode) => void;
 }) {
   const { t } = useAppI18n();
-  const { colorScheme, setColorScheme } = useUiPreferences();
-  const [wallpaperBlur, setWallpaperBlur] = useState(true);
-  const [autoDimWallpaper, setAutoDimWallpaper] = useState(true);
-  const [blurStrength, setBlurStrength] = useState(42);
-  const [showSearchBar, setShowSearchBar] = useState(true);
-  const [iconSize, setIconSize] = useState(58);
-  const [iconShape, setIconShape] = useState<"medium" | "large">("medium");
-  const [glassEffect, setGlassEffect] = useState(true);
+  const { colorScheme, setColorScheme, gridItemNamesVisible, setGridItemNamesVisible } = useUiPreferences();
+  const [gridColumns, setGridColumns] = useState(6);
+  const [gridRows, setGridRows] = useState(2);
+  const [iconSize, setIconSize] = useState<"small" | "medium" | "large">("medium");
+  const [iconGap, setIconGap] = useState(16);
+  const [minimalShowSearchBar, setMinimalShowSearchBar] = useState(true);
+  const [minimalShowQuickActions, setMinimalShowQuickActions] = useState(true);
+  const [minimalContentWidth, setMinimalContentWidth] = useState<"narrow" | "standard" | "wide">("standard");
 
   return (
     <div className={SETTINGS_MAIN_BODY_CLASS}>
       <div className="min-w-0 space-y-4 overflow-hidden rounded-2xl border border-slate-200/70 bg-white/72 p-4 dark:border-slate-600/60 dark:bg-slate-800/75">
-        <div className="text-sm font-medium">{t("settings.appearanceTheme")}</div>
+        <div className="min-w-0">
+          <div className="text-sm font-medium">{t("settings.appearanceTheme")}</div>
+          <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("settings.appearanceThemeHint")}</div>
+        </div>
         <SegmentedControl<"light" | "dark" | "system">
           value={colorScheme}
           onChange={setColorScheme}
@@ -188,11 +195,7 @@ function SettingsAppearancePanel({
           options={[
             { value: "light", label: t("settings.appearanceThemeLight"), testId: "settings-appearance-theme-light" },
             { value: "dark", label: t("settings.appearanceThemeDark"), testId: "settings-appearance-theme-dark" },
-            {
-              value: "system",
-              label: t("settings.appearanceThemeSystem"),
-              testId: "settings-appearance-theme-system",
-            },
+            { value: "system", label: t("settings.appearanceThemeSystem"), testId: "settings-appearance-theme-system" },
           ]}
         />
       </div>
@@ -200,11 +203,8 @@ function SettingsAppearancePanel({
       <div className="min-w-0 space-y-4 overflow-hidden rounded-2xl border border-slate-200/70 bg-white/72 p-4 dark:border-slate-600/60 dark:bg-slate-800/75">
         <div className="min-w-0">
           <div className="text-sm font-medium">{t("settings.appearanceWallpaper")}</div>
-          <div className="mt-1 break-words text-xs text-slate-500 dark:text-slate-400">
-            {t("settings.appearanceWallpaperHint")}
-          </div>
+          <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("settings.appearanceWallpaperHint")}</div>
         </div>
-        {/* 固定宽高比容器 + 绝对定位图片：彻底切断 intrinsic 宽度参与布局 */}
         <div className="relative mx-auto aspect-[5/2] w-full max-w-[280px] overflow-hidden rounded-xl border border-slate-200/80 bg-slate-100/50 shadow-inner dark:border-slate-600/60 dark:bg-slate-900/50">
           <img
             src={DEFAULT_NEW_TAB_BACKGROUND_URL}
@@ -221,100 +221,126 @@ function SettingsAppearancePanel({
         >
           {t("settings.appearancePickWallpaper")}
         </button>
-        <div className="h-px bg-slate-200/70 dark:bg-slate-600/50" />
-        <SettingsToggleRow
-          title={t("settings.appearanceWallpaperBlur")}
-          description={t("settings.appearanceWallpaperBlurDesc")}
-          pressed={wallpaperBlur}
-          onPressedChange={setWallpaperBlur}
-          testId="settings-appearance-wallpaper-blur"
-        />
-        <SettingsToggleRow
-          title={t("settings.appearanceAutoDimWallpaper")}
-          description={t("settings.appearanceAutoDimWallpaperDesc")}
-          pressed={autoDimWallpaper}
-          onPressedChange={setAutoDimWallpaper}
-          testId="settings-appearance-auto-dim"
-        />
-        <SettingsRangeRow
-          label={t("settings.appearanceBlurStrength")}
-          valueLabel={`${blurStrength}%`}
-          value={blurStrength}
-          onChange={setBlurStrength}
-          min={0}
-          max={100}
-        />
       </div>
 
-      <div className="min-w-0 space-y-3 overflow-hidden rounded-2xl border border-slate-200/70 bg-white/72 p-4 dark:border-slate-600/60 dark:bg-slate-800/75">
-        <div className="text-sm font-medium">{t("settings.appearanceLayoutSection")}</div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-          <div>
-            <div className="text-sm font-medium">{t("settings.layoutMode")}</div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">{t("settings.layoutModeDesc")}</div>
+      <div className="min-w-0 space-y-4 overflow-hidden rounded-2xl border border-slate-200/70 bg-white/72 p-4 dark:border-slate-600/60 dark:bg-slate-800/75">
+        <div className="min-w-0">
+          <div className="text-base font-semibold">{t("settings.layoutConfigTitle")}</div>
+          <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("settings.layoutConfigDesc")}</div>
+        </div>
+        <div className="rounded-xl border border-slate-200/70 bg-slate-50/70 p-3 dark:border-slate-600/70 dark:bg-slate-700/35">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+            <div>
+              <div className="text-sm font-medium">{t("settings.layoutMode")}</div>
+              <div className="text-xs text-slate-500 dark:text-slate-400">{t("settings.layoutModeDesc")}</div>
+            </div>
+            <SegmentedControl<LayoutMode>
+              value={layoutMode}
+              onChange={onLayoutModeChange}
+              options={[
+                {
+                  value: "default",
+                  label: t("settings.layoutOptionDefault"),
+                  testId: "settings-layout-mode-default",
+                },
+                {
+                  value: "minimal",
+                  label: t("settings.layoutOptionMinimal"),
+                  testId: "settings-layout-mode-minimal",
+                },
+              ]}
+              ariaLabel={t("settings.layoutMode")}
+            />
           </div>
-          <SegmentedControl<LayoutMode>
-            value={layoutMode}
-            onChange={onLayoutModeChange}
-            options={[
-              {
-                value: "default",
-                label: t("settings.layoutOptionDefault"),
-                testId: "settings-layout-mode-default",
-              },
-              {
-                value: "minimal",
-                label: t("settings.layoutOptionMinimal"),
-                testId: "settings-layout-mode-minimal",
-              },
-            ]}
-            ariaLabel={t("settings.layoutMode")}
-          />
         </div>
-        <div className="h-px bg-slate-200/70 dark:bg-slate-600/50" />
-        <SettingsToggleRow
-          title={t("settings.appearanceShowSearchBar")}
-          description={t("settings.appearanceShowSearchBarDesc")}
-          pressed={showSearchBar}
-          onPressedChange={setShowSearchBar}
-          testId="settings-appearance-show-search"
-        />
-        <SettingsRangeRow
-          label={t("settings.appearanceIconSize")}
-          valueLabel={`${iconSize}%`}
-          value={iconSize}
-          onChange={setIconSize}
-          min={40}
-          max={100}
-        />
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-          <span className="text-sm text-slate-700 dark:text-slate-200">{t("settings.appearanceIconShape")}</span>
-          <SegmentedControl<"medium" | "large">
-            value={iconShape}
-            onChange={setIconShape}
-            ariaLabel={t("settings.appearanceIconShape")}
-            options={[
-              {
-                value: "medium",
-                label: t("settings.appearanceIconShapeMedium"),
-                testId: "settings-appearance-icon-medium",
-              },
-              {
-                value: "large",
-                label: t("settings.appearanceIconShapeLarge"),
-                testId: "settings-appearance-icon-large",
-              },
-            ]}
-          />
+        <div className="rounded-t-2xl border-t border-slate-200/60 bg-slate-50/35 px-4 pb-3 pt-4 dark:border-slate-600/45 dark:bg-slate-700/20">
+          {layoutMode === "default" ? (
+            <div className="space-y-4">
+              <SettingsRangeRow
+                label={t("settings.gridColumns")}
+                valueLabel={`${gridColumns}`}
+                value={gridColumns}
+                onChange={setGridColumns}
+                min={3}
+                max={10}
+              />
+              <SettingsRangeRow
+                label={t("settings.gridRows")}
+                valueLabel={`${gridRows}`}
+                value={gridRows}
+                onChange={setGridRows}
+                min={1}
+                max={6}
+              />
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                <span className="text-sm text-slate-700 dark:text-slate-200">{t("settings.appearanceIconSize")}</span>
+                <SegmentedControl<"small" | "medium" | "large">
+                  value={iconSize}
+                  onChange={setIconSize}
+                  ariaLabel={t("settings.appearanceIconSize")}
+                  options={[
+                    { value: "small", label: t("settings.iconSizeSmall"), testId: "settings-layout-icon-size-small" },
+                    { value: "medium", label: t("settings.iconSizeMedium"), testId: "settings-layout-icon-size-medium" },
+                    { value: "large", label: t("settings.iconSizeLarge"), testId: "settings-layout-icon-size-large" },
+                  ]}
+                />
+              </div>
+              <SettingsToggleRow
+                title={t("settings.gridShowLabels")}
+                description={t("settings.gridShowLabelsDesc")}
+                pressed={gridItemNamesVisible}
+                onPressedChange={setGridItemNamesVisible}
+                testId="settings-layout-show-labels"
+              />
+              <SettingsRangeRow
+                label={t("settings.gridIconGap")}
+                valueLabel={`${iconGap}px`}
+                value={iconGap}
+                onChange={setIconGap}
+                min={8}
+                max={36}
+              />
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <SettingsToggleRow
+                title={t("settings.minimalShowSearchBar")}
+                description={t("settings.minimalShowSearchBarDesc")}
+                pressed={minimalShowSearchBar}
+                onPressedChange={setMinimalShowSearchBar}
+                testId="settings-minimal-show-search"
+              />
+              <SettingsToggleRow
+                title={t("settings.minimalShowQuickActions")}
+                description={t("settings.minimalShowQuickActionsDesc")}
+                pressed={minimalShowQuickActions}
+                onPressedChange={setMinimalShowQuickActions}
+                testId="settings-minimal-show-quick-actions"
+              />
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                <span className="text-sm text-slate-700 dark:text-slate-200">{t("settings.minimalContentWidth")}</span>
+                <SegmentedControl<"narrow" | "standard" | "wide">
+                  value={minimalContentWidth}
+                  onChange={setMinimalContentWidth}
+                  ariaLabel={t("settings.minimalContentWidth")}
+                  options={[
+                    {
+                      value: "narrow",
+                      label: t("settings.minimalContentWidthNarrow"),
+                      testId: "settings-minimal-width-narrow",
+                    },
+                    {
+                      value: "standard",
+                      label: t("settings.minimalContentWidthStandard"),
+                      testId: "settings-minimal-width-standard",
+                    },
+                    { value: "wide", label: t("settings.minimalContentWidthWide"), testId: "settings-minimal-width-wide" },
+                  ]}
+                />
+              </div>
+            </div>
+          )}
         </div>
-        <div className="h-px bg-slate-200/70 dark:bg-slate-600/50" />
-        <SettingsToggleRow
-          title={t("settings.appearanceGlassEffect")}
-          description={t("settings.appearanceGlassEffectDesc")}
-          pressed={glassEffect}
-          onPressedChange={setGlassEffect}
-          testId="settings-appearance-glass"
-        />
       </div>
     </div>
   );
@@ -327,6 +353,70 @@ function SettingsComingSoonBody() {
       <p className="max-w-sm text-center text-sm leading-relaxed text-slate-500 dark:text-slate-400">
         {t("settings.sectionComingSoon")}
       </p>
+    </div>
+  );
+}
+
+function SettingsAboutPanel() {
+  const { locale } = useAppI18n();
+  const openExternalUrl = useOpenExternalUrl();
+  const iconPalette = useMemo(() => [Sparkles, Globe, Activity, ShieldCheck, FileText], []);
+  const RandomIcon = useMemo(() => iconPalette[Math.floor(Math.random() * iconPalette.length)] ?? Globe, [iconPalette]);
+  const aboutTagline = locale === "en-US" ? aboutContent.tagline["en-US"] : aboutContent.tagline["zh-CN"];
+  const versionLabel = locale === "en-US" ? aboutContent.versionLabel["en-US"] : aboutContent.versionLabel["zh-CN"];
+  const updatedLabel = locale === "en-US" ? aboutContent.updatedLabel["en-US"] : aboutContent.updatedLabel["zh-CN"];
+  const copyright = locale === "en-US" ? aboutContent.copyright["en-US"] : aboutContent.copyright["zh-CN"];
+
+  return (
+    <div className={SETTINGS_MAIN_BODY_CLASS}>
+      <div className="space-y-5">
+        <div className="rounded-2xl border border-slate-200/70 bg-white/72 p-4 dark:border-slate-600/60 dark:bg-slate-800/75">
+          <div className="flex items-start gap-4">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-white/70 bg-white/92 text-slate-700 shadow-sm dark:border-slate-500/70 dark:bg-slate-700/90 dark:text-slate-100">
+              <RandomIcon className="h-8 w-8" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{aboutContent.profileName}</div>
+              <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">{aboutTagline}</div>
+            </div>
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-4 rounded-xl border border-slate-200/70 bg-white/60 px-3 py-2 dark:border-slate-600/70 dark:bg-slate-700/40">
+            <div className="min-w-0 border-r border-slate-200/70 pr-3 dark:border-slate-600/70">
+              <div className="text-xs text-slate-500 dark:text-slate-400">{versionLabel}</div>
+              <div className="mt-0.5 text-sm font-medium text-slate-800 dark:text-slate-100">{aboutContent.version}</div>
+            </div>
+            <div className="min-w-0 pl-1">
+              <div className="text-xs text-slate-500 dark:text-slate-400">{updatedLabel}</div>
+              <div className="mt-0.5 text-sm font-medium text-slate-800 dark:text-slate-100">{aboutContent.updated}</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200/70 bg-white/72 p-2 dark:border-slate-600/60 dark:bg-slate-800/75">
+          {aboutContent.links.map((item, index) => {
+            const title = locale === "en-US" ? item.title["en-US"] : item.title["zh-CN"];
+            const description = locale === "en-US" ? item.description["en-US"] : item.description["zh-CN"];
+            return (
+              <button
+                key={item.id}
+                type="button"
+                className="relative flex w-full items-center justify-between gap-3 rounded-xl px-3 py-3 text-left transition-colors hover:bg-slate-100/70 dark:hover:bg-slate-700/60"
+                onClick={(e) => openExternalUrl(item.url, e)}
+              >
+                <div className="min-w-0">
+                  <div className="text-sm font-medium text-slate-800 dark:text-slate-100">{title}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">{description}</div>
+                </div>
+                <ArrowRight className="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" />
+                {index < aboutContent.links.length - 1 ? (
+                  <div className="pointer-events-none absolute inset-x-4 bottom-0 h-px bg-slate-200/70 dark:bg-slate-600/60" />
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      <div className="pt-2 text-center text-xs text-slate-400 dark:text-slate-500">{copyright}</div>
     </div>
   );
 }
@@ -800,6 +890,8 @@ export function SettingsSpotlightModal({
         ) : null}
       </div>
     );
+  } else if (activeSection === "about") {
+    mainBody = <SettingsAboutPanel />;
   } else {
     mainBody = <SettingsComingSoonBody />;
   }
@@ -823,16 +915,16 @@ export function SettingsSpotlightModal({
       {/* Spotlight halo: keep subtle so panel edge remains crisp */}
       <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 top-1/2 z-[1] h-[620px] w-[980px] -translate-x-1/2 -translate-y-1/2 rounded-[44px] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.22),rgba(255,255,255,0)_68%)]"
+        className="pointer-events-none absolute left-1/2 top-1/2 z-[1] h-[min(80vh,860px)] w-[min(80vw,1140px)] -translate-x-1/2 -translate-y-1/2 rounded-[44px] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.22),rgba(255,255,255,0)_68%)]"
       />
 
       {/*
-        宽度：视口与 920px 取小；高度：min(620px, 100vh-5rem) 作「关于」类短页基准，不随 tab 变高；长内容仅在右侧 scrollbar-none 区域滚动。
+        呼吸式尺寸：在最小/首选/最大之间伸展，避免大屏固定 920x620；长内容仅在右侧 scrollbar-none 区域滚动。
       */}
       <div className="pointer-events-none relative z-10 flex w-full min-w-0 justify-center">
-        <div className="pointer-events-auto flex h-[min(620px,calc(100vh-5rem))] max-h-[calc(100vh-5rem)] w-[min(920px,calc(100vw-4rem))] max-w-full min-w-0 flex-col overflow-hidden rounded-[24px] border border-white/55 bg-white/90 shadow-[0_30px_90px_rgba(2,6,23,0.5),0_12px_32px_rgba(15,23,42,0.38)] backdrop-blur-xl dark:border-slate-600/50 dark:bg-slate-900/95">
-          <div className="grid h-full min-h-0 min-w-0 flex-1 grid-cols-[250px_minmax(0,1fr)] grid-rows-1">
-            <aside className="flex h-full min-h-0 flex-col overflow-y-auto border-r border-slate-200/65 bg-white/58 px-4 py-5 scrollbar-none dark:border-slate-700/80 dark:bg-slate-900/70">
+        <div className="pointer-events-auto flex h-[clamp(620px,78vh,860px)] max-h-[calc(100vh-3rem)] w-[clamp(860px,70vw,1140px)] max-w-[calc(100vw-3rem)] min-w-0 flex-col overflow-hidden rounded-[24px] border border-white/55 bg-white/90 shadow-[0_30px_90px_rgba(2,6,23,0.5),0_12px_32px_rgba(15,23,42,0.38)] backdrop-blur-xl dark:border-slate-600/50 dark:bg-slate-900/95">
+          <div className="grid h-full min-h-0 min-w-0 flex-1 grid-cols-[180px_minmax(0,1fr)] grid-rows-1">
+            <aside className="flex h-full min-h-0 flex-col overflow-y-auto border-r border-slate-200/65 bg-white/58 px-2 py-4 scrollbar-none dark:border-slate-700/80 dark:bg-slate-900/70">
             <div className="mb-4">
               <div className="relative min-w-0 flex-1">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />

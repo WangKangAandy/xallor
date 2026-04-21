@@ -25,13 +25,19 @@ type MultiDesktopStripProps = {
   onRequestHideItem?: (item: GridItemType) => boolean | Promise<boolean>;
   restoreItems?: SiteItem[];
   onRestoreApplied?: (ids: string[]) => void;
+  gridItemNamesVisible?: boolean;
 };
 
 /**
  * 横向多桌面：在桌面区域纵向滚轮向下 → 下一页（到末页则新建空白页）；向上 → 上一页。
  * 指示条与滚轮逻辑见 `useDesktopPageIndicator`、`useDesktopStripWheel`。
  */
-export function MultiDesktopStrip({ onRequestHideItem, restoreItems = [], onRestoreApplied }: MultiDesktopStripProps) {
+export function MultiDesktopStrip({
+  onRequestHideItem,
+  restoreItems = [],
+  onRestoreApplied,
+  gridItemNamesVisible = true,
+}: MultiDesktopStripProps) {
   const arrangeSession = useArrangeSession();
   const runtimeRegistryRef = useRef<Map<string, ArrangeGestureGridRuntime>>(new Map());
   const {
@@ -141,7 +147,7 @@ export function MultiDesktopStrip({ onRequestHideItem, restoreItems = [], onRest
                   arrangeSession={arrangeSession}
                   items={page.items}
                   setItems={(u) => applyMultiPageItemsPatch({ [page.pageId]: u })}
-                  showLabels={page.showLabels}
+                  showLabels={page.showLabels && gridItemNamesVisible}
                   isHydrated={isHydrated}
                   widgetLayout={page.widgetLayout}
                   onChangeWidgetLayout={(layout) => setPageWidgetLayout(page.pageId, layout)}

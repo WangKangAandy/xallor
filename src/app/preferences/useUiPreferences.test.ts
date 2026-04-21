@@ -3,11 +3,13 @@
  */
 import { afterEach, describe, expect, it } from "vitest";
 import {
+  parseStoredGridItemNamesVisible,
   parseStoredSearchEngineId,
   parseStoredSidebarLayout,
   parseStoredLayoutMode,
   parseStoredOpenLinksInNewTab,
   UI_COLOR_SCHEME_STORAGE_KEY,
+  UI_GRID_ITEM_NAMES_VISIBLE_STORAGE_KEY,
   UI_LAYOUT_STORAGE_KEY,
   UI_OPEN_LINKS_IN_NEW_TAB_STORAGE_KEY,
   UI_SEARCH_ENGINE_STORAGE_KEY,
@@ -67,6 +69,19 @@ describe("parseStoredSidebarLayout", () => {
   });
 });
 
+describe("parseStoredGridItemNamesVisible", () => {
+  /**
+   * 目的：网格名称显示偏好应对脏值有稳定回退；仅 `"0"` 表示隐藏。
+   */
+  it("should_default_to_visible_unless_storage_is_zero", () => {
+    expect(parseStoredGridItemNamesVisible(null)).toBe(true);
+    expect(parseStoredGridItemNamesVisible("")).toBe(true);
+    expect(parseStoredGridItemNamesVisible("1")).toBe(true);
+    expect(parseStoredGridItemNamesVisible("garbage")).toBe(true);
+    expect(parseStoredGridItemNamesVisible("0")).toBe(false);
+  });
+});
+
 describe("useUiPreferences storage contract", () => {
   afterEach(() => {
     globalThis.localStorage?.removeItem(UI_LAYOUT_STORAGE_KEY);
@@ -74,6 +89,7 @@ describe("useUiPreferences storage contract", () => {
     globalThis.localStorage?.removeItem(UI_COLOR_SCHEME_STORAGE_KEY);
     globalThis.localStorage?.removeItem(UI_SEARCH_ENGINE_STORAGE_KEY);
     globalThis.localStorage?.removeItem(UI_SIDEBAR_LAYOUT_STORAGE_KEY);
+    globalThis.localStorage?.removeItem(UI_GRID_ITEM_NAMES_VISIBLE_STORAGE_KEY);
   });
 
   /**
@@ -85,5 +101,6 @@ describe("useUiPreferences storage contract", () => {
     expect(UI_COLOR_SCHEME_STORAGE_KEY).toBe("xallor_ui_color_scheme");
     expect(UI_SEARCH_ENGINE_STORAGE_KEY).toBe("xallor_ui_search_engine");
     expect(UI_SIDEBAR_LAYOUT_STORAGE_KEY).toBe("xallor_ui_sidebar_layout");
+    expect(UI_GRID_ITEM_NAMES_VISIBLE_STORAGE_KEY).toBe("xallor_ui_grid_item_names_visible");
   });
 });
