@@ -1,0 +1,59 @@
+{
+  "profileName": "wangkang",
+  "tagline": {
+    "zh-CN": "一个更快更清爽的新标签页体验。",
+    "en-US": "A faster and cleaner new tab experience."
+  },
+  "version": "1.2.0",
+  "updated": "2026.04.20",
+  "versionLabel": {
+    "zh-CN": "版本",
+    "en-US": "Version"
+  },
+  "updatedLabel": {
+    "zh-CN": "更新时间",
+    "en-US": "Updated"
+  },
+  "links": [
+    {
+      "id": "check-updates",
+      "title": {
+        "zh-CN": "检查更新",
+        "en-US": "Check for Updates"
+      },
+      "description": {
+        "zh-CN": "查看是否有可用新版本",
+        "en-US": "Check if a new version is available"
+      },
+      "url": "https://github.com"
+    },
+    {
+      "id": "release-notes",
+      "title": {
+        "zh-CN": "更新说明",
+        "en-US": "Release Notes"
+      },
+      "description": {
+        "zh-CN": "查看最近改动与优化内容",
+        "en-US": "View recent updates and improvements"
+      },
+      "url": "https://github.com"
+    },
+    {
+      "id": "privacy-policy",
+      "title": {
+        "zh-CN": "隐私政策",
+        "en-US": "Privacy Policy"
+      },
+      "description": {
+        "zh-CN": "了解我们如何保护你的数据",
+        "en-US": "Learn how we protect your data"
+      },
+      "url": "https://github.com"
+    }
+  ],
+  "copyright": {
+    "zh-CN": "© 2026 wangkang. All rights reserved.",
+    "en-US": "© 2026 wangkang. All rights reserved."
+  }
+}

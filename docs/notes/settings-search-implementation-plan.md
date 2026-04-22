@@ -1,0 +1,123 @@
+# 设置搜索功能实施计划（轻搜索定位版）
+
+## 实现状态（2026-04-22）
+
+- MVP 已落地并进入维护阶段：
+  - 受控输入、轻量匹配、一级分区定位、空态反馈、清空恢复已实现。
+  - 搜索触发时浮层收口已接入（通过 `useSettingsSectionRouting.ts` 的导航回调触发）。
+- 当前实现入口：
+  - `src/app/components/settingsSearch.ts`
+  - `src/app/components/useSettingsSectionRouting.ts`
+  - `src/app/components/SettingsSpotlightModal.tsx`
+  - `src/app/components/settingsSearch.test.ts`
+  - `src/app/components/SettingsSpotlightModal.test.tsx`
+- 当前 TODO 已转为增强项（非阻塞）：
+  - 结果高亮
+  - 关键词治理与排序优化
+  - 键盘候选导航
+
+## 1. 目标
+
+当前设置搜索的职责是“快速定位”，不是“完整检索”。
+
+本计划目标：
+
+- 将设置页顶部输入框从占位态升级为轻搜索定位入口。
+- 帮用户通过少量关键词快速跳转到目标一级分区。
+- 保持实现轻量、低回归，不扩展为完整搜索系统。
+
+## 2. 范围
+
+### 2.1 本期包含（MVP）
+
+- 搜索框改为受控输入（输入、清空）。
+- 轻量关键词匹配，基于最佳命中定位一级分区。
+- 无结果空态提示。
+- 清空输入恢复普通浏览。
+- 搜索触发前收起可关闭的临时浮层（例如搜索引擎下拉）。
+
+### 2.2 本期不包含
+
+- 分区内锚点滚动定位。
+- 第三方模糊搜索库（fuse.js）与拼音/同义词扩展。
+- 独立结果列表/候选面板。
+- 键盘驱动的结果选择交互（上下选择、Enter 定位）。
+
+## 3. 索引模型（section 级）
+
+建议新增独立模块维护索引（如 `settingsSearch.ts`）：
+
+- `sectionId`
+- `sectionTitle`
+- `keywords`
+- `tokens`
+
+规则：
+
+- 所有已存在一级分区至少支持 section 级命中。
+- 已完整落地分区补充更细的稳定关键词。
+- About 分区除标题外补充固定别名与少量稳定字段（如 `version` / `updated` / 链接标题），但不做全字段动态建索引。
+
+## 4. 匹配规则
+
+- 输入归一化：`trim + toLowerCase + 空格压缩`。
+- 仅在 query 非空且满足最小触发条件后执行匹配（如最小长度或短 debounce）。
+- 匹配以 `includes` 为基础，采用轻量优先级：
+  1) `sectionTitle` 命中优先；
+  2) `keywords` 精准/前缀命中次之；
+  3) `tokens` includes 最后。
+- 同分时按索引声明顺序兜底。
+- 空 query 不主动跳转。
+
+## 5. 实施步骤（已完成）
+
+1. 搜索框从 `readOnly` 改为受控输入。
+2. 新增 `SETTINGS_SEARCH_INDEX` 与匹配函数（建议放 `settingsSearch.ts`）。
+3. 输入命中后定位到最佳分区（`activeSection` 切换）。
+4. 无命中显示空态；清空后恢复普通状态。
+5. 执行分区切换前统一收起可关闭浮层。
+
+后续如设置规模继续增长，再评估是否增加锚点定位或结果列表能力（当前不作为 P0/P1 阻塞项）。
+
+## 6. 文件改动（现状）
+
+- `src/app/components/SettingsSpotlightModal.tsx`
+  - 搜索输入状态、命中驱动分区切换、空态展示、浮层收口。
+- `src/app/components/settingsSearch.ts`
+  - 索引、文本归一化、轻量匹配逻辑。
+- `src/app/components/SettingsSpotlightModal.test.tsx`
+  - 搜索定位与交互回归测试。
+- `src/app/i18n/messages.ts`
+  - 空态与提示文案。
+
+## 7. 测试策略（现状与增量）
+
+至少覆盖：
+
+1. 输入“外观”或“主题”命中 `appearance`。
+2. 输入“隐私”命中 `privacy`。
+3. 输入“版本”或“about”命中 `about`。
+4. 输入“壁纸”命中 `wallpaper`。
+5. 输入不存在关键词显示空态。
+6. 清空输入恢复普通状态。
+7. 搜索触发后临时浮层可正确收口。
+
+测试命名沿用：`should_<expected_behavior>_when_<condition>`。
+
+备注：`App.sidebar-layer.test.tsx` 曾出现 `EnvironmentTeardownError` 噪声，已确认属于测试 harness 稳定性问题（与设置搜索业务逻辑无关），并通过缩小渲染面规避；搜索相关断言链路本身稳定。
+
+## 8. 风险与规避
+
+- 风险：设置结构调整后关键词失效。  
+  规避：索引显式维护，分区调整时同步更新。
+- 风险：About 配置变更导致命中覆盖不稳定。  
+  规避：保留一组固定别名关键词，不完全依赖动态文案。
+- 风险：搜索定位与现有浮层交互冲突。  
+  规避：分区切换前统一收起可关闭浮层。
+
+## 9. 验收标准
+
+- 用户可通过稳定关键词快速定位到目标一级分区。
+- 空态、清空恢复、分区切换行为符合预期。
+- 不引入设置弹层与临时浮层交互回归。
+- 搜索相关测试全部通过。

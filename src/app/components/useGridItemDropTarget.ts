@@ -4,6 +4,22 @@ import type { GridDnDDragItem } from "./desktopGridDnDTypes";
 import { GRID_DND_CENTER_ZONE_MARGIN_RATIO, GRID_DND_MERGE_INTENT_DELAY_MS } from "./desktopGridConstants";
 import { isCenterZone } from "./gridItemDnDHelpers";
 
+/**
+ * 边缘重排触发判定：不依赖“曾进入中心区”路径，避免用户轨迹差异导致偶发不触发。
+ */
+export function shouldTriggerEdgeReorder(args: {
+  inCenterZone: boolean;
+  draggedType: string;
+  draggedIndex?: number;
+  hoverIndex: number;
+}) {
+  const { inCenterZone, draggedType, draggedIndex, hoverIndex } = args;
+  if (inCenterZone) return false;
+  if (draggedType === "folder-site") return false;
+  if (typeof draggedIndex === "number" && draggedIndex === hoverIndex) return false;
+  return true;
+}
+
 export function useGridItemDropTarget(options: {
   ref: RefObject<HTMLDivElement | null>;
   itemId: string;
@@ -44,8 +60,14 @@ export function useGridItemDropTarget(options: {
         }
         onClearMergeIntent(itemId);
 
-        if (hasEnteredCenterRef.current && draggedItem.type !== "folder-site") {
-          hasEnteredCenterRef.current = false;
+        if (
+          shouldTriggerEdgeReorder({
+            inCenterZone,
+            draggedType: draggedItem.type,
+            draggedIndex: draggedItem.index,
+            hoverIndex: index,
+          })
+        ) {
           onReorder(draggedItem.id, itemId);
           if (typeof draggedItem.index === "number") {
             draggedItem.index = index;

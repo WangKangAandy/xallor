@@ -1,8 +1,9 @@
 import { Cloud, Sun, CloudRain, CloudSun } from 'lucide-react';
 
+/** 外层表面由 {@link DesktopGridItemWidgetBody} 的 gridPanel 壳提供 */
 export function WeatherCard() {
   return (
-    <div className="backdrop-blur-md bg-white/40 rounded-[36px] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.06)] border border-white/60 w-full h-full flex flex-col justify-between transition-transform duration-200 hover:bg-white/50 cursor-pointer group">
+    <div className="flex h-full w-full cursor-pointer flex-col justify-between p-8 transition-transform duration-200">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-base text-gray-700 mb-2 font-medium">Tokyo, Japan</p>

@@ -1,7 +1,8 @@
 import type { CSSProperties } from "react";
 import type { FolderItem, GridShape, Site } from "./desktopGridTypes";
 import { DesktopGridFolderPreviewItem } from "./DesktopGridFolderPreviewItem";
-import { EditableLabel } from "./DesktopGridItemPrimitives";
+import { GridDesktopCardSurface } from "./GridDesktopCardSurface";
+import { GridItemLabel } from "./GridItemLabel";
 
 export type FolderTileChrome = {
   viewportWidth: number;
@@ -23,6 +24,8 @@ export type FolderTileChrome = {
 export function DesktopGridItemFolderBody({
   item,
   isMergeTarget,
+  isArrangeMode,
+  isArrangeSelected,
   showLabels,
   chrome,
   onRename,
@@ -30,6 +33,8 @@ export function DesktopGridItemFolderBody({
 }: {
   item: FolderItem;
   isMergeTarget: boolean;
+  isArrangeMode: boolean;
+  isArrangeSelected: boolean;
   showLabels: boolean;
   chrome: FolderTileChrome;
   onRename: (newName: string) => void;
@@ -53,22 +58,53 @@ export function DesktopGridItemFolderBody({
   } = chrome;
 
   return (
-    <div
-      className="relative flex flex-col w-full h-full pointer-events-auto cursor-pointer group/folder"
+    <GridDesktopCardSurface
+      variant="panel"
+      isMergeTarget={isMergeTarget}
+      className="group/folder relative flex h-full w-full cursor-pointer flex-col"
+      style={
+        isArrangeMode && isArrangeSelected
+          ? {
+              boxShadow: "inset 0 0 0 2px rgba(59,130,246,0.95), inset 0 0 0 3px rgba(255,255,255,0.2)",
+            }
+          : undefined
+      }
       onClick={(e) => {
         e.stopPropagation();
-        onOpenFolder();
+        if (!isArrangeMode) {
+          onOpenFolder();
+        }
       }}
-      style={{
-        borderRadius: 36,
-        backdropFilter: "blur(16px)",
-        background: "rgba(255,255,255,0.35)",
-        border: isMergeTarget ? "3px solid #3b82f6" : "1px solid rgba(255,255,255,0.65)",
-        transition: "transform 0.2s",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.06)",
+      onDoubleClick={(e) => {
+        if (!isArrangeMode) return;
+        // 整理模式下禁用“双击展开”，避免与外层选中语义冲突。
+        e.preventDefault();
+        e.stopPropagation();
       }}
     >
-      <div className="relative w-full h-full overflow-hidden" style={{ width: viewportWidth, height: viewportHeight, borderRadius: 36 }}>
+      {isArrangeMode && isArrangeSelected ? (
+        <button
+          type="button"
+          aria-label="展开整理"
+          data-arrange-action="open-folder-arrange"
+          className="absolute left-1/2 top-1.5 z-[3] -translate-x-1/2 rounded-full border border-white/70 bg-black/25 px-2 py-0.5 text-xs leading-none text-white transition hover:bg-black/40"
+          onPointerDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onOpenFolder();
+          }}
+        >
+          ⤢
+        </button>
+      ) : null}
+      <div
+        className="relative h-full w-full overflow-hidden"
+        style={{ width: viewportWidth, height: viewportHeight, borderRadius: "var(--grid-panel-radius)" }}
+      >
         <div
           style={{
             position: "absolute",
@@ -96,34 +132,13 @@ export function DesktopGridItemFolderBody({
           ))}
         </div>
       </div>
-      <EditableLabel
+      <GridItemLabel
+        placement="bottom"
+        editable
         initialName={item.name}
         onRename={onRename}
         showLabels={showLabels}
-        className="hover:bg-black/10 px-1 rounded transition-colors"
-        style={{
-          position: "absolute",
-          bottom: -28,
-          fontSize: 13,
-          color: "rgba(255,255,255,0.95)",
-          maxWidth: 100,
-          left: "50%",
-          transform: "translateX(-50%)",
-          textShadow: "0 1px 4px rgba(0,0,0,0.4)",
-          fontWeight: 500,
-        }}
-        inputClassName="placeholder:text-white/60 text-center"
-        inputStyle={{
-          position: "absolute",
-          bottom: -30,
-          width: "120%",
-          left: "-10%",
-          fontSize: 13,
-          color: "rgba(255,255,255,0.95)",
-          textShadow: "0 1px 4px rgba(0,0,0,0.4)",
-          fontWeight: 500,
-        }}
       />
-    </div>
+    </GridDesktopCardSurface>
   );
 }

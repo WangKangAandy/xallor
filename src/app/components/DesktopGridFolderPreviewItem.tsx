@@ -1,4 +1,5 @@
 import { useDrag } from "react-dnd";
+import { useOpenExternalUrl } from "../navigation";
 import type { Site } from "./desktopGridTypes";
 import { Favicon } from "./DesktopGridItemPrimitives";
 import { buildFolderPreviewItemStyle } from "./folderPreviewStyle";
@@ -16,6 +17,7 @@ export function DesktopGridFolderPreviewItem({
   innerBorderRadius: number;
   faviconSize: number;
 }) {
+  const openUrl = useOpenExternalUrl();
   const [{ isDragging }, drag, dragPreview] = useDrag({
     type: "ITEM",
     item: () => ({ id: `folder-item-${folderId}-${site.url}`, type: "folder-site", sourceFolderId: folderId, site }),
@@ -27,10 +29,10 @@ export function DesktopGridFolderPreviewItem({
       ref={drag}
       onClick={(e) => {
         e.stopPropagation();
-        window.open(site.url, "_blank");
+        openUrl(site.url, e);
       }}
       style={buildFolderPreviewItemStyle({ maxIconSize, innerBorderRadius, isDragging })}
-      className="hover:bg-white/80 cursor-grab active:cursor-grabbing"
+      className="glass-folder-preview-tile cursor-grab active:cursor-grabbing"
     >
       <div ref={dragPreview}>
         <Favicon domain={site.domain} name={site.name} size={faviconSize} />

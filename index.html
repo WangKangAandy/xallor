@@ -6,6 +6,21 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <title>xallor</title>
       <style>html, body { height: 100%; margin: 0; } #root { height: 100%; }</style>
+      <!-- 与 src/app/theme/initColorScheme.ts#getInitialResolvedSchemeSync 算法一致；改规则须双改 -->
+      <script>
+        (function () {
+          try {
+            var KEY = "xallor_ui_color_scheme";
+            var raw = localStorage.getItem(KEY);
+            var pref = raw === "light" || raw === "dark" || raw === "system" ? raw : "system";
+            var prefersDark =
+              window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            var resolved = pref === "light" ? "light" : pref === "dark" ? "dark" : prefersDark ? "dark" : "light";
+            document.documentElement.classList.toggle("dark", resolved === "dark");
+            document.documentElement.style.colorScheme = resolved;
+          } catch (e) {}
+        })();
+      </script>
     </head>
 
     <body>

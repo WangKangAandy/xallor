@@ -1,8 +1,6 @@
 import type { GridItemType, GridShape } from "./desktopGridTypes";
 import type { GridDnDDragItem } from "./desktopGridDnDTypes";
-import { GridFolderCard } from "./GridFolderCard";
-import { GridSiteCard } from "./GridSiteCard";
-import { GridWidgetCard } from "./GridWidgetCard";
+import { WidgetRenderer } from "./widgets/WidgetRenderer";
 
 export { Favicon, EditableLabel } from "./DesktopGridItemPrimitives";
 export type { GridSiteCardProps } from "./GridSiteCard";
@@ -21,28 +19,18 @@ export interface DesktopGridItemProps {
   index: number;
   showLabels?: boolean;
   onRename?: (id: string, newName: string) => void;
+  /** 右键菜单等：从当前页移除该图标。 */
+  onDeleteItem?: (id: string) => void;
+  /** 右键菜单：将图标/文件夹移动到隐私空间。 */
+  onHideItem?: (id: string) => void;
+  onEnterArrangeMode?: () => void;
+  isArrangeMode?: boolean;
+  isArrangeSelected?: boolean;
+  onArrangeToggleSelect?: () => void;
+  onDragStart?: (itemId: string) => void;
+  onDragEnd?: (itemId: string) => void;
 }
 
 export function DesktopGridItem(props: DesktopGridItemProps) {
-  const { item, index, onReorder, onHoverMergeIntent, onClearMergeIntent, onDropItem, isMergeTarget, onResize, onOpenFolder, showLabels, onRename } =
-    props;
-
-  const shared = {
-    onReorder,
-    onHoverMergeIntent,
-    onClearMergeIntent,
-    onDropItem,
-    isMergeTarget,
-    onResize,
-  };
-
-  if (item.type === "site") {
-    return <GridSiteCard item={item} index={index} showLabels={showLabels} onRename={onRename} {...shared} />;
-  }
-  if (item.type === "folder") {
-    return (
-      <GridFolderCard item={item} index={index} showLabels={showLabels} onRename={onRename} onOpenFolder={onOpenFolder} {...shared} />
-    );
-  }
-  return <GridWidgetCard item={item} index={index} {...shared} />;
+  return <WidgetRenderer {...props} />;
 }

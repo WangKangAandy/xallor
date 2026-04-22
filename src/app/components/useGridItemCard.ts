@@ -14,6 +14,12 @@ export type GridItemCardSharedCallbacks = {
   onDropItem: (draggedItem: GridDnDDragItem, hoverId: string, inCenterZone?: boolean) => void;
   isMergeTarget: boolean;
   onResize: (id: string, newShape: GridShape) => void;
+  onEnterArrangeMode?: () => void;
+  isArrangeMode?: boolean;
+  isArrangeSelected?: boolean;
+  onArrangeToggleSelect?: () => void;
+  onDragStart?: (itemId: string) => void;
+  onDragEnd?: (itemId: string) => void;
 };
 
 /**
@@ -25,7 +31,7 @@ export function useGridItemCard(
   index: number,
   callbacks: GridItemCardSharedCallbacks,
 ) {
-  const { onReorder, onHoverMergeIntent, onClearMergeIntent, onDropItem, isMergeTarget, onResize } = callbacks;
+  const { onReorder, onHoverMergeIntent, onClearMergeIntent, onDropItem, isMergeTarget, onResize, onEnterArrangeMode, onDragStart, onDragEnd } = callbacks;
   const ref = useRef<HTMLDivElement>(null);
 
   const folderResize = useFolderResize({
@@ -36,7 +42,7 @@ export function useGridItemCard(
     onResize,
   });
 
-  const [{ isDragging }, drag] = useGridItemDrag({ item, index });
+  const [{ isDragging }, drag] = useGridItemDrag({ item, index, onDragStart, onDragEnd });
   const { drop } = useGridItemDropTarget({
     ref,
     itemId: item.id,
@@ -69,5 +75,6 @@ export function useGridItemCard(
     renderSize,
     showResizeChrome,
     folderResize,
+    onEnterArrangeMode,
   };
 }

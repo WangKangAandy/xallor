@@ -1,26 +1,44 @@
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
+import { GridDesktopCardSurface } from "./GridDesktopCardSurface";
+import { GlassSurface } from "./shared/GlassSurface";
+import type { AddableWidgetType } from "./widgets/addableWidgetTypes";
+import { getWidgetBodyComponent } from "./widgets/widgetRegistry";
 
-const WeatherCard = lazy(async () => {
-  const m = await import("./WeatherCard");
-  return { default: m.WeatherCard };
-});
-
-export function DesktopGridItemWidgetBody({ widgetType }: { widgetType: "weather" | "calendar" }) {
-  if (widgetType === "weather") {
-    return (
-      <div className="w-full h-full overflow-hidden pointer-events-auto shadow-sm" style={{ borderRadius: 36 }}>
-        <Suspense
-          fallback={
-            <div
-              className="w-full h-full min-h-[120px] animate-pulse rounded-[36px] bg-white/25 backdrop-blur-sm"
-              aria-hidden
-            />
-          }
-        >
-          <WeatherCard />
-        </Suspense>
-      </div>
-    );
-  }
-  return null;
+export function DesktopGridItemWidgetBody({
+  widgetType,
+  isArrangeMode,
+  isArrangeSelected,
+}: {
+  widgetType: AddableWidgetType;
+  isArrangeMode: boolean;
+  isArrangeSelected: boolean;
+}) {
+  const WidgetBody = getWidgetBodyComponent(widgetType);
+  return (
+    <GridDesktopCardSurface
+      variant="panel"
+      className="pointer-events-auto h-full w-full overflow-hidden shadow-sm transition-colors group hover:bg-white/50"
+      style={
+        isArrangeMode && isArrangeSelected
+          ? {
+              boxShadow: "inset 0 0 0 2px rgba(59,130,246,0.95), inset 0 0 0 3px rgba(255,255,255,0.2)",
+            }
+          : undefined
+      }
+    >
+      <Suspense
+        fallback={
+          <GlassSurface
+            variant="widgetSkeleton"
+            rounded="none"
+            className="h-full min-h-[120px] w-full animate-pulse rounded-none"
+            style={{ borderRadius: "var(--grid-panel-radius)" }}
+            aria-hidden
+          />
+        }
+      >
+        <WidgetBody />
+      </Suspense>
+    </GridDesktopCardSurface>
+  );
 }
