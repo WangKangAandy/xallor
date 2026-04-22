@@ -9,10 +9,11 @@ export {
   ADD_ICON_PICKER_FILTERS,
   type AddIconPickerFilter,
 } from "./addIconPickerConstants";
-export { AddIconDialog, type AddIconDialogProps, type AddIconSubmitPayload } from "./AddIconDialog";
+export type { AddIconSubmitPayload } from "./addIconSubmitPayload";
 export { AddIconPickerGrid } from "./AddIconPickerGrid";
 export { AddIconPickerSection } from "./AddIconPickerSection";
 export { AddIconPickerPanel } from "./AddIconPickerPanel";
 export { AddIconPickerTile } from "./AddIconPickerTile";
 export { AddIconPreviewPanel } from "./AddIconPreviewPanel";
+export { AddIconPanelContent } from "./AddIconPanelContent";
 export { GridAddSlotCell } from "./GridAddSlotCell";

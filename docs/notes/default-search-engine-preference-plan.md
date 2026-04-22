@@ -2,6 +2,15 @@
 
 本文档记录「设置 → 通用 → 默认搜索引擎」的落地方案。目标是把搜索引擎选择从 `SearchBar` 组件内状态升级为**全局单一数据源**，同时避免过早平台化设计。
 
+## 实现状态（2026-04-22）
+
+本方案已完成 v1 落地，当前文档主要作为实现记录与后续增强参考：
+
+- 已落地：`UiPreferences` 持有 `selectedSearchEngineId` 与 `setSearchEngine`。
+- 已落地：设置页与 `SearchBar` 共享同一默认搜索引擎来源，并走 `resolveSearchEngineId` 回退链。
+- 代码入口：`src/app/preferences/useUiPreferences.tsx`、`src/app/components/SettingsSpotlightModal.tsx`、`src/app/components/SearchBar.tsx`、`src/app/search/searchEngineRegistry.ts`。
+- 剩余增量：自定义搜索引擎“删除”能力（不属于本文 v1 范围）。
+
 ---
 
 ## 1. 目标与边界

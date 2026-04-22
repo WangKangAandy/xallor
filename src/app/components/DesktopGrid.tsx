@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDrop } from "react-dnd";
-import { AddIconDialog, GridAddSlotCell, type AddIconSubmitPayload } from "./addIcon";
+import { GridAddSlotCell } from "./addIcon";
 import { DesktopGridItem } from "./DesktopGridItem";
 import { DesktopGridFolderPortal } from "./DesktopGridFolderPortal";
 import type { GridItemType, GridShape, FolderItem } from "./desktopGridTypes";
@@ -8,7 +8,6 @@ import type { GridDnDDragItem } from "./desktopGridDnDTypes";
 import { GRID_CELL_SIZE, GRID_GAP } from "./desktopGridConstants";
 import { removeGridItemById, removeSiteFromFolderByUrl } from "./desktopGridItemActions";
 import { useGridDnD } from "./useGridDnD";
-import { createGridItemFromAddPayload } from "./widgets/createGridItemFromAddPayload";
 import type { ArrangeSessionController } from "./arrange/useArrangeSession";
 import { createFolderSiteArrangeId } from "./arrange/arrangeItemIds";
 import {
@@ -40,6 +39,7 @@ export type DesktopGridProps = {
   onToggleAutoCompact?: (enabled: boolean) => void;
   onChangeConflictStrategy?: (strategy: WidgetConflictStrategy) => void;
   onHideItem?: (id: string) => void;
+  onOpenAddFromDesktop?: () => void;
 };
 
 function GridDropZone({
@@ -90,6 +90,7 @@ export function DesktopGrid({
   onToggleAutoCompact,
   onChangeConflictStrategy,
   onHideItem,
+  onOpenAddFromDesktop,
 }: DesktopGridProps) {
   const { t } = useAppI18n();
   const pinnedItemIds = useMemo(
@@ -111,7 +112,6 @@ export function DesktopGrid({
 
   const [openFolderId, setOpenFolderId] = useState<string | null>(null);
   const [isFolderDragging, setIsFolderDragging] = useState(false);
-  const [addIconOpen, setAddIconOpen] = useState(false);
   const dropZoneRef = useRef<HTMLDivElement | null>(null);
   const gridRef = useRef<HTMLDivElement | null>(null);
 
@@ -193,16 +193,6 @@ export function DesktopGrid({
     arrangeSession.endBatchDrag();
   }, [arrangeSession]);
 
-  const handleConfirmAddFromPicker = useCallback(
-    (payload: AddIconSubmitPayload) => {
-      setItems((prev) => {
-        const item = createGridItemFromAddPayload(payload);
-        return [...prev, item];
-      });
-    },
-    [setItems],
-  );
-
   const openFolder = openFolderId ? (items.find((i) => i.id === openFolderId) as FolderItem | undefined) : undefined;
   const getFolderChildArrangeIds = useCallback((folder: FolderItem) => {
     return getSelectableArrangeIdsFromGridItem(folder);
@@ -271,6 +261,7 @@ export function DesktopGrid({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [arrangeSession, arrangeSession.state.isArrangeMode, handleDeleteSelectedInArrangeMode]);
+  const isCustomContextMenuEnabled = !arrangeSession.state.isArrangeMode;
   // 网格项 z-index 数值见 desktopGridLayers.ts（DesktopGridItem inline style）
   return (
     <>
@@ -294,7 +285,7 @@ export function DesktopGrid({
           dropZoneRef.current = el;
         }}
       >
-        <div className="flex w-full flex-col gap-3">
+        <div className="flex w-full flex-col gap-3" data-context-disabled={isCustomContextMenuEnabled ? undefined : "true"}>
           <div className="relative flex w-full items-center justify-end">
             <div className="flex items-center gap-2">
               <button
@@ -387,19 +378,14 @@ export function DesktopGrid({
                       onDragEnd={handleItemDragEnd}
                     />
                   ))}
-                {isHydrated ? <GridAddSlotCell onOpenAdd={() => setAddIconOpen(true)} alwaysVisible={isEmptyGrid} /> : null}
+                {isHydrated ? (
+                  <GridAddSlotCell onOpenAdd={() => onOpenAddFromDesktop?.()} alwaysVisible={isEmptyGrid} />
+                ) : null}
               </div>
             </div>
           </div>
         </div>
       </GridDropZone>
-
-      <AddIconDialog
-        open={addIconOpen}
-        onOpenChange={setAddIconOpen}
-        contextSiteId={null}
-        onConfirmAdd={handleConfirmAddFromPicker}
-      />
 
       {openFolder && (
         <DesktopGridFolderPortal

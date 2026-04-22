@@ -203,9 +203,7 @@ export function SearchBar() {
           onChange={e => setQuery(e.target.value)}
           onKeyDown={handleSearch}
           data-context-native="true"
-          placeholder={`${locale === "en-US" ? "Search with" : "用"} ${getSearchEngineDisplayName(selected, locale)}${
-            locale === "en-US" ? "..." : " 搜索…"
-          }`}
+          aria-label={locale === "en-US" ? "Search" : "搜索"}
           className="min-w-0 flex-1 bg-transparent text-gray-800 outline-none placeholder-gray-400 dark:text-slate-100 dark:placeholder:text-slate-500"
         />
       </GlassSurface>

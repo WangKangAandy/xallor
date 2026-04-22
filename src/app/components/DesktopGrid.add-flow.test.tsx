@@ -4,53 +4,48 @@ import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { AppI18nProvider } from "../i18n/AppI18n";
 import { UiPreferencesTestProvider } from "../preferences/UiPreferencesTestProvider";
 import { useArrangeSession } from "./arrange/useArrangeSession";
 import { DesktopGrid } from "./DesktopGrid";
 import type { GridItemType } from "./desktopGridTypes";
 
-function DesktopGridHarness() {
+function DesktopGridHarness({ onOpenAddFromDesktop }: { onOpenAddFromDesktop?: () => void }) {
   const [items, setItems] = useState<GridItemType[]>([]);
   const arrangeSession = useArrangeSession();
   return (
     <DndProvider backend={HTML5Backend}>
       <AppI18nProvider>
         <UiPreferencesTestProvider>
-          <DesktopGrid arrangeSession={arrangeSession} items={items} setItems={setItems} showLabels isHydrated />
+          <DesktopGrid
+            arrangeSession={arrangeSession}
+            items={items}
+            setItems={setItems}
+            showLabels
+            isHydrated
+            onOpenAddFromDesktop={onOpenAddFromDesktop}
+          />
         </UiPreferencesTestProvider>
       </AppI18nProvider>
     </DndProvider>
   );
 }
 
-async function waitForBodyText(text: string, timeoutMs = 1200) {
-  const start = Date.now();
-  while (Date.now() - start < timeoutMs) {
-    if ((document.body.textContent ?? "").includes(text)) {
-      return;
-    }
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 20));
-    });
-  }
-  throw new Error(`Timed out waiting for text: ${text}`);
-}
-
-describe("DesktopGrid add flow", () => {
+describe("DesktopGrid add entry", () => {
   /**
-   * 目的：验证“添加图标”链路能真实写入网格，而非仅关闭弹窗。
-   * 前置：空网格渲染；通过首格 AddSlot 打开弹窗后选中左栏第一站点并点击“添加”。
-   * 预期：弹窗关闭且网格中出现新增站点标签（GitHub）。
+   * 目的：验证桌面 “+” 按钮已改为触发“跳转到设置-站点与组件”入口回调，不再打开旧弹窗。
+   * 前置：渲染空网格并注入回调；点击 AddSlot 的 “+”。
+   * 预期：回调被调用且页面不存在对话框节点。
    */
-  it("should_append_site_item_to_grid_when_add_confirmed_from_dialog", () => {
+  it("should_call_settings_entry_callback_when_clicking_desktop_add_button", () => {
+    const onOpenAddFromDesktop = vi.fn();
     const container = document.createElement("div");
     document.body.appendChild(container);
     const root = createRoot(container);
 
     act(() => {
-      root.render(<DesktopGridHarness />);
+      root.render(<DesktopGridHarness onOpenAddFromDesktop={onOpenAddFromDesktop} />);
     });
 
     const openBtn = document.querySelector('button[aria-label="添加图标"]') as HTMLButtonElement | null;
@@ -60,122 +55,8 @@ describe("DesktopGrid add flow", () => {
       openBtn?.click();
     });
 
-    const siteSection = document.querySelector('section[aria-label="站点"]');
-    const firstSiteTile = siteSection?.querySelector('[role="option"]') as HTMLButtonElement | null;
-    expect(firstSiteTile).not.toBeNull();
-
-    act(() => {
-      firstSiteTile?.click();
-    });
-
-    const addBtn = Array.from(document.querySelectorAll("button")).find((btn) => btn.textContent?.trim() === "添加") as
-      | HTMLButtonElement
-      | undefined;
-    expect(addBtn).toBeDefined();
-
-    act(() => {
-      addBtn?.click();
-    });
-
+    expect(onOpenAddFromDesktop).toHaveBeenCalledTimes(1);
     expect(document.querySelector('[role="dialog"]')).toBeNull();
-    expect(document.body.textContent).toContain("GitHub");
-
-    act(() => {
-      root.unmount();
-    });
-    document.body.removeChild(container);
-  });
-
-  /**
-   * 目的：深色根类下添加图标链路仍可用（依赖 `html.dark` + 语义类 / token，而非业务内主题状态）。
-   * 前置：与首条用例相同，额外为 `document.documentElement` 加上 `dark`。
-   * 预期：仍能写入 GitHub 站点项。
-   */
-  it("should_append_site_item_when_add_confirmed_under_html_dark_class", () => {
-    document.documentElement.classList.add("dark");
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-    const root = createRoot(container);
-
-    try {
-      act(() => {
-        root.render(<DesktopGridHarness />);
-      });
-
-      const openBtn = document.querySelector('button[aria-label="添加图标"]') as HTMLButtonElement | null;
-      expect(openBtn).not.toBeNull();
-      act(() => {
-        openBtn?.click();
-      });
-
-      const siteSection = document.querySelector('section[aria-label="站点"]');
-      const firstSiteTile = siteSection?.querySelector('[role="option"]') as HTMLButtonElement | null;
-      expect(firstSiteTile).not.toBeNull();
-      act(() => {
-        firstSiteTile?.click();
-      });
-
-      const addBtn = Array.from(document.querySelectorAll("button")).find((btn) => btn.textContent?.trim() === "添加") as
-        | HTMLButtonElement
-        | undefined;
-      expect(addBtn).toBeDefined();
-      act(() => {
-        addBtn?.click();
-      });
-
-      expect(document.querySelector('[role="dialog"]')).toBeNull();
-      expect(document.body.textContent).toContain("GitHub");
-    } finally {
-      act(() => {
-        root.unmount();
-      });
-      document.body.removeChild(container);
-      document.documentElement.classList.remove("dark");
-    }
-  });
-
-  /**
-   * 目的：验证天气组件已打通“目录选择 -> 提交 payload -> 创建 widget item -> 网格渲染”全链路。
-   * 前置：打开添加弹层，切到「组件」分区并选中「天气」，点击“添加”。
-   * 预期：弹层关闭且网格中出现天气卡片内容（Tokyo, Japan）。
-   */
-  it("should_render_weather_widget_when_weather_component_added_from_catalog", async () => {
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-    const root = createRoot(container);
-
-    act(() => {
-      root.render(<DesktopGridHarness />);
-    });
-
-    const openBtn = document.querySelector('button[aria-label="添加图标"]') as HTMLButtonElement | null;
-    expect(openBtn).not.toBeNull();
-    act(() => {
-      openBtn?.click();
-    });
-
-    const componentSection = document.querySelector('section[aria-label="组件"]');
-    expect(componentSection).not.toBeNull();
-    const weatherTile = Array.from(componentSection?.querySelectorAll('[role="option"]') ?? []).find((el) =>
-      (el as HTMLElement).textContent?.includes("天气"),
-    ) as HTMLButtonElement | undefined;
-    expect(weatherTile).toBeDefined();
-    act(() => {
-      weatherTile?.click();
-    });
-
-    const addBtn = Array.from(document.querySelectorAll("button")).find((btn) => btn.textContent?.trim() === "添加") as
-      | HTMLButtonElement
-      | undefined;
-    expect(addBtn).toBeDefined();
-    act(() => {
-      addBtn?.click();
-    });
-
-    expect(document.querySelector('[role="dialog"]')).toBeNull();
-    // 天气文案依赖异步拉取，弱网下需更长等待窗口
-    await waitForBodyText("Tokyo, Japan", 8000);
-    expect(document.body.textContent).toContain("Tokyo, Japan");
 
     act(() => {
       root.unmount();

@@ -1,5 +1,21 @@
 # 设置搜索功能实施计划（轻搜索定位版）
 
+## 实现状态（2026-04-22）
+
+- MVP 已落地并进入维护阶段：
+  - 受控输入、轻量匹配、一级分区定位、空态反馈、清空恢复已实现。
+  - 搜索触发时浮层收口已接入（通过 `useSettingsSectionRouting.ts` 的导航回调触发）。
+- 当前实现入口：
+  - `src/app/components/settingsSearch.ts`
+  - `src/app/components/useSettingsSectionRouting.ts`
+  - `src/app/components/SettingsSpotlightModal.tsx`
+  - `src/app/components/settingsSearch.test.ts`
+  - `src/app/components/SettingsSpotlightModal.test.tsx`
+- 当前 TODO 已转为增强项（非阻塞）：
+  - 结果高亮
+  - 关键词治理与排序优化
+  - 键盘候选导航
+
 ## 1. 目标
 
 当前设置搜索的职责是“快速定位”，不是“完整检索”。
@@ -53,7 +69,7 @@
 - 同分时按索引声明顺序兜底。
 - 空 query 不主动跳转。
 
-## 5. 实施步骤（单阶段）
+## 5. 实施步骤（已完成）
 
 1. 搜索框从 `readOnly` 改为受控输入。
 2. 新增 `SETTINGS_SEARCH_INDEX` 与匹配函数（建议放 `settingsSearch.ts`）。
@@ -61,9 +77,9 @@
 4. 无命中显示空态；清空后恢复普通状态。
 5. 执行分区切换前统一收起可关闭浮层。
 
-后续如设置规模继续增长，再评估是否增加锚点定位或结果列表能力。
+后续如设置规模继续增长，再评估是否增加锚点定位或结果列表能力（当前不作为 P0/P1 阻塞项）。
 
-## 6. 文件改动建议
+## 6. 文件改动（现状）
 
 - `src/app/components/SettingsSpotlightModal.tsx`
   - 搜索输入状态、命中驱动分区切换、空态展示、浮层收口。
@@ -74,19 +90,21 @@
 - `src/app/i18n/messages.ts`
   - 空态与提示文案。
 
-## 7. 测试策略（MVP）
+## 7. 测试策略（现状与增量）
 
 至少覆盖：
 
 1. 输入“外观”或“主题”命中 `appearance`。
 2. 输入“隐私”命中 `privacy`。
 3. 输入“版本”或“about”命中 `about`。
-4. 输入“壁纸”命中 `appearance`。
+4. 输入“壁纸”命中 `wallpaper`。
 5. 输入不存在关键词显示空态。
 6. 清空输入恢复普通状态。
 7. 搜索触发后临时浮层可正确收口。
 
 测试命名沿用：`should_<expected_behavior>_when_<condition>`。
+
+备注：`App.sidebar-layer.test.tsx` 曾出现 `EnvironmentTeardownError` 噪声，已确认属于测试 harness 稳定性问题（与设置搜索业务逻辑无关），并通过缩小渲染面规避；搜索相关断言链路本身稳定。
 
 ## 8. 风险与规避
 

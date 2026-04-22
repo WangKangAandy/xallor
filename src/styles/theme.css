@@ -159,7 +159,7 @@
   --glass-page-veil-blur: 1px;
 
   /**
-   * app: 模态遮罩（全屏 scrim；AddIconDialog 等消费 `var(--surface-scrim-bg)`）
+   * app: 模态遮罩（全屏 scrim；设置弹层等消费 `var(--surface-scrim-bg)`）
    */
   --surface-scrim-bg: rgb(0 0 0 / 0.35);
   --surface-scrim-backdrop-blur: 2px;

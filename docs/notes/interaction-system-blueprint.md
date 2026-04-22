@@ -62,7 +62,6 @@
 - 命中契约：`context-menu-surface-contract.md`
 - Pointer/层级契约：`pointer-and-layering-contract.md`
 - 主题链路：`theme-color-scheme-implementation-plan.md`
-- 设置导航：`settings-secondary-navigation-plan.md`
 - 设置搜索：`settings-search-implementation-plan.md`
 
 ## 5. 演进路线

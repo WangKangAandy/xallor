@@ -21,7 +21,7 @@ export interface DesktopGridItemProps {
   onRename?: (id: string, newName: string) => void;
   /** 右键菜单等：从当前页移除该图标。 */
   onDeleteItem?: (id: string) => void;
-  /** 右键菜单：将图标/文件夹移动到隐藏空间。 */
+  /** 右键菜单：将图标/文件夹移动到隐私空间。 */
   onHideItem?: (id: string) => void;
   onEnterArrangeMode?: () => void;
   isArrangeMode?: boolean;

@@ -10,6 +10,7 @@ import { UiPreferencesTestProvider } from "../preferences/UiPreferencesTestProvi
 import { useArrangeSession } from "./arrange/useArrangeSession";
 import { DesktopGrid } from "./DesktopGrid";
 import type { GridItemType } from "./desktopGridTypes";
+import { shouldBypassCustomContextMenu } from "./useGridContextMenu";
 
 function ArrangeSelectionHarness({
   initialItems,
@@ -52,6 +53,10 @@ function dispatchPointerEvent(target: EventTarget, type: string, x: number, y: n
   target.dispatchEvent(new MouseEvent(type, { bubbles: true, clientX: x, clientY: y, button }));
 }
 
+function dispatchContextMenu(target: EventTarget, x: number, y: number) {
+  target.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: x, clientY: y, button: 2 }));
+}
+
 describe("DesktopGrid arrange selection trigger", () => {
   /**
    * 目的：进入整理模式后应出现「退出整理模式」入口（框选手势由 MultiDesktopStrip 统一监听，见 e2e）。
@@ -79,6 +84,110 @@ describe("DesktopGrid arrange selection trigger", () => {
     expect(item).not.toBeNull();
 
     expect(container.querySelector('button[aria-label="退出整理模式"]')).not.toBeNull();
+
+    act(() => {
+      root.unmount();
+    });
+    document.body.removeChild(container);
+  });
+
+  /**
+   * 目的：整理模式下应禁用站点卡片自定义右键菜单，避免与整理交互冲突。
+   * 前置：站点卡片存在，且会话已进入整理模式。
+   * 预期：右击站点后不渲染 `data-grid-context-menu`。
+   */
+  it("should_not_open_item_context_menu_for_site_when_arrange_mode_active", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    const items: GridItemType[] = [
+      {
+        id: "site-rm-1",
+        type: "site",
+        shape: { cols: 1, rows: 1 },
+        site: { name: "GitHub", domain: "github.com", url: "https://github.com" },
+      },
+    ];
+
+    act(() => {
+      root.render(<ArrangeSelectionHarness initialItems={items} enterArrangeModeOnMount />);
+    });
+
+    const siteItem = container.querySelector('[data-grid-item-id="site-rm-1"]') as HTMLDivElement | null;
+    expect(siteItem).not.toBeNull();
+    act(() => {
+      dispatchContextMenu(siteItem as EventTarget, 260, 200);
+    });
+    expect(document.body.querySelector("[data-grid-context-menu]")).toBeNull();
+
+    act(() => {
+      root.unmount();
+    });
+    document.body.removeChild(container);
+  });
+
+  /**
+   * 目的：整理模式下应禁用组件卡片自定义右键菜单，保证统一“右键不弹菜单”策略。
+   * 前置：组件卡片存在，且会话已进入整理模式。
+   * 预期：右击组件后不渲染 `data-grid-context-menu`。
+   */
+  it("should_not_open_item_context_menu_for_widget_when_arrange_mode_active", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    const items: GridItemType[] = [
+      {
+        id: "widget-rm-1",
+        type: "widget",
+        shape: { cols: 2, rows: 2 },
+        widgetType: "weather",
+      },
+    ];
+
+    act(() => {
+      root.render(<ArrangeSelectionHarness initialItems={items} enterArrangeModeOnMount />);
+    });
+
+    const widgetItem = container.querySelector('[data-grid-item-id="widget-rm-1"]') as HTMLDivElement | null;
+    expect(widgetItem).not.toBeNull();
+    act(() => {
+      dispatchContextMenu(widgetItem as EventTarget, 280, 220);
+    });
+    expect(document.body.querySelector("[data-grid-context-menu]")).toBeNull();
+
+    act(() => {
+      root.unmount();
+    });
+    document.body.removeChild(container);
+  });
+
+  /**
+   * 目的：整理模式下网格域应统一标记为 context-disabled，供空白区右键入口复用同一开关。
+   * 前置：进入整理模式并定位网格容器中的普通子元素。
+   * 预期：容器存在 `data-context-disabled="true"`，且 `shouldBypassCustomContextMenu` 返回 true。
+   */
+  it("should_mark_grid_surface_as_context_disabled_when_arrange_mode_active", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    const items: GridItemType[] = [
+      {
+        id: "site-rm-2",
+        type: "site",
+        shape: { cols: 1, rows: 1 },
+        site: { name: "CodePen", domain: "codepen.io", url: "https://codepen.io" },
+      },
+    ];
+
+    act(() => {
+      root.render(<ArrangeSelectionHarness initialItems={items} enterArrangeModeOnMount />);
+    });
+
+    const contextDisabledRoot = container.querySelector('[data-context-disabled="true"]') as HTMLDivElement | null;
+    expect(contextDisabledRoot).not.toBeNull();
+    const probe = document.createElement("span");
+    contextDisabledRoot?.appendChild(probe);
+    expect(shouldBypassCustomContextMenu(probe)).toBe(true);
 
     act(() => {
       root.unmount();

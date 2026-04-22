@@ -14,6 +14,7 @@ type AddIconPreviewPanelProps = {
   selected: AddIconCatalogEntry | null;
   contextSiteId: string | null;
   onClose: () => void;
+  showCloseButton?: boolean;
   /** 添加当前选中项并关闭（名称/网址/图标由面板内草稿与选项决定）。 */
   onAdd: (payload: AddIconSubmitPayload) => void;
   /** 添加后保留弹层并清空左侧选择。 */
@@ -125,6 +126,7 @@ export function AddIconPreviewPanel({
   selected,
   contextSiteId: _contextSiteId,
   onClose,
+  showCloseButton = true,
   onAdd,
   onContinueAdding,
 }: AddIconPreviewPanelProps) {
@@ -189,17 +191,19 @@ export function AddIconPreviewPanel({
           <h2 id={previewHeadingId} className="text-sm font-semibold text-foreground">
             {t("addIcon.preview")}
           </h2>
-          <button
-            type="button"
-            aria-label={t("addIcon.closeDialog")}
-            className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            onClick={onClose}
-          >
-            <X className="h-4 w-4" />
-          </button>
+          {showCloseButton ? (
+            <button
+              type="button"
+              aria-label={t("addIcon.closeDialog")}
+              className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              onClick={onClose}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          ) : null}
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-card/95 shadow-sm">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 py-2 [scrollbar-width:thin]">
             {!selected ? (
               <>

@@ -15,6 +15,8 @@ import { useDesktopPageIndicator } from "./useDesktopPageIndicator";
 import { useDesktopStripWheel } from "./useDesktopStripWheel";
 import { useMultiPageGridPersistence } from "./useMultiPageGridPersistence";
 import type { GridItemType, SiteItem } from "./desktopGridTypes";
+import type { AddIconSubmitPayload } from "./addIcon";
+import { createGridItemFromAddPayload } from "./widgets/createGridItemFromAddPayload";
 
 const FALLBACK: MultiPageGridState = {
   pages: [defaultFirstGridPagePayload()],
@@ -26,6 +28,10 @@ type MultiDesktopStripProps = {
   restoreItems?: SiteItem[];
   onRestoreApplied?: (ids: string[]) => void;
   gridItemNamesVisible?: boolean;
+  pendingAddPayloads?: AddIconSubmitPayload[];
+  onAddPayloadsConsumed?: () => void;
+  onOpenAddFromDesktop?: () => void;
+  onArrangeModeChange?: (isArrangeMode: boolean) => void;
 };
 
 /**
@@ -37,6 +43,10 @@ export function MultiDesktopStrip({
   restoreItems = [],
   onRestoreApplied,
   gridItemNamesVisible = true,
+  pendingAddPayloads = [],
+  onAddPayloadsConsumed,
+  onOpenAddFromDesktop,
+  onArrangeModeChange,
 }: MultiDesktopStripProps) {
   const arrangeSession = useArrangeSession();
   const runtimeRegistryRef = useRef<Map<string, ArrangeGestureGridRuntime>>(new Map());
@@ -93,6 +103,18 @@ export function MultiDesktopStrip({
     onRestoreApplied?.(restoreItems.map((item) => item.id));
   }, [pendingRestoreIds, restoreItems, pages, applyMultiPageItemsPatch, onRestoreApplied]);
 
+  const pendingAddIds = pendingAddPayloads.map((_, index) => index).join("|");
+  useEffect(() => {
+    if (pendingAddPayloads.length === 0) return;
+    const activePage = pages[activePageIndex];
+    if (!activePage) return;
+    const newItems = pendingAddPayloads.map((payload) => createGridItemFromAddPayload(payload));
+    applyMultiPageItemsPatch({
+      [activePage.pageId]: (prev) => [...prev, ...newItems],
+    });
+    onAddPayloadsConsumed?.();
+  }, [pendingAddIds, pendingAddPayloads, pages, activePageIndex, applyMultiPageItemsPatch, onAddPayloadsConsumed]);
+
   const handleHideItem = useCallback(
     async (pageId: string, itemId: string) => {
       const page = pages.find((p) => p.pageId === pageId);
@@ -115,6 +137,12 @@ export function MultiDesktopStrip({
     window.addEventListener(ENTER_ARRANGE_FROM_BACKGROUND_EVENT, onEnterArrange);
     return () => window.removeEventListener(ENTER_ARRANGE_FROM_BACKGROUND_EVENT, onEnterArrange);
   }, [handleEnterArrangeMode]);
+  useEffect(() => {
+    onArrangeModeChange?.(arrangeSession.state.isArrangeMode);
+    return () => {
+      onArrangeModeChange?.(false);
+    };
+  }, [arrangeSession.state.isArrangeMode, onArrangeModeChange]);
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -156,6 +184,7 @@ export function MultiDesktopStrip({
                   onHideItem={(itemId) => {
                     void handleHideItem(page.pageId, itemId);
                   }}
+                  onOpenAddFromDesktop={onOpenAddFromDesktop}
                 />
               </div>
             </div>

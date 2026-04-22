@@ -3,6 +3,13 @@
 本文档定义在空白区右键菜单新增「下载壁纸」的实现方案。  
 目标是先交付可用 MVP，同时兼容后续图片/视频背景来源演进，避免返工。
 
+## 实现状态（2026-04-22）
+
+- 已落地：空白区菜单入口、媒体无关下载逻辑、失败回退与 i18n 文案。
+- 代码入口：`src/app/components/feedback/downloadWallpaper.ts`、`src/app/components/useGridBackgroundContextMenu.tsx`、`src/app/components/gridBackgroundContextMenuConfig.ts`、`src/app/App.tsx`。
+- 已有测试：`src/app/components/feedback/downloadWallpaper.test.ts`、`src/app/components/gridBackgroundContextMenuConfig.test.ts`。
+- 后续仅保留增强项（例如 E2E 负向断言与可观测性细化），不再作为阻塞主流程的 TODO。
+
 ---
 
 ## 1. 目标与范围
@@ -130,19 +137,15 @@ downloadWallpaper(source: BackgroundSource): Promise<DownloadWallpaperResult>
 
 ---
 
-## 6. 测试计划（必须）
+## 6. 测试计划（现状与增量）
 
-### 单元测试
+### 已覆盖（单元）
 
 - 背景菜单包含 `download-wallpaper` 条目。
 - 图标/文件夹菜单不包含 `download-wallpaper`。
-- 下载函数覆盖分支：
-  - 成功下载 `download`
-  - 回退打开 `fallback-opened`
-  - 弹窗拦截 `popup-blocked`
-  - `invalid-url` / `unknown`
+- 下载函数覆盖分支：成功下载 `download`、回退打开 `fallback-opened`、弹窗拦截 `popup-blocked`、`invalid-url`。
 
-### E2E 测试
+### 增量建议（E2E）
 
 - 右击空白区可见 `下载壁纸`。
 - 右击图标/文件夹不可见 `下载壁纸`（负向断言）。

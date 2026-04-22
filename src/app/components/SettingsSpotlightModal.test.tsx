@@ -24,6 +24,7 @@ describe("SettingsSpotlightModal", () => {
       onVerifyHiddenPassword: async () => true,
       onRemoveHiddenItems: () => {},
       onRestoreHiddenItems: () => {},
+      onAddItemFromSettings: () => {},
       isMinimalMode: false,
     };
   }
@@ -50,7 +51,7 @@ describe("SettingsSpotlightModal", () => {
     });
 
     expect(document.body.textContent).toContain("语言");
-    expect(document.body.textContent).not.toContain("布局");
+    expect(document.body.textContent).not.toContain("布局设置");
 
     act(() => {
       document.querySelector<HTMLButtonElement>('[data-testid="settings-nav-appearance"]')?.click();
@@ -58,7 +59,7 @@ describe("SettingsSpotlightModal", () => {
 
     expect(document.body.textContent).toContain("主题");
     expect(document.body.textContent).toContain("壁纸");
-    expect(document.body.textContent).toContain("布局");
+    expect(document.body.textContent).toContain("布局设置");
     expect(document.querySelector('[data-testid="settings-appearance-theme-system"]')).toBeTruthy();
     expect(document.querySelector('[data-testid="settings-layout-mode-default"]')).toBeTruthy();
 
@@ -163,11 +164,11 @@ describe("SettingsSpotlightModal", () => {
   });
 
   /**
-   * 目的：点击面板外遮罩应关闭设置，防止 z-index/容器命中调整后回归。
+   * 目的：点击右上角关闭按钮应触发关闭回调，防止关闭入口回归失效。
    * 前置：弹层打开，`onClose` 回调可被观测。
-   * 预期：点击覆盖层（非面板区域）触发 `onClose` 一次。
+   * 预期：点击 `settings-modal-close` 后触发 `onClose` 一次。
    */
-  it("should_close_when_backdrop_clicked_outside_panel", () => {
+  it("should_trigger_on_close_when_header_close_button_clicked", () => {
     const container = document.createElement("div");
     document.body.appendChild(container);
     const root = createRoot(container);
@@ -188,11 +189,11 @@ describe("SettingsSpotlightModal", () => {
       );
     });
 
-    const backdrop = document.querySelector('button[aria-label="关闭"]') as HTMLButtonElement | null;
-    expect(backdrop).not.toBeNull();
+    const closeButton = document.querySelector('[data-testid="settings-modal-close"]') as HTMLButtonElement | null;
+    expect(closeButton).not.toBeNull();
 
     act(() => {
-      backdrop?.click();
+      closeButton?.click();
     });
 
     expect(closeCount).toBe(1);

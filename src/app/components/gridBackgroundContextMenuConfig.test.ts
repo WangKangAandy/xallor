@@ -24,7 +24,7 @@ describe("getGridBackgroundContextMenuEntries", () => {
   it("should_include_download_and_arrange_entries_when_both_handlers_provided", () => {
     const onArrange = vi.fn();
     const onDownload = vi.fn();
-    const entries = getGridBackgroundContextMenuEntries(onArrange, onDownload, false);
+    const entries = getGridBackgroundContextMenuEntries(onArrange, undefined, onDownload, false);
     expect(entries.map((e) => e.id)).toEqual(["download-wallpaper", "arrange-mode"]);
     entries[0]?.onSelect();
     entries[1]?.onSelect();
@@ -37,10 +37,23 @@ describe("getGridBackgroundContextMenuEntries", () => {
    */
   it("should_not_trigger_download_when_download_is_in_progress", () => {
     const onDownload = vi.fn();
-    const entries = getGridBackgroundContextMenuEntries(undefined, onDownload, true);
+    const entries = getGridBackgroundContextMenuEntries(undefined, undefined, onDownload, true);
     expect(entries.map((e) => e.label)).toEqual(["下载中..."]);
     entries[0]?.onSelect();
     expect(onDownload).not.toHaveBeenCalled();
+  });
+
+  /**
+   * 目的：空白区域菜单新增“添加站点 & 组件”后，应可正常触发回调且位于菜单首项。
+   */
+  it("should_include_add_site_or_component_entry_before_download_and_arrange", () => {
+    const onAdd = vi.fn();
+    const onDownload = vi.fn();
+    const onArrange = vi.fn();
+    const entries = getGridBackgroundContextMenuEntries(onArrange, onAdd, onDownload, false);
+    expect(entries.map((e) => e.id)).toEqual(["add-site-or-component", "download-wallpaper", "arrange-mode"]);
+    entries[0]?.onSelect();
+    expect(onAdd).toHaveBeenCalledTimes(1);
   });
 });
 
