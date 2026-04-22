@@ -19,6 +19,7 @@ export function useAppContentController({ hiddenSpaceEnableHintMessage }: UseApp
     openSettingsDefault,
     openSettingsPrivacy,
     openSettingsWidgets,
+    openSettingsWallpaper,
     settingsInitialSection,
     closeSettings,
   } = useSettingsModalController();
@@ -43,6 +44,7 @@ export function useAppContentController({ hiddenSpaceEnableHintMessage }: UseApp
   } = useAppMessageState();
   const { onDesktopBackgroundContextMenu, desktopBackgroundMenuPortal } = useDesktopBackgroundActions({
     onOpenAddSiteOrComponent: openSettingsWidgets,
+    onOpenWallpaperSettings: openSettingsWallpaper,
     onShowAlert: showAlert,
   });
   const onRequestHideItem = useHideItemRequest({

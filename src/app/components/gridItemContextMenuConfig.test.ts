@@ -60,10 +60,18 @@ describe("getGridItemContextMenuEntries", () => {
     const onOpenCurrent = vi.fn();
     const onOpenNew = vi.fn();
     const entries = getGridItemContextMenuEntries("site-1", undefined, undefined, undefined, onOpenCurrent, onOpenNew);
-    expect(entries.slice(0, 2).map((e) => e.id)).toEqual(["open-current-window", "open-new-window"]);
+    expect(entries.map((e) => e.id)).toEqual(["open-current-window", "open-new-window"]);
     entries[0]?.onSelect();
     entries[1]?.onSelect();
     expect(onOpenCurrent).toHaveBeenCalledTimes(1);
     expect(onOpenNew).toHaveBeenCalledTimes(1);
+  });
+
+  /**
+   * 目的：图标菜单中应优先展示“隐藏、删除”，再展示打开相关项，满足主操作前置。
+   */
+  it("should_place_hide_and_remove_before_open_entries_when_all_handlers_provided", () => {
+    const entries = getGridItemContextMenuEntries("site-1", vi.fn(), undefined, vi.fn(), vi.fn(), vi.fn());
+    expect(entries.map((entry) => entry.id)).toEqual(["hide", "remove", "open-current-window", "open-new-window"]);
   });
 });

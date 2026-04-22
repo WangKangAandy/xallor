@@ -7,6 +7,7 @@ export function useGridBackgroundContextMenu(
   onEnterArrangeMode?: () => void,
   onOpenAddSiteOrComponent?: () => void,
   onDownloadWallpaper?: () => void,
+  onSwitchWallpaper?: () => void,
   isDownloadingWallpaper = false,
 ) {
   const { t } = useAppI18n();
@@ -16,15 +17,17 @@ export function useGridBackgroundContextMenu(
         onEnterArrangeMode,
         onOpenAddSiteOrComponent,
         onDownloadWallpaper,
+        onSwitchWallpaper,
         isDownloadingWallpaper,
         {
           addSiteOrComponent: t("contextMenu.addSiteOrComponent"),
           downloadWallpaper: t("contextMenu.downloadWallpaper"),
+          switchWallpaper: t("contextMenu.switchWallpaper"),
           downloadingWallpaper: t("contextMenu.downloadingWallpaper"),
           arrangeMode: t("contextMenu.arrangeMode"),
         },
       ),
-    [onEnterArrangeMode, onOpenAddSiteOrComponent, onDownloadWallpaper, isDownloadingWallpaper, t],
+    [onEnterArrangeMode, onOpenAddSiteOrComponent, onDownloadWallpaper, onSwitchWallpaper, isDownloadingWallpaper, t],
   );
   return useGridContextMenu(entries);
 }

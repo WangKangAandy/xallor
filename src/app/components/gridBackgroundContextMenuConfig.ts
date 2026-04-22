@@ -3,6 +3,7 @@ import type { GridContextMenuEntry } from "./gridItemContextMenuConfig";
 export type GridBackgroundContextMenuLabels = {
   addSiteOrComponent: string;
   downloadWallpaper: string;
+  switchWallpaper: string;
   downloadingWallpaper: string;
   arrangeMode: string;
 };
@@ -14,12 +15,14 @@ export function getGridBackgroundContextMenuEntries(
   onEnterArrangeMode?: () => void,
   onOpenAddSiteOrComponent?: () => void,
   onDownloadWallpaper?: () => void,
+  onSwitchWallpaper?: () => void,
   isDownloadingWallpaper = false,
   labels?: GridBackgroundContextMenuLabels,
 ): GridContextMenuEntry[] {
   const text = labels ?? {
     addSiteOrComponent: "添加站点 & 组件",
     downloadWallpaper: "下载壁纸",
+    switchWallpaper: "更换壁纸",
     downloadingWallpaper: "下载中...",
     arrangeMode: "整理模式",
   };
@@ -39,6 +42,13 @@ export function getGridBackgroundContextMenuEntries(
         if (isDownloadingWallpaper) return;
         onDownloadWallpaper();
       },
+    });
+  }
+  if (onSwitchWallpaper) {
+    entries.push({
+      id: "switch-wallpaper",
+      label: text.switchWallpaper,
+      onSelect: onSwitchWallpaper,
     });
   }
   if (onEnterArrangeMode) {

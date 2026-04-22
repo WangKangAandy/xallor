@@ -88,7 +88,9 @@ export function SearchBar() {
   const [isOpen, setIsOpen] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [query, setQuery] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const hydratedRef = useRef(false);
   const selected =
     getSearchEngineById(selectedSearchEngineId, engines) ??
@@ -131,6 +133,10 @@ export function SearchBar() {
     setIsOpen(false);
     setShowAddForm(false);
   });
+  useDismissOnPointerDownOutside(containerRef, isFocused, () => {
+    setIsFocused(false);
+    inputRef.current?.blur();
+  });
 
   const handleSearch = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && query.trim()) {
@@ -162,21 +168,30 @@ export function SearchBar() {
       data-context-entity-type="search"
     >
       {/* Search Input Row */}
-      <GlassSurface variant="bar" rounded="full" className="flex w-full items-center gap-3 px-5 py-4">
+      <GlassSurface
+        variant="bar"
+        rounded="full"
+        className={`flex w-full items-center gap-3 px-5 py-4 transition-[background-color,border-color,box-shadow] duration-220 ${
+          isFocused
+            ? "bg-white/72 border-white/75 shadow-[0_10px_28px_-14px_rgba(15,23,42,0.45)] dark:bg-slate-700/58 dark:border-white/22"
+            : "bg-white/56 border-white/55 shadow-[0_8px_22px_-16px_rgba(15,23,42,0.3)] dark:bg-slate-800/46 dark:border-white/14"
+        }`}
+        onMouseDown={(e) => {
+          const target = e.target as HTMLElement | null;
+          if (target?.closest("button")) return;
+          inputRef.current?.focus();
+        }}
+      >
         {/* Engine Selector Trigger */}
         <button
           onClick={() => { setIsOpen(v => !v); setShowAddForm(false); }}
-          className="flex items-center gap-1.5 rounded-full px-1.5 py-1 hover:bg-white/40 transition-all group shrink-0"
+          className={`flex items-center gap-1.5 rounded-full px-1.5 py-1 transition-all group shrink-0 ${
+            isFocused ? "hover:bg-white/52 dark:hover:bg-white/16" : "hover:bg-white/40 dark:hover:bg-white/10"
+          }`}
           aria-label="选择搜索引擎"
         >
-          {/* Engine favicon – hollow/ghosted style */}
-          <div
-            className="relative"
-            style={{
-              filter: 'drop-shadow(0 0 2px rgba(255,255,255,0.8))',
-              opacity: 0.75,
-            }}
-          >
+          {/* Engine favicon: keep crisp and stable */}
+          <div className={`relative rounded-full p-[1px] ${isFocused ? "bg-white/65 dark:bg-white/18" : "bg-white/48 dark:bg-white/10"}`}>
             <FaviconIcon
               domain={selected.domain}
               name={selected.name}
@@ -187,24 +202,34 @@ export function SearchBar() {
           </div>
           {/* Right-pointing chevron rotates down when open */}
           <ChevronRight
-            className="h-3.5 w-3.5 text-gray-500 transition-transform duration-300 dark:text-slate-400"
+            className="h-3.5 w-3.5 text-slate-400/85 dark:text-slate-300/80 transition-transform duration-300"
             style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}
             strokeWidth={2.5}
           />
         </button>
 
         {/* Divider */}
-        <div className="h-5 w-px shrink-0 bg-gray-400/40 dark:bg-slate-500/50" />
+        <div
+          className="h-5 w-px shrink-0 bg-slate-400/85 dark:bg-slate-300/80"
+          style={{ boxShadow: "0 0 0.5px rgba(148,163,184,0.55)" }}
+        />
 
         {/* Text Input */}
         <input
+          ref={inputRef}
           type="text"
           value={query}
           onChange={e => setQuery(e.target.value)}
           onKeyDown={handleSearch}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
           data-context-native="true"
           aria-label={locale === "en-US" ? "Search" : "搜索"}
-          className="min-w-0 flex-1 bg-transparent text-gray-800 outline-none placeholder-gray-400 dark:text-slate-100 dark:placeholder:text-slate-500"
+          className={`min-w-0 flex-1 bg-transparent outline-none transition-colors ${
+            isFocused
+              ? "text-slate-800 placeholder-slate-500 dark:text-slate-100 dark:placeholder:text-slate-400"
+              : "text-slate-700 placeholder-slate-400 dark:text-slate-200 dark:placeholder:text-slate-500"
+          }`}
         />
       </GlassSurface>
 

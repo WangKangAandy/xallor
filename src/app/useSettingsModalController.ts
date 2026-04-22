@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 
-export type AppSettingsInitialSection = "privacy" | "widgets" | undefined;
+export type AppSettingsInitialSection = "privacy" | "widgets" | "wallpaper" | undefined;
 
 export function useSettingsModalController() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -22,6 +22,9 @@ export function useSettingsModalController() {
   const openSettingsWidgets = useCallback(() => {
     openSettings("widgets");
   }, [openSettings]);
+  const openSettingsWallpaper = useCallback(() => {
+    openSettings("wallpaper");
+  }, [openSettings]);
 
   const closeSettings = useCallback(() => {
     setIsSettingsOpen(false);
@@ -33,6 +36,7 @@ export function useSettingsModalController() {
     openSettingsDefault,
     openSettingsPrivacy,
     openSettingsWidgets,
+    openSettingsWallpaper,
     closeSettings,
   };
 }

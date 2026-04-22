@@ -30,24 +30,10 @@ export function getGridItemContextMenuEntries(
     openCurrentWindow: "当前窗口打开",
     openNewWindow: "新窗口打开",
     hide: "隐藏",
-    remove: "删除图标",
+    remove: "删除",
     arrangeMode: "整理模式",
   };
   const entries: GridContextMenuEntry[] = [];
-  if (onOpenInCurrentWindow) {
-    entries.push({
-      id: "open-current-window",
-      label: text.openCurrentWindow,
-      onSelect: onOpenInCurrentWindow,
-    });
-  }
-  if (onOpenInNewWindow) {
-    entries.push({
-      id: "open-new-window",
-      label: text.openNewWindow,
-      onSelect: onOpenInNewWindow,
-    });
-  }
   if (onHideItem) {
     entries.push({
       id: "hide",
@@ -60,6 +46,20 @@ export function getGridItemContextMenuEntries(
       id: "remove",
       label: text.remove,
       onSelect: () => onDeleteItem(itemId),
+    });
+  }
+  if (onOpenInCurrentWindow) {
+    entries.push({
+      id: "open-current-window",
+      label: text.openCurrentWindow,
+      onSelect: onOpenInCurrentWindow,
+    });
+  }
+  if (onOpenInNewWindow) {
+    entries.push({
+      id: "open-new-window",
+      label: text.openNewWindow,
+      onSelect: onOpenInNewWindow,
     });
   }
   if (onEnterArrangeMode) {

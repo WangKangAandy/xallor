@@ -10,6 +10,7 @@ import { useGridBackgroundContextMenu } from "./components/useGridBackgroundCont
 
 type UseDesktopBackgroundActionsParams = {
   onOpenAddSiteOrComponent: () => void;
+  onOpenWallpaperSettings: () => void;
   onShowAlert: (message: string) => void;
 };
 
@@ -29,7 +30,11 @@ export function getWallpaperDownloadAlertMessage(result: DownloadWallpaperResult
   return "下载失败，请稍后重试";
 }
 
-export function useDesktopBackgroundActions({ onOpenAddSiteOrComponent, onShowAlert }: UseDesktopBackgroundActionsParams) {
+export function useDesktopBackgroundActions({
+  onOpenAddSiteOrComponent,
+  onOpenWallpaperSettings,
+  onShowAlert,
+}: UseDesktopBackgroundActionsParams) {
   const [isDownloadingWallpaper, setIsDownloadingWallpaper] = useState(false);
 
   const handleDownloadWallpaper = useCallback(async () => {
@@ -54,6 +59,7 @@ export function useDesktopBackgroundActions({ onOpenAddSiteOrComponent, onShowAl
     },
     onOpenAddSiteOrComponent,
     handleDownloadWallpaper,
+    onOpenWallpaperSettings,
     isDownloadingWallpaper,
   );
 
