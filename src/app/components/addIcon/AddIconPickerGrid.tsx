@@ -10,9 +10,10 @@ type AddIconPickerGridProps = {
   gridVariant: "site" | "component";
 };
 
-const SITE_GRID = "grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5";
-// 组件与站点使用同一列宽基准，保证「站点边长 = 组件宽度」。
-const COMPONENT_GRID = SITE_GRID;
+/** 列数随容器变窄自动减少，避免右栏占位时站点磁贴被压到重叠 */
+const SITE_GRID = "grid gap-2 [grid-template-columns:repeat(auto-fill,minmax(4.75rem,1fr))]";
+/** 组件行卡片需要更宽轨道，避免标题与图标挤成一团 */
+const COMPONENT_GRID = "grid gap-2 [grid-template-columns:repeat(auto-fill,minmax(10.5rem,1fr))]";
 
 /**
  * 分区内的图标列表（listbox）。

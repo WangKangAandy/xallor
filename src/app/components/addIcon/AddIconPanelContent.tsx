@@ -38,13 +38,8 @@ export function AddIconPanelContent({
     onConfirmAdd?.(payload);
     onRequestClose?.();
   };
-  const handleContinueAdding = (payload: AddIconSubmitPayload) => {
-    onConfirmAdd?.(payload);
-    setSelectedCatalogId(null);
-  };
-
   return (
-    <div className={className ?? "flex min-h-0 flex-1 flex-col sm:flex-row"}>
+    <div className={className ?? "flex min-h-0 min-w-0 flex-1 flex-col sm:flex-row"}>
       <AddIconPickerPanel
         pickerFilter={pickerFilter}
         onPickerFilterChange={setPickerFilter}
@@ -59,7 +54,6 @@ export function AddIconPanelContent({
         contextSiteId={contextSiteId}
         onClose={handleClose}
         onAdd={handleAdd}
-        onContinueAdding={handleContinueAdding}
         showCloseButton={showCloseButton}
       />
     </div>

@@ -449,7 +449,7 @@ export function SettingsSitesAndComponentsPanel({ onConfirmAdd }: { onConfirmAdd
           onConfirmAdd={onConfirmAdd}
           onRequestClose={() => {}}
           showCloseButton={false}
-          className="flex h-full min-h-0 flex-col sm:flex-row"
+          className="flex h-full min-h-0 min-w-0 flex-col sm:flex-row"
         />
       </div>
     </div>

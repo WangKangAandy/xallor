@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link2, X } from "lucide-react";
 import { FaviconIcon } from "../shared/FaviconIcon";
+import { LocalFileUploadButton } from "../localUpload/LocalFileUploadButton";
 import type { AddIconCatalogEntry } from "./addIconCatalog";
 import { useAppI18n } from "../../i18n/AppI18n";
 import {
   type AddIconSubmitPayload,
+  type AddIconUploadFailureReason,
   type SiteIconVariantId,
+  toCustomIconFailureMessageKey,
   normalizeSiteUrlInput,
   safeDomainFromUrl,
 } from "./addIconSubmitPayload";
@@ -17,8 +20,6 @@ type AddIconPreviewPanelProps = {
   showCloseButton?: boolean;
   /** 添加当前选中项并关闭（名称/网址/图标由面板内草稿与选项决定）。 */
   onAdd: (payload: AddIconSubmitPayload) => void;
-  /** 添加后保留弹层并清空左侧选择。 */
-  onContinueAdding: (payload: AddIconSubmitPayload) => void;
 };
 
 /** 组件「图样示例」大图预览区；色值见 `theme.css` feature: add-icon */
@@ -54,12 +55,20 @@ function SitePreviewHeaderIcon(props: {
   variant: SiteIconVariantId;
   domain: string;
   displayName: string;
+  customIconDataUrl: string | null;
 }) {
-  const { variant, domain, displayName } = props;
-  if (variant === 3) {
+  const { variant, domain, displayName, customIconDataUrl } = props;
+  if (variant === 3 && !customIconDataUrl) {
     return (
       <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-dashed border-border bg-muted/50 text-sm font-medium text-muted-foreground">
         ···
+      </div>
+    );
+  }
+  if (variant === 3 && customIconDataUrl) {
+    return (
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-card ring-1 ring-border/60">
+        <img src={customIconDataUrl} alt="" className="h-6 w-6 object-contain" width={24} height={24} />
       </div>
     );
   }
@@ -89,14 +98,22 @@ function SitePreviewHeroIcon(props: {
   variant: SiteIconVariantId;
   domain: string;
   displayName: string;
+  customIconDataUrl: string | null;
 }) {
-  const { variant, domain, displayName } = props;
-  if (variant === 3) {
+  const { variant, domain, displayName, customIconDataUrl } = props;
+  if (variant === 3 && !customIconDataUrl) {
     return (
       <div
         className={`${SITE_PREVIEW_HERO_SLOT} border border-dashed border-border bg-muted/50 text-2xl font-medium text-muted-foreground`}
       >
         ···
+      </div>
+    );
+  }
+  if (variant === 3 && customIconDataUrl) {
+    return (
+      <div className={`${SITE_PREVIEW_HERO_SLOT} border border-border bg-card ring-1 ring-border/60`}>
+        <img src={customIconDataUrl} alt="" className="h-12 w-12 object-contain" width={48} height={48} />
       </div>
     );
   }
@@ -128,21 +145,23 @@ export function AddIconPreviewPanel({
   onClose,
   showCloseButton = true,
   onAdd,
-  onContinueAdding,
 }: AddIconPreviewPanelProps) {
   const { t } = useAppI18n();
   const canSubmit = Boolean(selected);
-  const previewHeadingId = "add-icon-preview-heading";
 
   const [siteDraftName, setSiteDraftName] = useState("");
   const [siteDraftUrl, setSiteDraftUrl] = useState("");
   const [siteIconVariant, setSiteIconVariant] = useState<SiteIconVariantId>(0);
+  const [siteCustomIconDataUrl, setSiteCustomIconDataUrl] = useState<string | null>(null);
+  const [customIconError, setCustomIconError] = useState<string | null>(null);
 
   useEffect(() => {
     if (selected?.kind === "site") {
       setSiteDraftName(selected.name);
       setSiteDraftUrl(selected.url);
       setSiteIconVariant(0);
+      setSiteCustomIconDataUrl(null);
+      setCustomIconError(null);
     }
   }, [selected?.kind, selected?.id]);
 
@@ -165,6 +184,7 @@ export function AddIconPreviewPanel({
           domain,
           url,
           iconVariant: siteIconVariant,
+            customIconDataUrl: siteIconVariant === 3 ? (siteCustomIconDataUrl ?? undefined) : undefined,
         },
       };
     }
@@ -176,21 +196,18 @@ export function AddIconPreviewPanel({
     if (payload) onAdd(payload);
   };
 
-  const handleContinueClick = () => {
-    const payload = buildSubmitPayload();
-    if (payload) onContinueAdding(payload);
+  const handleCustomIconUploadError = (reason: AddIconUploadFailureReason) => {
+    const key = toCustomIconFailureMessageKey(reason);
+    setCustomIconError(key ? t(key) : null);
   };
 
   return (
     <section
-      className="flex h-full min-h-0 w-full shrink-0 flex-col sm:min-w-[260px] sm:max-w-[340px] lg:min-w-[280px] lg:max-w-[380px]"
-      aria-labelledby={previewHeadingId}
+      className="flex h-full min-h-0 w-full min-w-0 shrink flex-col sm:grow-0 sm:shrink sm:basis-[min(288px,42%)] sm:max-w-[min(380px,46%)]"
+      aria-label={t("addIcon.preview")}
     >
-      <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-4 sm:px-5 sm:pb-5 sm:pt-5">
-        <div className="mb-2 flex shrink-0 items-center justify-between gap-2">
-          <h2 id={previewHeadingId} className="text-sm font-semibold text-foreground">
-            {t("addIcon.preview")}
-          </h2>
+      <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-2 sm:px-5 sm:pb-5 sm:pt-2.5">
+        <div className="mb-1 flex shrink-0 items-center justify-end gap-2">
           {showCloseButton ? (
             <button
               type="button"
@@ -213,7 +230,7 @@ export function AddIconPreviewPanel({
                 </div>
               </>
             ) : selected.kind === "site" ? (
-              <div className="flex min-h-0 flex-col gap-3 pt-2">
+              <div className="flex min-h-0 flex-col gap-3 pt-0.5">
                 <div
                   className={`flex min-h-[104px] flex-col items-stretch justify-center gap-2.5 px-3 py-3 ${SITE_PREVIEW_CARD}`}
                 >
@@ -223,6 +240,7 @@ export function AddIconPreviewPanel({
                         variant={siteIconVariant}
                         domain={sitePreviewDomain}
                         displayName={siteDisplayName}
+                        customIconDataUrl={siteCustomIconDataUrl}
                       />
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold text-foreground">{siteDraftName || selected.name}</p>
@@ -236,6 +254,7 @@ export function AddIconPreviewPanel({
                       variant={siteIconVariant}
                       domain={sitePreviewDomain}
                       displayName={siteDisplayName}
+                      customIconDataUrl={siteCustomIconDataUrl}
                     />
                     <p className="mt-2 text-sm font-semibold text-foreground">{siteDraftName || selected.name}</p>
                   </div>
@@ -338,6 +357,32 @@ export function AddIconPreviewPanel({
                       ···
                     </button>
                   </div>
+                  {siteIconVariant === 3 ? (
+                    <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                      <LocalFileUploadButton
+                        className="rounded-lg border border-border bg-secondary px-2.5 py-1.5 text-xs font-medium text-secondary-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                        onPick={({ dataUrl }) => {
+                          setSiteCustomIconDataUrl(dataUrl);
+                          setCustomIconError(null);
+                        }}
+                        onPickError={handleCustomIconUploadError}
+                      >
+                        {t("addIcon.uploadCustomIcon")}
+                      </LocalFileUploadButton>
+                      <button
+                        type="button"
+                        className="rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted"
+                        disabled={!siteCustomIconDataUrl}
+                        onClick={() => {
+                          setSiteCustomIconDataUrl(null);
+                          setCustomIconError(null);
+                        }}
+                      >
+                        {t("addIcon.resetCustomIcon")}
+                      </button>
+                      {customIconError ? <p className="w-full text-xs text-amber-700">{customIconError}</p> : null}
+                    </div>
+                  ) : null}
                 </div>
               </div>
             ) : (
@@ -386,9 +431,6 @@ export function AddIconPreviewPanel({
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
               <button type="button" disabled={!canSubmit} className={footerPrimaryBtn} onClick={handleAddClick}>
                 {t("addIcon.add")}
-              </button>
-              <button type="button" disabled={!canSubmit} className={footerPrimaryBtn} onClick={handleContinueClick}>
-                {t("addIcon.continueAdd")}
               </button>
             </div>
           </div>
