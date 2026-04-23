@@ -26,6 +26,7 @@ import { loadSearchPayload } from "../storage/repository";
 import { useDismissOnPointerDownOutside } from "./useDismissOnPointerDownOutside";
 import type { AddIconSubmitPayload } from "./addIcon";
 import {
+  SettingsAccountPanel,
   SettingsAboutPanel,
   SettingsAppearancePanel,
   SettingsComingSoonBody,
@@ -235,7 +236,9 @@ export function SettingsSpotlightModal({
   if (!open) return null;
 
   let mainBody: ReactNode;
-  if (activeSection === "general") {
+  if (activeSection === "account") {
+    mainBody = <SettingsAccountPanel mainBodyClassName={SETTINGS_MAIN_BODY_CLASS} />;
+  } else if (activeSection === "general") {
     mainBody = (
       <SettingsGeneralPanel
         mainBodyClassName={SETTINGS_MAIN_BODY_CLASS}

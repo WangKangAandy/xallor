@@ -11,6 +11,7 @@ import { getSearchEngineDisplayName, type SearchEngine } from "../search/searchE
 import type { MessageKey } from "../i18n/messages";
 import type { SiteItem } from "./desktopGridTypes";
 import { Favicon } from "./DesktopGridItemPrimitives";
+export { SettingsAccountPanel } from "./SettingsAccountPanel";
 
 type SettingsAppearancePanelProps = {
   mainBodyClassName: string;

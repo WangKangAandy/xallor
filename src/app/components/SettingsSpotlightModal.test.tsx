@@ -70,6 +70,44 @@ describe("SettingsSpotlightModal", () => {
   });
 
   /**
+   * 目的：账户分区已从占位态升级为可视化面板，避免侧栏点击后仍显示 coming soon。
+   * 前置：设置弹层打开，默认分区为「通用」。
+   * 预期：点击 `settings-nav-account` 后渲染账户标题和四个信息卡片。
+   */
+  it("should_show_account_panel_when_account_nav_clicked", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    act(() => {
+      root.render(
+        <AppI18nProvider>
+          <UiPreferencesProvider>
+            <SettingsSpotlightModal
+              {...getBaseProps()}
+            />
+          </UiPreferencesProvider>
+        </AppI18nProvider>,
+      );
+    });
+
+    act(() => {
+      document.querySelector<HTMLButtonElement>('[data-testid="settings-nav-account"]')?.click();
+    });
+
+    expect(document.querySelector('[data-testid="settings-account-panel"]')).toBeTruthy();
+    expect(document.querySelector('[data-testid="settings-account-basic-info"]')).toBeTruthy();
+    expect(document.querySelector('[data-testid="settings-account-sync-backup"]')).toBeTruthy();
+    expect(document.querySelector('[data-testid="settings-account-security"]')).toBeTruthy();
+    expect(document.querySelector('[data-testid="settings-account-preferences-data"]')).toBeTruthy();
+
+    act(() => {
+      root.unmount();
+    });
+    document.body.removeChild(container);
+  });
+
+  /**
    * 目的：通用页可切换默认搜索引擎，确保设置入口能驱动全局偏好。
    * 前置：设置弹层打开在「通用」。
    * 预期：点击触发器展开小框并选择 Google 后，触发器文案更新为 Google。

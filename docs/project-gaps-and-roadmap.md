@@ -29,7 +29,7 @@
 
 ### 当前结构快照（2026-04）
 
-- **设置域 P0 拆分已收尾**：`SettingsSpotlightModal.tsx` 已收敛为壳层编排；分区面板、隐私弹窗与状态逻辑已拆到独立组件/hook（`SettingsSpotlightPanels.tsx`、`SettingsHiddenSpaceDialog.tsx`、`useHiddenSpaceDialogController.ts`、`useSettingsSectionRouting.ts`）。
+- **设置域 P0 拆分已收尾**：`SettingsSpotlightModal.tsx` 已收敛为壳层编排；分区面板、隐私弹窗与状态逻辑已拆到独立组件/hook（`SettingsSpotlightPanels.tsx`、`SettingsHiddenSpaceDialog.tsx`、`useHiddenSpaceDialogController.ts`、`useSettingsSectionRouting.ts`）。**账户分区**已独立为 `SettingsAccountPanel.tsx`（当前为 UI + mock 模型占位，便于后续接登录态与云端同步字段映射）。
 - **App 编排层偏厚**：`App.tsx` 同时处理背景右键、下载壁纸、隐藏空间入口、全局消息提示、设置开关串联。
 - **网格主链路已拆出骨架，但仍是热点模块**：`DesktopGrid.tsx` 仍聚合 DnD、整理态与文件夹 Portal 交互。
 - **文档总体齐全，但状态漂移风险仍在**：已有计划与实现速度不一致，需持续清理“文档 TODO 与代码现状”偏差。
@@ -38,7 +38,7 @@
 
 - **P0：设置模块瘦身（首要）**
   - 目标：把 `SettingsSpotlightModal.tsx` 从“巨型组件”收敛为“壳层 + 分区路由”。
-  - 进度（已完成）：`general/privacy/appearance/about/widgets` 分区已迁出主文件，主文件职责集中为路由编排；隐私弹窗已独立为 `SettingsHiddenSpaceDialog`；新增 `useHiddenSpaceDialogController` 与 `useSettingsSectionRouting` 承接状态机与搜索路由，并已补齐 hook 级单测（`useHiddenSpaceDialogController.test.tsx`、`useSettingsSectionRouting.test.tsx`）。
+  - 进度（已完成）：`general/privacy/appearance/about/widgets` 分区已迁出主文件；**`account`** 分区已接入独立面板 `SettingsAccountPanel`（纯展示与占位数据，不含登录/同步业务）。主文件职责集中为路由编排；隐私弹窗已独立为 `SettingsHiddenSpaceDialog`；新增 `useHiddenSpaceDialogController` 与 `useSettingsSectionRouting` 承接状态机与搜索路由，并已补齐 hook 级单测（`useHiddenSpaceDialogController.test.tsx`、`useSettingsSectionRouting.test.tsx`）；`SettingsSpotlightModal.test.tsx` 含账户分区渲染回归。
   - 下一步（转 P1 优化）：在不影响交互稳定性的前提下，按需抽离设置域共享 UI primitives（如行级开关/滑杆）并评估跨面板复用边界。
   - 约束：拆分不改变现有交互行为与 test id；每个拆分阶段都保持回归测试通过。
 
@@ -93,6 +93,7 @@
 ### 低（多在上架或接真实数据时）
 
 - Manifest `icons`、商店素材；天气等接 API 时的权限与隐私文案。
+- **设置 - 账户（后续能力）**：当前仅 UI 与 `AccountPanelModel` 占位；后续需接入认证会话、设备列表、同步状态与冲突策略时，建议在 `src/app/` 下增设账户域 hook 或轻量 client（与 `SettingsAccountPanel` 解耦），避免把网络与令牌逻辑写进面板组件。
 - **安全**：自定义搜索引擎 URL 若完全开放，需防开放重定向（上架相关）。
 
 ---
@@ -120,6 +121,7 @@
 | [`favicon-load-optimization-plan.md`](./favicon-load-optimization-plan.md) | 远程资源策略层（Favicon 首期）与缓存/加载加速计划 |
 | [`notes/hidden-icons-space-plan.md`](./notes/hidden-icons-space-plan.md) | 隐藏图标空间：开启/关闭状态机、密码流程、批量操作与极简模式约束 |
 | [`notes/settings-search-implementation-plan.md`](./notes/settings-search-implementation-plan.md) | 设置搜索：索引模型、匹配与定位策略、分阶段交付与测试清单 |
+| [`../src/app/components/SettingsAccountPanel.tsx`](../src/app/components/SettingsAccountPanel.tsx) | 设置 - 账户分区 UI（占位模型；后续接云同步 / 会话） |
 | [`notes/context-menu-surface-contract.md`](./notes/context-menu-surface-contract.md) | 右键命中契约：实体优先、最近命中优先、空白兜底与输入语义保留 |
 | [`notes/interaction-system-blueprint.md`](./notes/interaction-system-blueprint.md) | 交互系统蓝图：命中层、阻断层、状态层与跨文档约束关系 |
 | [`notes/download-wallpaper-context-menu-plan.md`](./notes/download-wallpaper-context-menu-plan.md) | 空白区右键“下载壁纸”：媒体无关下载、回退策略、负向测试与实施步骤 |
