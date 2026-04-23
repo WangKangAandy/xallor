@@ -13,9 +13,10 @@ const tileBase =
   "group/tile relative text-left outline-none transition-[box-shadow,background-color,border-color] duration-150 " +
   "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background";
 
-/** 未选中：轻边界 + card 底；选中：主色边 + 淡主色底（随 `html.dark` 语义色变化）。 */
+/** 未选中：使用 `theme.css` 中 `--add-icon-surface-*`，避免深色下 `bg-card` 与背景同色成死黑块。 */
 const idleSurface =
-  "border border-border bg-card/90 shadow-sm hover:border-border hover:bg-accent/35 hover:shadow-md";
+  "border border-[color:var(--add-icon-surface-border)] bg-[color:var(--add-icon-surface-raised)] shadow-sm " +
+  "hover:border-[color:var(--add-icon-surface-border)] hover:bg-[color:var(--add-icon-surface-raised-hover)] hover:shadow-md";
 
 const selectedSurface = "border border-primary bg-primary/12 shadow-sm ring-1 ring-ring/30";
 

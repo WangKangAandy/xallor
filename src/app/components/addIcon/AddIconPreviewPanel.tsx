@@ -27,7 +27,8 @@ const PREVIEW_PATTERN_SURFACE =
   "rounded-xl border shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] bg-[var(--add-icon-preview-pattern-bg)] border-[color:var(--add-icon-preview-pattern-border)]";
 
 /** 站点顶部预览卡 */
-const SITE_PREVIEW_CARD = "rounded-xl border border-border bg-muted/40";
+const SITE_PREVIEW_CARD =
+  "rounded-xl border border-[color:var(--add-icon-surface-border)] bg-[color:var(--add-icon-surface-raised)]";
 
 /** 与左侧摘要里「组件」标签同一套深绿底白字。 */
 const KIND_TAG_EMERALD = "shrink-0 rounded-md bg-emerald-600/95 px-2 py-0.5 text-[10px] font-medium text-white";
@@ -60,14 +61,14 @@ function SitePreviewHeaderIcon(props: {
   const { variant, domain, displayName, customIconDataUrl } = props;
   if (variant === 3 && !customIconDataUrl) {
     return (
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-dashed border-border bg-muted/50 text-sm font-medium text-muted-foreground">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-dashed border-[color:var(--add-icon-surface-border)] bg-[color:var(--add-icon-surface-subtle)] text-sm font-medium text-muted-foreground">
         ···
       </div>
     );
   }
   if (variant === 3 && customIconDataUrl) {
     return (
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-card ring-1 ring-border/60">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[color:var(--add-icon-surface-border)] bg-[color:var(--add-icon-surface-raised)] ring-1 ring-border/60">
         <img src={customIconDataUrl} alt="" className="h-6 w-6 object-contain" width={24} height={24} />
       </div>
     );
@@ -78,7 +79,7 @@ function SitePreviewHeaderIcon(props: {
   return (
     <div
       className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full shadow-sm ring-1 ${
-        invert ? "bg-foreground ring-border" : "bg-card ring-border"
+        invert ? "bg-foreground ring-border" : "bg-[color:var(--add-icon-surface-raised)] ring-border"
       }`}
     >
       <FaviconIcon
@@ -104,7 +105,7 @@ function SitePreviewHeroIcon(props: {
   if (variant === 3 && !customIconDataUrl) {
     return (
       <div
-        className={`${SITE_PREVIEW_HERO_SLOT} border border-dashed border-border bg-muted/50 text-2xl font-medium text-muted-foreground`}
+        className={`${SITE_PREVIEW_HERO_SLOT} border border-dashed border-[color:var(--add-icon-surface-border)] bg-[color:var(--add-icon-surface-subtle)] text-2xl font-medium text-muted-foreground`}
       >
         ···
       </div>
@@ -112,7 +113,9 @@ function SitePreviewHeroIcon(props: {
   }
   if (variant === 3 && customIconDataUrl) {
     return (
-      <div className={`${SITE_PREVIEW_HERO_SLOT} border border-border bg-card ring-1 ring-border/60`}>
+      <div
+        className={`${SITE_PREVIEW_HERO_SLOT} border border-[color:var(--add-icon-surface-border)] bg-[color:var(--add-icon-surface-raised)] ring-1 ring-border/60`}
+      >
         <img src={customIconDataUrl} alt="" className="h-12 w-12 object-contain" width={48} height={48} />
       </div>
     );
@@ -225,7 +228,7 @@ export function AddIconPreviewPanel({
             {!selected ? (
               <>
                 <p className="text-xs leading-relaxed text-muted-foreground">{t("addIcon.previewHint")}</p>
-                <div className="mt-4 flex min-h-[120px] items-center justify-center rounded-xl border border-dashed border-border bg-muted/30 p-4 text-center text-xs text-muted-foreground">
+                <div className="mt-4 flex min-h-[120px] items-center justify-center rounded-xl border border-dashed border-[color:var(--add-icon-surface-border)] bg-[color:var(--add-icon-surface-subtle)] p-4 text-center text-xs text-muted-foreground">
                   {t("addIcon.unselected")}
                 </div>
               </>
@@ -317,7 +320,7 @@ export function AddIconPreviewPanel({
                       aria-checked={siteIconVariant === 0}
                       aria-label={t("addIcon.iconColor")}
                       onClick={() => setSiteIconVariant(0)}
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-card p-1 transition-colors ${siteIconOptionClasses(siteIconVariant === 0, "default")}`}
+                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[color:var(--add-icon-surface-raised)] p-1 transition-colors ${siteIconOptionClasses(siteIconVariant === 0, "default")}`}
                     >
                       <FaviconIcon domain={sitePreviewDomain} name={siteDisplayName} size={28} />
                     </button>
@@ -342,7 +345,7 @@ export function AddIconPreviewPanel({
                       aria-checked={siteIconVariant === 2}
                       aria-label={t("addIcon.iconSmall")}
                       onClick={() => setSiteIconVariant(2)}
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-card p-1 ${siteIconOptionClasses(siteIconVariant === 2, "default")}`}
+                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[color:var(--add-icon-surface-raised)] p-1 ${siteIconOptionClasses(siteIconVariant === 2, "default")}`}
                     >
                       <FaviconIcon domain={sitePreviewDomain} name={siteDisplayName} size={22} />
                     </button>
@@ -352,7 +355,7 @@ export function AddIconPreviewPanel({
                       aria-checked={siteIconVariant === 3}
                       aria-label={t("addIcon.iconMore")}
                       onClick={() => setSiteIconVariant(3)}
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-muted/60 text-lg font-medium text-muted-foreground transition-colors hover:bg-muted ${siteIconOptionClasses(siteIconVariant === 3, "more")}`}
+                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[color:var(--add-icon-surface-subtle)] text-lg font-medium text-muted-foreground transition-colors hover:bg-[color:var(--add-icon-surface-raised-hover)] ${siteIconOptionClasses(siteIconVariant === 3, "more")}`}
                     >
                       ···
                     </button>
@@ -371,7 +374,7 @@ export function AddIconPreviewPanel({
                       </LocalFileUploadButton>
                       <button
                         type="button"
-                        className="rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted"
+                        className="rounded-lg border border-[color:var(--add-icon-surface-border)] bg-[color:var(--add-icon-surface-subtle)] px-2.5 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-[color:var(--add-icon-surface-raised-hover)]"
                         disabled={!siteCustomIconDataUrl}
                         onClick={() => {
                           setSiteCustomIconDataUrl(null);
@@ -405,9 +408,15 @@ export function AddIconPreviewPanel({
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">{t("addIcon.componentSizes")}</p>
                   <div className="mt-2 grid grid-cols-3 gap-1.5 text-center text-[10px] text-muted-foreground">
-                    <div className="rounded-lg border border-border bg-muted/40 py-2">{t("addIcon.sizeLarge")}</div>
-                    <div className="rounded-lg border border-border bg-muted/40 py-2">{t("addIcon.sizeMedium")}</div>
-                    <div className="rounded-lg border border-border bg-muted/40 py-2">{t("addIcon.sizeSmall")}</div>
+                    <div className="rounded-lg border border-[color:var(--add-icon-surface-border)] bg-[color:var(--add-icon-surface-subtle)] py-2">
+                      {t("addIcon.sizeLarge")}
+                    </div>
+                    <div className="rounded-lg border border-[color:var(--add-icon-surface-border)] bg-[color:var(--add-icon-surface-subtle)] py-2">
+                      {t("addIcon.sizeMedium")}
+                    </div>
+                    <div className="rounded-lg border border-[color:var(--add-icon-surface-border)] bg-[color:var(--add-icon-surface-subtle)] py-2">
+                      {t("addIcon.sizeSmall")}
+                    </div>
                   </div>
                 </div>
                 <div>

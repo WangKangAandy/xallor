@@ -39,7 +39,7 @@ export function AddIconPickerPanel({
   return (
     <aside className="flex h-full min-h-0 min-w-0 flex-1 flex-col border-border/70 sm:border-r sm:border-border">
       <div className="flex flex-col gap-3 px-4 pb-2 pt-4 sm:px-5 sm:pt-5">
-        <div className="flex items-center gap-2 rounded-2xl border border-border bg-muted/70 px-3 py-2.5 shadow-sm">
+        <div className="flex items-center gap-2 rounded-2xl border border-[color:var(--add-icon-surface-border)] bg-[color:var(--add-icon-surface-raised)] px-3 py-2.5 shadow-sm">
           <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
           <input
             type="text"
@@ -88,7 +88,7 @@ export function AddIconPickerPanel({
 
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 pb-4 sm:px-5">
         {!hasAnySection ? (
-          <div className="rounded-xl border border-dashed border-border bg-muted/30 px-4 py-10 text-center text-xs text-muted-foreground">
+          <div className="rounded-xl border border-dashed border-[color:var(--add-icon-surface-border)] bg-[color:var(--add-icon-surface-subtle)] px-4 py-10 text-center text-xs text-muted-foreground">
             {t("addIcon.noResults")}
           </div>
         ) : (

@@ -22,7 +22,7 @@ export function AddIconPickerGrid({ entries, selectedId, onSelectId, gridVariant
   const { t } = useAppI18n();
   if (entries.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-border bg-muted/30 px-4 py-8 text-center text-xs text-muted-foreground">
+      <div className="rounded-xl border border-dashed border-[color:var(--add-icon-surface-border)] bg-[color:var(--add-icon-surface-subtle)] px-4 py-8 text-center text-xs text-muted-foreground">
         {t("addIcon.noResults")}
       </div>
     );

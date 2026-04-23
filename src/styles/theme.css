@@ -171,6 +171,11 @@
   --add-icon-preview-pattern-border: rgb(167 243 208 / 0.85);
   --add-icon-preview-pattern-text: rgb(6 78 59 / 0.88);
   --add-icon-preview-pattern-text-muted: rgb(6 78 59 / 0.72);
+  /** 列表磁贴、搜索行、空态等与「纯 --card」解耦，避免深色下与 slate 壳层对比成死黑块 */
+  --add-icon-surface-raised: rgb(255 255 255 / 0.94);
+  --add-icon-surface-raised-hover: rgb(248 250 252 / 0.98);
+  --add-icon-surface-subtle: rgb(241 245 249 / 0.92);
+  --add-icon-surface-border: rgb(15 23 42 / 0.1);
 }
 
 .dark {
@@ -225,6 +230,11 @@
   --add-icon-preview-pattern-border: oklch(0.38 0.07 166);
   --add-icon-preview-pattern-text: oklch(0.88 0.06 166);
   --add-icon-preview-pattern-text-muted: oklch(0.78 0.05 166);
+  /** 与 `glass-panel` / slate 系壳层协调的略提亮底，替代等同 background 的 `--card` 磁贴底 */
+  --add-icon-surface-raised: rgb(51 65 85 / 0.42);
+  --add-icon-surface-raised-hover: rgb(71 85 105 / 0.55);
+  --add-icon-surface-subtle: rgb(30 41 59 / 0.45);
+  --add-icon-surface-border: rgb(148 163 184 / 0.22);
 }
 
 @theme inline {
