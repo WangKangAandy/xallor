@@ -1,6 +1,6 @@
 import { Activity, ArrowRight, Bell, FileText, Globe, ShieldCheck, Sparkles } from "lucide-react";
-import { useMemo, useState, type MouseEvent, type RefObject } from "react";
-import { useAppI18n, type AppLocale, type AppI18nShape } from "../i18n/AppI18n";
+import { useEffect, useMemo, useState, type MouseEvent, type Ref, type RefObject } from "react";
+import { useAppI18n, type AppLocale } from "../i18n/AppI18n";
 import { useOpenExternalUrl } from "../navigation";
 import { useUiPreferences, type LayoutMode } from "../preferences";
 import aboutContent from "../config/about-content.json";
@@ -11,7 +11,29 @@ import { getSearchEngineDisplayName, type SearchEngine } from "../search/searchE
 import type { MessageKey } from "../i18n/messages";
 import type { SiteItem } from "./desktopGridTypes";
 import { Favicon } from "./DesktopGridItemPrimitives";
+import type { PickLocalImageFailureReason } from "../localUpload/pickLocalImageAsDataUrl";
+import { useUserLocalAssets } from "../localUpload";
+import { LocalFileUploadButton } from "./localUpload/LocalFileUploadButton";
 export { SettingsAccountPanel } from "./SettingsAccountPanel";
+export { SettingsWallpaperPanel } from "./SettingsWallpaperPanel";
+
+function mapPickFailureToMessageKey(reason: PickLocalImageFailureReason): MessageKey | null {
+  switch (reason) {
+    case "no_file":
+      return null;
+    case "too_large":
+      return "localUpload.errorTooLarge";
+    case "bad_type":
+    case "empty":
+      return "localUpload.errorBadType";
+    case "read_failed":
+      return "localUpload.errorReadFailed";
+    case "stored_too_large":
+      return "localUpload.errorStoredTooLarge";
+    default:
+      return "localUpload.errorReadFailed";
+  }
+}
 
 type SettingsAppearancePanelProps = {
   mainBodyClassName: string;
@@ -97,6 +119,8 @@ function SettingsRangeRow({
 export function SettingsAppearancePanel({ mainBodyClassName, layoutMode, onLayoutModeChange }: SettingsAppearancePanelProps) {
   const { t } = useAppI18n();
   const { colorScheme, setColorScheme, gridItemNamesVisible, setGridItemNamesVisible } = useUiPreferences();
+  const { wallpaperDataUrl, setWallpaperDataUrl } = useUserLocalAssets();
+  const [wallpaperUploadMessage, setWallpaperUploadMessage] = useState<string | null>(null);
   const [gridColumns, setGridColumns] = useState(6);
   const [gridRows, setGridRows] = useState(2);
   const [iconSize, setIconSize] = useState<"small" | "medium" | "large">("medium");
@@ -104,6 +128,14 @@ export function SettingsAppearancePanel({ mainBodyClassName, layoutMode, onLayou
   const [minimalShowSearchBar, setMinimalShowSearchBar] = useState(true);
   const [minimalShowQuickActions, setMinimalShowQuickActions] = useState(true);
   const [minimalContentWidth, setMinimalContentWidth] = useState<"narrow" | "standard" | "wide">("standard");
+
+  const wallpaperPreviewSrc = wallpaperDataUrl ?? DEFAULT_NEW_TAB_BACKGROUND_URL;
+
+  useEffect(() => {
+    if (!wallpaperUploadMessage) return;
+    const id = window.setTimeout(() => setWallpaperUploadMessage(null), 4500);
+    return () => window.clearTimeout(id);
+  }, [wallpaperUploadMessage]);
 
   return (
     <div className={mainBodyClassName}>
@@ -131,7 +163,7 @@ export function SettingsAppearancePanel({ mainBodyClassName, layoutMode, onLayou
         </div>
         <div className="relative mx-auto aspect-[5/2] w-full max-w-[280px] overflow-hidden rounded-xl border border-slate-200/80 bg-slate-100/50 shadow-inner dark:border-slate-600/60 dark:bg-slate-900/50">
           <img
-            src={DEFAULT_NEW_TAB_BACKGROUND_URL}
+            src={wallpaperPreviewSrc}
             alt=""
             className="absolute inset-0 h-full w-full object-cover"
             width={280}
@@ -139,12 +171,37 @@ export function SettingsAppearancePanel({ mainBodyClassName, layoutMode, onLayou
             draggable={false}
           />
         </div>
-        <button
-          type="button"
-          className="rounded-lg border border-slate-200 bg-white/85 px-3 py-2 text-xs font-medium text-slate-700 shadow-sm transition-colors hover:bg-white dark:border-slate-600 dark:bg-slate-700/90 dark:text-slate-100 dark:hover:bg-slate-600/90"
-        >
-          {t("settings.appearancePickWallpaper")}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <LocalFileUploadButton
+            className="rounded-lg border border-slate-200 bg-white/85 px-3 py-2 text-xs font-medium text-slate-700 shadow-sm transition-colors hover:bg-white dark:border-slate-600 dark:bg-slate-700/90 dark:text-slate-100 dark:hover:bg-slate-600/90"
+            onPick={({ dataUrl }) => {
+              setWallpaperUploadMessage(null);
+              setWallpaperDataUrl(dataUrl);
+            }}
+            onPickError={(reason) => {
+              const key = mapPickFailureToMessageKey(reason);
+              setWallpaperUploadMessage(key ? t(key) : null);
+            }}
+          >
+            {t("settings.appearancePickWallpaper")}
+          </LocalFileUploadButton>
+          <button
+            type="button"
+            disabled={!wallpaperDataUrl}
+            className="rounded-lg border border-slate-200 bg-white/60 px-3 py-2 text-xs font-medium text-slate-600 shadow-sm transition-colors hover:bg-white enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-700/90"
+            onClick={() => {
+              setWallpaperUploadMessage(null);
+              setWallpaperDataUrl(null);
+            }}
+          >
+            {t("settings.appearanceResetWallpaper")}
+          </button>
+        </div>
+        {wallpaperUploadMessage ? (
+          <div className="text-xs text-amber-700 dark:text-amber-300" role="status">
+            {wallpaperUploadMessage}
+          </div>
+        ) : null}
       </div>
 
       <div className="min-w-0 space-y-4 overflow-hidden rounded-2xl border border-slate-200/70 bg-white/72 p-4 dark:border-slate-600/60 dark:bg-slate-800/75">
@@ -275,8 +332,10 @@ type SettingsAboutPanelProps = {
 };
 
 export function SettingsAboutPanel({ mainBodyClassName }: SettingsAboutPanelProps) {
-  const { locale } = useAppI18n();
+  const { locale, t } = useAppI18n();
   const openExternalUrl = useOpenExternalUrl();
+  const { avatarDataUrl, setAvatarDataUrl } = useUserLocalAssets();
+  const [avatarUploadMessage, setAvatarUploadMessage] = useState<string | null>(null);
   const iconPalette = useMemo(() => [Sparkles, Globe, Activity, ShieldCheck, FileText], []);
   const RandomIcon = useMemo(() => iconPalette[Math.floor(Math.random() * iconPalette.length)] ?? Globe, [iconPalette]);
   const aboutTagline = locale === "en-US" ? aboutContent.tagline["en-US"] : aboutContent.tagline["zh-CN"];
@@ -284,17 +343,60 @@ export function SettingsAboutPanel({ mainBodyClassName }: SettingsAboutPanelProp
   const updatedLabel = locale === "en-US" ? aboutContent.updatedLabel["en-US"] : aboutContent.updatedLabel["zh-CN"];
   const copyright = locale === "en-US" ? aboutContent.copyright["en-US"] : aboutContent.copyright["zh-CN"];
 
+  useEffect(() => {
+    if (!avatarUploadMessage) return;
+    const id = window.setTimeout(() => setAvatarUploadMessage(null), 4500);
+    return () => window.clearTimeout(id);
+  }, [avatarUploadMessage]);
+
   return (
     <div className={mainBodyClassName}>
       <div className="space-y-5">
         <div className="rounded-2xl border border-slate-200/70 bg-white/72 p-4 dark:border-slate-600/60 dark:bg-slate-800/75">
           <div className="flex items-start gap-4">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-white/70 bg-white/92 text-slate-700 shadow-sm dark:border-slate-500/70 dark:bg-slate-700/90 dark:text-slate-100">
-              <RandomIcon className="h-8 w-8" />
+            <div className="relative shrink-0">
+              <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-white/70 bg-white/92 text-slate-700 shadow-sm dark:border-slate-500/70 dark:bg-slate-700/90 dark:text-slate-100">
+                {avatarDataUrl ? (
+                  <img src={avatarDataUrl} alt="" className="h-full w-full object-cover" width={64} height={64} />
+                ) : (
+                  <RandomIcon className="h-8 w-8" />
+                )}
+              </div>
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{aboutContent.profileName}</div>
               <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">{aboutTagline}</div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <LocalFileUploadButton
+                  className="rounded-lg border border-slate-200 bg-white/85 px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition-colors hover:bg-white dark:border-slate-600 dark:bg-slate-700/90 dark:text-slate-100 dark:hover:bg-slate-600/90"
+                  onPick={({ dataUrl }) => {
+                    setAvatarUploadMessage(null);
+                    setAvatarDataUrl(dataUrl);
+                  }}
+                  onPickError={(reason) => {
+                    const key = mapPickFailureToMessageKey(reason);
+                    setAvatarUploadMessage(key ? t(key) : null);
+                  }}
+                >
+                  {t("settings.aboutUploadAvatar")}
+                </LocalFileUploadButton>
+                <button
+                  type="button"
+                  disabled={!avatarDataUrl}
+                  className="rounded-lg border border-slate-200 bg-white/60 px-2.5 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition-colors hover:bg-white enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-700/90"
+                  onClick={() => {
+                    setAvatarUploadMessage(null);
+                    setAvatarDataUrl(null);
+                  }}
+                >
+                  {t("settings.aboutResetAvatar")}
+                </button>
+              </div>
+              {avatarUploadMessage ? (
+                <div className="mt-2 text-xs text-amber-700 dark:text-amber-300" role="status">
+                  {avatarUploadMessage}
+                </div>
+              ) : null}
             </div>
           </div>
           <div className="mt-4 grid grid-cols-2 gap-4 rounded-xl border border-slate-200/70 bg-white/60 px-3 py-2 dark:border-slate-600/70 dark:bg-slate-700/40">
@@ -340,7 +442,7 @@ export function SettingsAboutPanel({ mainBodyClassName }: SettingsAboutPanelProp
 
 export function SettingsSitesAndComponentsPanel({ onConfirmAdd }: { onConfirmAdd: (payload: AddIconSubmitPayload) => void }) {
   return (
-    <div className="flex min-h-full min-w-0 flex-col px-6 pb-6 pt-4 text-slate-800 dark:text-slate-100">
+    <div className="flex min-h-full min-w-0 flex-col px-6 pb-6 pt-1.5 text-slate-800 dark:text-slate-100">
       <div className="min-h-0 flex-1 overflow-hidden rounded-2xl border border-slate-200/70 bg-white/72 p-2 dark:border-slate-600/60 dark:bg-slate-800/75">
         <AddIconPanelContent
           contextSiteId={null}
@@ -368,7 +470,7 @@ export function SettingsComingSoonBody() {
 type SettingsGeneralPanelProps = {
   mainBodyClassName: string;
   locale: AppLocale;
-  setLocale: AppI18nShape["setLocale"];
+  setLocale: (locale: AppLocale) => void;
   selectedSearchEngine: SearchEngine | null;
   availableSearchEngines: SearchEngine[];
   searchEnginePickerOpen: boolean;
@@ -432,7 +534,7 @@ export function SettingsGeneralPanel({
           />
         </div>
         <div className="h-px bg-slate-200/70 dark:bg-slate-600/50" />
-        <div ref={searchEnginePickerRef} className="relative flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+        <div ref={searchEnginePickerRef as Ref<HTMLDivElement>} className="relative flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
           <div>
             <div className="text-sm font-medium">{t("settings.defaultSearchEngine")}</div>
             <div className="text-xs text-slate-500 dark:text-slate-400">{t("settings.defaultSearchEngineDesc")}</div>

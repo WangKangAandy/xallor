@@ -5,6 +5,7 @@ import { act } from "react";
 import { describe, expect, it } from "vitest";
 import { createRoot } from "react-dom/client";
 import { AppI18nProvider } from "../i18n/AppI18n";
+import { UserLocalAssetsProvider } from "../localUpload";
 import { UiPreferencesProvider } from "../preferences";
 import { SettingsSpotlightModal } from "./SettingsSpotlightModal";
 
@@ -42,9 +43,11 @@ describe("SettingsSpotlightModal", () => {
       root.render(
         <AppI18nProvider>
           <UiPreferencesProvider>
+            <UserLocalAssetsProvider>
             <SettingsSpotlightModal
               {...getBaseProps()}
             />
+            </UserLocalAssetsProvider>
           </UiPreferencesProvider>
         </AppI18nProvider>,
       );
@@ -70,9 +73,48 @@ describe("SettingsSpotlightModal", () => {
   });
 
   /**
+   * 目的：壁纸分区从 Coming Soon 升级为独立面板，便于产品与云端接入前验收版式。
+   * 前置：设置弹层打开。
+   * 预期：点击 `settings-nav-wallpaper` 后出现图库筛选、缩略图网格与右侧预览/应用入口。
+   */
+  it("should_show_wallpaper_panel_when_wallpaper_nav_clicked", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    act(() => {
+      root.render(
+        <AppI18nProvider>
+          <UiPreferencesProvider>
+            <UserLocalAssetsProvider>
+              <SettingsSpotlightModal
+                {...getBaseProps()}
+              />
+            </UserLocalAssetsProvider>
+          </UiPreferencesProvider>
+        </AppI18nProvider>,
+      );
+    });
+
+    act(() => {
+      document.querySelector<HTMLButtonElement>('[data-testid="settings-nav-wallpaper"]')?.click();
+    });
+
+    expect(document.querySelector('[data-testid="settings-wallpaper-panel"]')).toBeTruthy();
+    expect(document.querySelector('[data-testid="settings-wallpaper-filter-all"]')).toBeTruthy();
+    expect(document.querySelector('[data-testid="settings-wallpaper-tile-w1"]')).toBeTruthy();
+    expect(document.querySelector('[data-testid="settings-wallpaper-apply"]')).toBeTruthy();
+
+    act(() => {
+      root.unmount();
+    });
+    document.body.removeChild(container);
+  });
+
+  /**
    * 目的：账户分区已从占位态升级为可视化面板，避免侧栏点击后仍显示 coming soon。
    * 前置：设置弹层打开，默认分区为「通用」。
-   * 预期：点击 `settings-nav-account` 后渲染账户标题和四个信息卡片。
+   * 预期：点击 `settings-nav-account` 后渲染账户信息卡片。
    */
   it("should_show_account_panel_when_account_nav_clicked", () => {
     const container = document.createElement("div");
@@ -83,9 +125,11 @@ describe("SettingsSpotlightModal", () => {
       root.render(
         <AppI18nProvider>
           <UiPreferencesProvider>
+            <UserLocalAssetsProvider>
             <SettingsSpotlightModal
               {...getBaseProps()}
             />
+            </UserLocalAssetsProvider>
           </UiPreferencesProvider>
         </AppI18nProvider>,
       );
@@ -121,9 +165,11 @@ describe("SettingsSpotlightModal", () => {
       root.render(
         <AppI18nProvider>
           <UiPreferencesProvider>
+            <UserLocalAssetsProvider>
             <SettingsSpotlightModal
               {...getBaseProps()}
             />
+            </UserLocalAssetsProvider>
           </UiPreferencesProvider>
         </AppI18nProvider>,
       );
@@ -170,9 +216,11 @@ describe("SettingsSpotlightModal", () => {
       root.render(
         <AppI18nProvider>
           <UiPreferencesProvider>
+            <UserLocalAssetsProvider>
             <SettingsSpotlightModal
               {...getBaseProps()}
             />
+            </UserLocalAssetsProvider>
           </UiPreferencesProvider>
         </AppI18nProvider>,
       );
@@ -216,12 +264,14 @@ describe("SettingsSpotlightModal", () => {
       root.render(
         <AppI18nProvider>
           <UiPreferencesProvider>
+            <UserLocalAssetsProvider>
             <SettingsSpotlightModal
               {...getBaseProps()}
               onClose={() => {
                 closeCount += 1;
               }}
             />
+            </UserLocalAssetsProvider>
           </UiPreferencesProvider>
         </AppI18nProvider>,
       );

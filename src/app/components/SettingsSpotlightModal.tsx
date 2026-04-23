@@ -33,6 +33,7 @@ import {
   SettingsGeneralPanel,
   SettingsPrivacyPanel,
   SettingsSitesAndComponentsPanel,
+  SettingsWallpaperPanel,
 } from "./SettingsSpotlightPanels";
 import { useHiddenSpaceDialogController } from "./useHiddenSpaceDialogController";
 import { type SettingsSectionId, useSettingsSectionRouting } from "./useSettingsSectionRouting";
@@ -89,7 +90,7 @@ const TOGGLES = [
 ] as const;
 
 /** 设置右侧主内容区统一容器样式：集中维护间距与文本色。 */
-const SETTINGS_MAIN_BODY_CLASS = "min-w-0 max-w-full space-y-6 px-6 pb-6 pt-4 text-slate-800 dark:text-slate-100";
+const SETTINGS_MAIN_BODY_CLASS = "min-w-0 max-w-full space-y-6 px-6 pb-6 pt-1.5 text-slate-800 dark:text-slate-100";
 
 export function SettingsSpotlightModal({
   open,
@@ -266,6 +267,8 @@ export function SettingsSpotlightModal({
         onLayoutModeChange={onLayoutModeChange}
       />
     );
+  } else if (activeSection === "wallpaper") {
+    mainBody = <SettingsWallpaperPanel mainBodyClassName={SETTINGS_MAIN_BODY_CLASS} />;
   } else if (activeSection === "widgets") {
     mainBody = <SettingsSitesAndComponentsPanel onConfirmAdd={onAddItemFromSettings} />;
   } else if (activeSection === "privacy") {
@@ -383,7 +386,7 @@ export function SettingsSpotlightModal({
             </aside>
 
             <section className="relative flex h-full min-h-0 min-w-0 flex-col">
-            <div className="flex min-w-0 shrink-0 items-center justify-end gap-3 px-6 py-4">
+            <div className="flex min-w-0 shrink-0 items-center justify-end gap-3 px-6 py-2">
               <button
                 type="button"
                 data-testid="settings-modal-close"
