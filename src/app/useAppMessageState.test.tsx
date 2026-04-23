@@ -9,7 +9,7 @@ import { useAppMessageState } from "./useAppMessageState";
 
 type MessageStateSnapshot = ReturnType<typeof useAppMessageState>;
 
-globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 function mountMessageStateHarness() {
   let latest: MessageStateSnapshot | null = null;

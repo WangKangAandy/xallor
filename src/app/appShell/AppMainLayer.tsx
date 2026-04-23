@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import type { AppContentController } from "../useAppContentController";
+import type { AppMainLayerBundle } from "../useAppContentController";
 import {
   MultiDesktopFallback,
   MultiDesktopStripLazy,
@@ -9,25 +9,7 @@ import {
   SidebarLazy,
 } from "./AppLazyParts";
 
-type AppMainLayerProps = Pick<
-  AppContentController,
-  | "isSettingsOpen"
-  | "openSettingsDefault"
-  | "openSettingsWidgets"
-  | "effectiveSidebarLayout"
-  | "gridItemNamesVisible"
-  | "capabilities"
-  | "onDesktopBackgroundContextMenu"
-  | "onRequestHideItem"
-  | "restoreItems"
-  | "pendingAddPayloads"
-  | "onAddPayloadsConsumed"
-  | "onRestoreApplied"
-  | "isCustomContextMenuEnabled"
-  | "onArrangeModeChange"
-> & {
-  isResting: boolean;
-};
+export type AppMainLayerProps = AppMainLayerBundle & { isResting: boolean };
 
 export function AppMainLayer({
   isSettingsOpen,

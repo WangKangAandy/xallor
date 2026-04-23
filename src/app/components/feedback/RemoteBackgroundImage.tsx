@@ -49,6 +49,30 @@ export function RemoteBackgroundImage({
     setResolvedSrc(null);
     setFailed(false);
     startAtRef.current = nowMs();
+
+    const trimmed = memoryKey;
+    const isInlineMedia = trimmed.startsWith("data:") || trimmed.startsWith("blob:");
+    if (isInlineMedia) {
+      preloadBackgroundImage(trimmed)
+        .then(() => {
+          if (cancelled) return;
+          setResolvedSrc(trimmed);
+          recordRemoteResourceMetric({
+            kind: "background",
+            key: memoryKey,
+            elapsedMs: nowMs() - startAtRef.current,
+            outcome: "success",
+            provider: "inline-data-or-blob",
+          });
+        })
+        .catch(() => {
+          if (!cancelled) setFailed(true);
+        });
+      return () => {
+        cancelled = true;
+      };
+    }
+
     const ordered = orderCandidatesByMemory("background", memoryKey, candidates);
 
     raceRemoteCandidates(ordered, (candidate) => preloadBackgroundImage(candidate.url), {

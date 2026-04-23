@@ -24,6 +24,7 @@ export function DesktopGridItemSiteBody({
   const invert = v === 1;
   const small = v === 2;
   const placeholder = v === 3;
+  const customIconDataUrl = item.site.customIconDataUrl;
 
   return (
     <div
@@ -49,10 +50,19 @@ export function DesktopGridItemSiteBody({
             : undefined
         }
       >
-        {placeholder ? (
+        {placeholder && !customIconDataUrl ? (
           <span className="text-[26px] font-medium leading-none text-gray-500" aria-hidden>
             ···
           </span>
+        ) : placeholder && customIconDataUrl ? (
+          <img
+            src={customIconDataUrl}
+            alt=""
+            className="h-[52px] w-[52px] object-contain"
+            width={52}
+            height={52}
+            draggable={false}
+          />
         ) : (
           <Favicon
             domain={item.site.domain}

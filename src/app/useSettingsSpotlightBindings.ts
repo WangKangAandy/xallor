@@ -2,18 +2,8 @@ import { useCallback, useMemo, type Dispatch, type SetStateAction } from "react"
 import type { LayoutMode } from "./preferences";
 import type { SiteItem } from "./components/desktopGridTypes";
 import type { AddIconSubmitPayload } from "./components/addIcon";
+import type { HiddenSpaceSettingsBinding } from "./hiddenSpace/hiddenSpaceSettingsBinding";
 import type { AppSettingsInitialSection } from "./useSettingsModalController";
-
-type HiddenSpaceBinding = {
-  isEnabled: boolean;
-  hiddenItems: SiteItem[];
-  isDev: boolean;
-  enableWithPassword: (password: string) => Promise<void>;
-  verifyPassword: (password: string) => Promise<boolean>;
-  clearAllAndDisable: () => void;
-  removeHiddenItemsByIds: (ids: string[]) => void;
-  resetFolderWarnedInDev: () => void;
-};
 
 type UseSettingsSpotlightBindingsParams = {
   isSettingsOpen: boolean;
@@ -23,7 +13,7 @@ type UseSettingsSpotlightBindingsParams = {
   setLayoutMode: (mode: LayoutMode) => void;
   openLinksInNewTab: boolean;
   setOpenLinksInNewTab: (value: boolean) => void;
-  hiddenSpace: HiddenSpaceBinding;
+  hiddenSpace: HiddenSpaceSettingsBinding;
   setRestoreQueue: Dispatch<SetStateAction<SiteItem[]>>;
   setSettingsAddQueue: Dispatch<SetStateAction<AddIconSubmitPayload[]>>;
 };

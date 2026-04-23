@@ -11,7 +11,7 @@ import { useSettingsSpotlightBindings } from "./useSettingsSpotlightBindings";
 
 type BindingsSnapshot = ReturnType<typeof useSettingsSpotlightBindings>;
 
-globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 function mountBindingsHarness(params?: { verifyOk?: boolean }) {
   const verifyOk = params?.verifyOk ?? true;

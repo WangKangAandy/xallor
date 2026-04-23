@@ -2,11 +2,11 @@
 
 本文档保持**简短**：记录仍值得跟进的缺口；**已完成的 v1/v2 工程项**见下文「归档指针」，不再逐条罗列。
 
-**当前阶段**：以**维护与重构**为主，优先**优化代码结构、边界与可测试性**，降低后续加交互/装饰层时的重构成本；不急于堆业务功能。
+**当前阶段**：并行两条线——**产品**：壁纸能力与**云端后台服务**（目录/收藏/同步等）为当前开发主轴；**工程**：结构、契约与可测试性继续按需收敛，**不阻塞**壁纸/云端功能迭代。
 
-**优先级说明**：下文 **「高」专指工程结构债务**（拖延会显著抬高日后重构代价）。**外链、弱网、资源策略**属于**体验与运行环境**，与「结构高优」分列，避免和可扩展性目标混淆。
+**优先级说明**：**「产品焦点」**下列为近期交付主线；**「高」仍专指工程结构/契约债务**（可与产品并行，但不必等产品做完再动）。体验类（弱网、资源策略）与结构高优分列。
 
-**排期说明**：下列「缺口」含**可持续跟进的工程项**与**面向未来的能力占位**（弱网、未来 API、上架等）；**未标注「紧迫」的不等于当前线上已有对应缺陷**，而是降低日后返工与体验风险的**提前约束**。
+**排期说明**：缺口中含**可持续工程项**与**能力占位**；未写「紧迫」不等于线上必有缺陷，多为降低返工与合规风险的**提前约束**。
 
 ---
 
@@ -22,78 +22,58 @@
 | 链接打开方式（v1） | [`notes/navigation-behavior-layer.md`](./notes/navigation-behavior-layer.md)；实现：`src/app/navigation/`、`useUiPreferences`（`xallor_ui_open_links_in_new_tab`）、`SearchBar` / 网格站点与文件夹 |
 | 隐藏图标空间（v1） | [`notes/hidden-icons-space-plan.md`](./notes/hidden-icons-space-plan.md)；实现：`src/app/hiddenSpace/useHiddenSpace.ts` + `SettingsSpotlightModal` 隐私空间流程 |
 | 空白区右键下载壁纸（v1） | [`notes/download-wallpaper-context-menu-plan.md`](./notes/download-wallpaper-context-menu-plan.md)；实现：`src/app/components/feedback/downloadWallpaper.ts`、`useGridBackgroundContextMenu.tsx` |
+| 设置 Spotlight 壳层与分区拆分（v1） | `SettingsSpotlightModal.tsx`（壳层编排）+ `SettingsSpotlightPanels.tsx` / `SettingsHiddenSpaceDialog.tsx` / `useHiddenSpaceDialogController.ts` / `useSettingsSectionRouting.ts`；账户分区 UI：`SettingsAccountPanel.tsx`（占位模型，无登录/同步业务） |
+| 设置搜索 MVP（v1） | [`notes/settings-search-implementation-plan.md`](./notes/settings-search-implementation-plan.md)；实现：`settingsSearch.ts`、`useSettingsSectionRouting.ts` |
+| App 编排首轮解耦（v1） | `src/app/appShell/`、`useAppContentController.ts` 及配套 hooks 单测；侧栏层测试通过 mock 收窄渲染面稳定 harness |
+| DesktopGrid 首轮拆分（v1，小步） | `DesktopGridDropZone.tsx`、`useDesktopGridItemMutations.ts`；**继续拆网格/整理态大块暂缓**，待壁纸/云端里程碑后再排 |
 
 ---
 
 ## 仍存在的缺口
 
-### 当前结构快照（2026-04）
+### 优先级总览（当前）
 
-- **设置域 P0 拆分已收尾**：`SettingsSpotlightModal.tsx` 已收敛为壳层编排；分区面板、隐私弹窗与状态逻辑已拆到独立组件/hook（`SettingsSpotlightPanels.tsx`、`SettingsHiddenSpaceDialog.tsx`、`useHiddenSpaceDialogController.ts`、`useSettingsSectionRouting.ts`）。**账户分区**已独立为 `SettingsAccountPanel.tsx`（当前为 UI + mock 模型占位，便于后续接登录态与云端同步字段映射）。
-- **App 编排层偏厚**：`App.tsx` 同时处理背景右键、下载壁纸、隐藏空间入口、全局消息提示、设置开关串联。
-- **网格主链路已拆出骨架，但仍是热点模块**：`DesktopGrid.tsx` 仍聚合 DnD、整理态与文件夹 Portal 交互。
-- **文档总体齐全，但状态漂移风险仍在**：已有计划与实现速度不一致，需持续清理“文档 TODO 与代码现状”偏差。
+| 层级 | 含义 | 当前做什么 |
+|------|------|-------------|
+| **产品焦点** | 近期交付主线 | **壁纸**（设置分区、列表/收藏、与页背景联动）+ **云端后台**（鉴权、API、同步与缓存策略） |
+| **高** | 结构热点与契约风险；可与产品并行 | 交互契约与整理态、E2E；`DesktopGrid` 热点治理（**大块拆分暂缓**） |
+| **中** | 体验与工程质量；可分期交付 | 搜索与设置搜索增强、多桌面挂载、Favicon/视觉 token、文档同步 |
+| **低** | 上架、合规、强依赖真实服务时 | Manifest/商店、账户与壁纸共用云端的鉴权与隐私文案、开放 URL 安全 |
 
-### 高（结构 / 可扩展，优先执行）
+### 当前产品焦点：壁纸与云端后台服务
 
-- **P0：设置模块瘦身（首要）**
-  - 目标：把 `SettingsSpotlightModal.tsx` 从“巨型组件”收敛为“壳层 + 分区路由”。
-  - 进度（已完成）：`general/privacy/appearance/about/widgets` 分区已迁出主文件；**`account`** 分区已接入独立面板 `SettingsAccountPanel`（纯展示与占位数据，不含登录/同步业务）。主文件职责集中为路由编排；隐私弹窗已独立为 `SettingsHiddenSpaceDialog`；新增 `useHiddenSpaceDialogController` 与 `useSettingsSectionRouting` 承接状态机与搜索路由，并已补齐 hook 级单测（`useHiddenSpaceDialogController.test.tsx`、`useSettingsSectionRouting.test.tsx`）；`SettingsSpotlightModal.test.tsx` 含账户分区渲染回归。
-  - 下一步（转 P1 优化）：在不影响交互稳定性的前提下，按需抽离设置域共享 UI primitives（如行级开关/滑杆）并评估跨面板复用边界。
-  - 约束：拆分不改变现有交互行为与 test id；每个拆分阶段都保持回归测试通过。
+- **目标（产品）**：用户可从**设置「壁纸」分区**（及与外观/背景的衔接）浏览或同步**云端壁纸库**；支持收藏、应用为当前新标签背景、多设备同步等能力按版本迭代；弱网/失败时有明确降级（本地图、缓存、文案）。
+- **现状（代码）**：设置内已有「壁纸」分区（图库/筛选/预览占位与本地上传**静态图**）；**动态/本地视频**尚未接入，方案见 [`notes/wallpaper-dynamic-local-and-cloud-plan.md`](./notes/wallpaper-dynamic-local-and-cloud-plan.md)。外观页壁纸块与空白区右键下载见 [`notes/download-wallpaper-context-menu-plan.md`](./notes/download-wallpaper-context-menu-plan.md)。
+- **云端与客户端边界（工程）**：网络与令牌逻辑放在 **`src/app/` 下独立模块**（如 `wallpaperCloud/` 或沿用将扩展的 `storage/repository` 读策略 + 薄 `client`），UI 面板只消费**已解析的模型**；与 **账户/会话**可共用同一后端域时，通过共享 session client 接入，避免在 `SettingsSpotlightModal` 内堆请求。
+- **建议交付顺序（可调整）**：① API 契约与错误模型（含未登录态）→ ② 只读列表/应用单张 → ③ 收藏与同步 → ④ 与账户设置/偏好与数据的展示对齐。落地过程中**补一篇**专项笔记（如 `docs/notes/wallpaper-cloud-service-plan.md`）记录端点、缓存键、同步冲突策略，并与本文档互链。
+- **与「低」档关系**：上架所需的权限说明、壁纸版权与外链策略，在接真实 CDN/API 时一并补齐。
 
-- **P0：设置搜索 MVP 落地**
-  - 方案文档：[`notes/settings-search-implementation-plan.md`](./notes/settings-search-implementation-plan.md)。
-  - 进度（已完成）：已接入受控输入、轻匹配、分区定位、无结果空态、搜索触发时浮层收口；实现入口：`settingsSearch.ts` + `useSettingsSectionRouting.ts`。
-  - 后续增强（非 P0）：结果高亮、关键词治理与排序优化、键盘候选导航。
+### 当前结构快照（简）
 
-- **P1：App 编排层解耦**
-  - 进度（本轮已完成子项）：已抽离背景菜单与下载行为（`useDesktopBackgroundActions.ts`）、全局提示状态机（`useAppMessageState.ts`）与提示弹窗分发容器（`AppMessageDialogs.tsx`）、隐藏请求领域逻辑（`useHideItemRequest.ts`）；设置弹窗打开/关闭与分区跳转指令已收敛为 `useSettingsModalController.ts`；`SettingsSpotlightModal` 入参已收敛为 `settingsState + settingsActions` 适配层（`useSettingsSpotlightBindings.ts`），并进一步由 `useSettingsDesktopIntegration.ts`、`useAppContentController.ts` 统一桥接到桌面网格与页面壳层；`App.tsx` 已从“内联流程实现”收敛为“依赖装配 + 渲染结构”。
-  - 回归保障：新增/更新单测覆盖上述拆分链路（`useDesktopBackgroundActions.test.ts`、`useAppMessageState.test.tsx`、`useHideItemRequest.test.ts`、`useSettingsModalController.test.tsx`、`useSettingsSpotlightBindings.test.tsx`、`useSettingsDesktopIntegration.test.tsx`、`App.sidebar-layer.test.tsx`）。
-  - 测试稳定性：`App.sidebar-layer.test.tsx` 已通过缩小渲染面（mock 非目标重组件）消除 `EnvironmentTeardownError` 噪声；判定为测试 harness 稳定性问题而非业务逻辑回归。
-  - 下一步（建议）：继续以 adapter 方式压缩设置域跨层传参（如将设置域内部回调组合为稳定动作集合），并在不改变交互语义前提下逐步降低 `App.tsx` 对设置细节的感知面。
-  - 目标：`App.tsx` 保留页面壳与跨域挂载，不再承载细粒度业务分支。
+- **`DesktopGrid` 继续小步拆分**：已抽出 DropZone 与 item mutations；**进一步拆整理态/大块暂缓**，优先保证壁纸/云端主线不被大范围重构牵制。
+- **App–设置跨层**：阶段 A/B（类型、`mainLayer`/`overlayLayer`、`openSettingsAt`）已落地；**进一步压缩传参属可选**，见 [`notes/app-settings-desktop-bridge.md`](./notes/app-settings-desktop-bridge.md)。
+- **文档与计划易漂移**：壁纸/云端每阶段合入后更新专项笔记与下表「相关文件」。
 
-- **P1：交互系统契约收敛**
-  - 蓝图：[`notes/interaction-system-blueprint.md`](./notes/interaction-system-blueprint.md)。
-  - 命中契约：[`notes/context-menu-surface-contract.md`](./notes/context-menu-surface-contract.md)。
-  - 当前焦点：整理态下右击退出的一致性规则 + E2E 边界回归。
+### 高（结构 / 契约；与产品并行）
 
-- **P1：整理模式开工前置治理（持续）**
-  - 前置文档：[`current-structural-gaps.md`](./current-structural-gaps.md)。
-  - 实施方案：[`arrange-mode-technical-plan.md`](./arrange-mode-technical-plan.md)。
-  - 重点：补齐批量移动与跨页手势回归，避免交互迭代时反复返工底层状态机。
+1. **交互系统契约**：[`notes/interaction-system-blueprint.md`](./notes/interaction-system-blueprint.md) + [`notes/context-menu-surface-contract.md`](./notes/context-menu-surface-contract.md)；整理态与右击、层级阻断保持一致，并补 E2E 边界回归。
+2. **整理模式深化**：[`current-structural-gaps.md`](./current-structural-gaps.md)、[`arrange-mode-technical-plan.md`](./arrange-mode-technical-plan.md)；批量移动、跨页手势与状态机回归。
+3. **（可选）App–设置跨层再收口**：仅在出现新的跨层传参痛点时深化；当前以桥接文档与 bundle 为准。
+4. **（可选）设置域 UI 原语**：确有重复再抽共享行；保持 test id 与交互语义不变。
 
 ### 中（体验与工程质量，跟进推进）
 
-- **搜索体验补全**
-  - 搜索输入联想（autocomplete/suggestion）与站内图标联想能力尚未实现。
-  - 自定义搜索引擎仅支持新增与选择，尚缺删除与回退兜底流程。
-
-- **设置搜索体验增强**
-  - 继续补全结果高亮与关键词维护机制，减少模糊输入下的跳转偏差。
-  - 保持一级分区定位模型，不再引入设置二级导航。
-
-- **多桌面挂载策略优化**
-  - 当前 `MultiDesktopStrip` 仍按页完整挂载 `DesktopGrid`。
-  - 目标方案：访问过缓存 + 未访问占位，平衡切换体验与内存占用。
-
-- **远程资源加载专项**
-  - 方案：[`favicon-load-optimization-plan.md`](./favicon-load-optimization-plan.md)。
-  - 已完成策略层与双 consumer 接入，待持续采样 p90 并固化阶段报告。
-
-- **视觉 token 统一**
-  - 继续推进毛玻璃与语义色收敛，见 [`glass-theme-unification-plan.md`](./glass-theme-unification-plan.md) 与 [`notes/add-icon-theme-refactor-plan.md`](./notes/add-icon-theme-refactor-plan.md)。
-  - 重点从“可用”转向“跨模块一致性与可维护性”。
-
-- **文档与代码一致性治理（新增）**
-  - 每次功能落地后同步更新对应计划文档状态，避免 roadmap 与实现偏离。
-  - 汇总入口：`docs/notes/docs-todo-audit-2026-04-22.md`（按阶段持续更新）。
+- **主搜索体验**：输入联想、站内图标联想；自定义搜索引擎删除与回退兜底。
+- **设置搜索增强**：结果高亮、关键词治理与排序；仍保持一级分区定位（不设二级导航）。
+- **多桌面挂载**：`MultiDesktopStrip` 全页挂载 `DesktopGrid` → 访问缓存 + 未访问占位，平衡内存与切换体验。
+- **远程资源**：[`favicon-load-optimization-plan.md`](./favicon-load-optimization-plan.md) 策略与双 consumer 已接，**后续**固化 p90 采样与阶段结论。
+- **视觉 token**：[`glass-theme-unification-plan.md`](./glass-theme-unification-plan.md)、[`notes/add-icon-theme-refactor-plan.md`](./notes/add-icon-theme-refactor-plan.md) 跨模块一致化。
+- **文档一致性**：功能合入时同步计划文与 `docs/notes/docs-todo-audit-2026-04-22.md`。
 
 ### 低（多在上架或接真实数据时）
 
 - Manifest `icons`、商店素材；天气等接 API 时的权限与隐私文案。
-- **设置 - 账户（后续能力）**：当前仅 UI 与 `AccountPanelModel` 占位；后续需接入认证会话、设备列表、同步状态与冲突策略时，建议在 `src/app/` 下增设账户域 hook 或轻量 client（与 `SettingsAccountPanel` 解耦），避免把网络与令牌逻辑写进面板组件。
+- **设置 - 账户（业务层）**：在 `SettingsAccountPanel` 之外增加账户域 hook / client；若壁纸收藏/同步与登录态绑定，**与云端壁纸共用会话层**，避免两套 token。
 - **安全**：自定义搜索引擎 URL 若完全开放，需防开放重定向（上架相关）。
 
 ---
@@ -121,10 +101,13 @@
 | [`favicon-load-optimization-plan.md`](./favicon-load-optimization-plan.md) | 远程资源策略层（Favicon 首期）与缓存/加载加速计划 |
 | [`notes/hidden-icons-space-plan.md`](./notes/hidden-icons-space-plan.md) | 隐藏图标空间：开启/关闭状态机、密码流程、批量操作与极简模式约束 |
 | [`notes/settings-search-implementation-plan.md`](./notes/settings-search-implementation-plan.md) | 设置搜索：索引模型、匹配与定位策略、分阶段交付与测试清单 |
+| [`notes/app-settings-desktop-bridge.md`](./notes/app-settings-desktop-bridge.md) | App、设置弹层与桌面队列（恢复/添加）数据流与类型约定 |
 | [`../src/app/components/SettingsAccountPanel.tsx`](../src/app/components/SettingsAccountPanel.tsx) | 设置 - 账户分区 UI（占位模型；后续接云同步 / 会话） |
 | [`notes/context-menu-surface-contract.md`](./notes/context-menu-surface-contract.md) | 右键命中契约：实体优先、最近命中优先、空白兜底与输入语义保留 |
 | [`notes/interaction-system-blueprint.md`](./notes/interaction-system-blueprint.md) | 交互系统蓝图：命中层、阻断层、状态层与跨文档约束关系 |
 | [`notes/download-wallpaper-context-menu-plan.md`](./notes/download-wallpaper-context-menu-plan.md) | 空白区右键“下载壁纸”：媒体无关下载、回退策略、负向测试与实施步骤 |
+| [`notes/wallpaper-dynamic-local-and-cloud-plan.md`](./notes/wallpaper-dynamic-local-and-cloud-plan.md) | 动态壁纸：本地视频/云端媒体类型、IDB 与渲染管线、与现有静态 Data URL 的兼容与分阶段交付 |
+| （待建）[`notes/wallpaper-cloud-service-plan.md`](./notes/wallpaper-cloud-service-plan.md) | 云端壁纸 API、鉴权、缓存与同步冲突、与设置「壁纸」分区及页背景的契约（文件落地后与本文档互链） |
 | [`minimal-layout-mode.md`](./minimal-layout-mode.md) | 极简布局模式：主区仅搜索、侧栏不变；`layoutMode` 与分层约定 |
 | [`notes/navigation-behavior-layer.md`](./notes/navigation-behavior-layer.md) | 外链打开方式：`openExternalUrlImpl`、`useOpenExternalUrl`、存储与整理边界 |
 | [`package.json`](../package.json) | `build` / `typecheck` / `lint` / `test:run` |

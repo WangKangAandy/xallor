@@ -9,7 +9,7 @@ import { useSettingsModalController } from "./useSettingsModalController";
 
 type ControllerSnapshot = ReturnType<typeof useSettingsModalController>;
 
-globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 function mountSettingsModalControllerHarness() {
   let latest: ControllerSnapshot | null = null;
@@ -91,6 +91,21 @@ describe("useSettingsModalController", () => {
     });
     expect(harness.getLatest().isSettingsOpen).toBe(false);
     expect(harness.getLatest().settingsInitialSection).toBe("widgets");
+    harness.cleanup();
+  });
+
+  /**
+   * 目的：`openSettingsAt` 作为统一入口，便于深链与分区扩展（如 account）不新增平行 API。
+   * 前置：调用 `openSettingsAt("account")`。
+   * 预期：打开且初始分区为 account。
+   */
+  it("should_open_account_section_when_open_settings_at_account_called", () => {
+    const harness = mountSettingsModalControllerHarness();
+    act(() => {
+      harness.getLatest().openSettingsAt("account");
+    });
+    expect(harness.getLatest().isSettingsOpen).toBe(true);
+    expect(harness.getLatest().settingsInitialSection).toBe("account");
     harness.cleanup();
   });
 });

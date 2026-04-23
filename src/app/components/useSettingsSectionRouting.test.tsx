@@ -10,7 +10,7 @@ import { useSettingsSectionRouting } from "./useSettingsSectionRouting";
 type RoutingSnapshot = ReturnType<typeof useSettingsSectionRouting>;
 
 // React 18 act() warning suppression for createRoot-based hook harness.
-globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 function mountRoutingHarness(initialOpen = true, initialSection: "general" | "privacy" = "general") {
   let latest: RoutingSnapshot | null = null;

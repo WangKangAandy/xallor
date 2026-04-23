@@ -1,10 +1,14 @@
 import { DEFAULT_NEW_TAB_BACKGROUND_URL, RemoteBackgroundImage } from "../components/feedback";
 import { GlassSurface } from "../components/shared/GlassSurface";
+import { useUserLocalAssets } from "../localUpload";
 
 export function AppBackgroundLayer() {
+  const { wallpaperDataUrl } = useUserLocalAssets();
+  const backgroundSrc = wallpaperDataUrl ?? DEFAULT_NEW_TAB_BACKGROUND_URL;
+
   return (
     <div className="absolute inset-0">
-      <RemoteBackgroundImage src={DEFAULT_NEW_TAB_BACKGROUND_URL} />
+      <RemoteBackgroundImage src={backgroundSrc} />
       <GlassSurface
         variant="pageVeil"
         rounded="none"

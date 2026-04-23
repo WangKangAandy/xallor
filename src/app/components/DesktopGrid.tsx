@@ -1,12 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useDrop } from "react-dnd";
 import { GridAddSlotCell } from "./addIcon";
 import { DesktopGridItem } from "./DesktopGridItem";
 import { DesktopGridFolderPortal } from "./DesktopGridFolderPortal";
-import type { GridItemType, GridShape, FolderItem } from "./desktopGridTypes";
+import { DesktopGridDropZone } from "./DesktopGridDropZone";
+import type { GridItemType, FolderItem } from "./desktopGridTypes";
 import type { GridDnDDragItem } from "./desktopGridDnDTypes";
 import { GRID_CELL_SIZE, GRID_GAP } from "./desktopGridConstants";
-import { removeGridItemById, removeSiteFromFolderByUrl } from "./desktopGridItemActions";
 import { useGridDnD } from "./useGridDnD";
 import type { ArrangeSessionController } from "./arrange/useArrangeSession";
 import { createFolderSiteArrangeId } from "./arrange/arrangeItemIds";
@@ -23,6 +22,7 @@ import {
   type WidgetPageLayoutState,
 } from "./widgets/layoutSchema";
 import { useAppI18n } from "../i18n/AppI18n";
+import { useDesktopGridItemMutations } from "./useDesktopGridItemMutations";
 
 export type DesktopGridProps = {
   pageId?: string;
@@ -41,40 +41,6 @@ export type DesktopGridProps = {
   onHideItem?: (id: string) => void;
   onOpenAddFromDesktop?: () => void;
 };
-
-function GridDropZone({
-  onDropEmpty,
-  gridId,
-  onDropZoneRef,
-  children,
-}: {
-  onDropEmpty: (item: unknown) => void;
-  gridId?: string;
-  onDropZoneRef?: (el: HTMLDivElement | null) => void;
-  children: React.ReactNode;
-}) {
-  const [, drop] = useDrop({
-    accept: "ITEM",
-    drop: (item, monitor) => {
-      if (monitor.didDrop()) return;
-      onDropEmpty(item);
-    },
-  });
-
-  return (
-    <div
-      data-testid="desktop-grid-dropzone"
-      data-arrange-grid-id={gridId}
-      ref={(node) => {
-        drop(node);
-        onDropZoneRef?.(node);
-      }}
-      className="w-full h-full min-h-[500px]"
-    >
-      {children}
-    </div>
-  );
-}
 
 export function DesktopGrid({
   pageId,
@@ -115,62 +81,8 @@ export function DesktopGrid({
   const dropZoneRef = useRef<HTMLDivElement | null>(null);
   const gridRef = useRef<HTMLDivElement | null>(null);
 
-  const handleRename = useCallback(
-    (id: string, newName: string) => {
-      setItems((prev) =>
-        prev.map((item) => {
-          if (item.id === id) {
-            if (item.type === "site") {
-              return { ...item, site: { ...item.site, name: newName } };
-            }
-            if (item.type === "folder") {
-              return { ...item, name: newName };
-            }
-          }
-          return item;
-        }),
-      );
-    },
-    [setItems],
-  );
-
-  const handleRenameInnerItem = useCallback(
-    (folderId: string, siteUrl: string, newName: string) => {
-      setItems((prev) =>
-        prev.map((item) => {
-          if (item.type === "folder" && item.id === folderId) {
-            return {
-              ...item,
-              sites: item.sites.map((site) => (site.url === siteUrl ? { ...site, name: newName } : site)),
-            };
-          }
-          return item;
-        }),
-      );
-    },
-    [setItems],
-  );
-  const handleDeleteInnerItem = useCallback(
-    (folderId: string, siteUrl: string) => {
-      setItems((prev) => removeSiteFromFolderByUrl(prev, folderId, siteUrl));
-    },
-    [setItems],
-  );
-
-  const handleResize = useCallback(
-    (id: string, newShape: GridShape) => {
-      setItems((prev) => prev.map((item) => (item.id === id ? { ...item, shape: newShape } : item)));
-    },
-    [setItems],
-  );
-
-  const handleDeleteItem = useCallback(
-    (id: string) => {
-      setItems((prev) => removeGridItemById(prev, id));
-      setOpenFolderId((cur) => (cur === id ? null : cur));
-    },
-    [setItems],
-  );
+  const { handleRename, handleRenameInnerItem, handleDeleteInnerItem, handleResize, handleDeleteItem } =
+    useDesktopGridItemMutations(setItems, setOpenFolderId);
   const handleDeleteSelectedInArrangeMode = useCallback(() => {
     if (!arrangeSession.state.isArrangeMode || arrangeSession.state.selectedIds.size === 0) return;
     setItems((prev) => deleteItemsByArrangeSelection(prev, arrangeSession.state.selectedIds));
@@ -278,7 +190,7 @@ export function DesktopGrid({
           />
         </div>
       ) : null}
-      <GridDropZone
+      <DesktopGridDropZone
         onDropEmpty={(item) => handleDropItem(item as GridDnDDragItem, "GRID_END", false)}
         gridId={pageId}
         onDropZoneRef={(el) => {
@@ -385,7 +297,7 @@ export function DesktopGrid({
             </div>
           </div>
         </div>
-      </GridDropZone>
+      </DesktopGridDropZone>
 
       {openFolder && (
         <DesktopGridFolderPortal

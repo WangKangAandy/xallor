@@ -4,7 +4,6 @@ import { useAppI18n, type AppLocale } from "../i18n/AppI18n";
 import { useOpenExternalUrl } from "../navigation";
 import { useUiPreferences, type LayoutMode } from "../preferences";
 import aboutContent from "../config/about-content.json";
-import { DEFAULT_NEW_TAB_BACKGROUND_URL } from "./feedback";
 import { AddIconPanelContent, type AddIconSubmitPayload } from "./addIcon";
 import { SegmentedControl } from "./shared/SegmentedControl";
 import { getSearchEngineDisplayName, type SearchEngine } from "../search/searchEngineRegistry";
@@ -115,12 +114,10 @@ function SettingsRangeRow({
   );
 }
 
-/** 外观页：主题与布局走 `UiPreferences`；其余控件仍为本地示意，可后续接入 preferences。 */
+/** 外观页：主题与布局走 `UiPreferences`；壁纸请使用侧栏「壁纸」分区。 */
 export function SettingsAppearancePanel({ mainBodyClassName, layoutMode, onLayoutModeChange }: SettingsAppearancePanelProps) {
   const { t } = useAppI18n();
   const { colorScheme, setColorScheme, gridItemNamesVisible, setGridItemNamesVisible } = useUiPreferences();
-  const { wallpaperDataUrl, setWallpaperDataUrl } = useUserLocalAssets();
-  const [wallpaperUploadMessage, setWallpaperUploadMessage] = useState<string | null>(null);
   const [gridColumns, setGridColumns] = useState(6);
   const [gridRows, setGridRows] = useState(2);
   const [iconSize, setIconSize] = useState<"small" | "medium" | "large">("medium");
@@ -129,19 +126,11 @@ export function SettingsAppearancePanel({ mainBodyClassName, layoutMode, onLayou
   const [minimalShowQuickActions, setMinimalShowQuickActions] = useState(true);
   const [minimalContentWidth, setMinimalContentWidth] = useState<"narrow" | "standard" | "wide">("standard");
 
-  const wallpaperPreviewSrc = wallpaperDataUrl ?? DEFAULT_NEW_TAB_BACKGROUND_URL;
-
-  useEffect(() => {
-    if (!wallpaperUploadMessage) return;
-    const id = window.setTimeout(() => setWallpaperUploadMessage(null), 4500);
-    return () => window.clearTimeout(id);
-  }, [wallpaperUploadMessage]);
-
   return (
     <div className={mainBodyClassName}>
       <div className="min-w-0 space-y-4 overflow-hidden rounded-2xl border border-slate-200/70 bg-white/72 p-4 dark:border-slate-600/60 dark:bg-slate-800/75">
         <div className="min-w-0">
-          <div className="text-sm font-medium">{t("settings.appearanceTheme")}</div>
+          <div className="text-sm font-medium text-slate-900 dark:text-slate-100">{t("settings.appearanceTheme")}</div>
           <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("settings.appearanceThemeHint")}</div>
         </div>
         <SegmentedControl<"light" | "dark" | "system">
@@ -158,55 +147,7 @@ export function SettingsAppearancePanel({ mainBodyClassName, layoutMode, onLayou
 
       <div className="min-w-0 space-y-4 overflow-hidden rounded-2xl border border-slate-200/70 bg-white/72 p-4 dark:border-slate-600/60 dark:bg-slate-800/75">
         <div className="min-w-0">
-          <div className="text-sm font-medium">{t("settings.appearanceWallpaper")}</div>
-          <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("settings.appearanceWallpaperHint")}</div>
-        </div>
-        <div className="relative mx-auto aspect-[5/2] w-full max-w-[280px] overflow-hidden rounded-xl border border-slate-200/80 bg-slate-100/50 shadow-inner dark:border-slate-600/60 dark:bg-slate-900/50">
-          <img
-            src={wallpaperPreviewSrc}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover"
-            width={280}
-            height={112}
-            draggable={false}
-          />
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <LocalFileUploadButton
-            className="rounded-lg border border-slate-200 bg-white/85 px-3 py-2 text-xs font-medium text-slate-700 shadow-sm transition-colors hover:bg-white dark:border-slate-600 dark:bg-slate-700/90 dark:text-slate-100 dark:hover:bg-slate-600/90"
-            onPick={({ dataUrl }) => {
-              setWallpaperUploadMessage(null);
-              setWallpaperDataUrl(dataUrl);
-            }}
-            onPickError={(reason) => {
-              const key = mapPickFailureToMessageKey(reason);
-              setWallpaperUploadMessage(key ? t(key) : null);
-            }}
-          >
-            {t("settings.appearancePickWallpaper")}
-          </LocalFileUploadButton>
-          <button
-            type="button"
-            disabled={!wallpaperDataUrl}
-            className="rounded-lg border border-slate-200 bg-white/60 px-3 py-2 text-xs font-medium text-slate-600 shadow-sm transition-colors hover:bg-white enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-700/90"
-            onClick={() => {
-              setWallpaperUploadMessage(null);
-              setWallpaperDataUrl(null);
-            }}
-          >
-            {t("settings.appearanceResetWallpaper")}
-          </button>
-        </div>
-        {wallpaperUploadMessage ? (
-          <div className="text-xs text-amber-700 dark:text-amber-300" role="status">
-            {wallpaperUploadMessage}
-          </div>
-        ) : null}
-      </div>
-
-      <div className="min-w-0 space-y-4 overflow-hidden rounded-2xl border border-slate-200/70 bg-white/72 p-4 dark:border-slate-600/60 dark:bg-slate-800/75">
-        <div className="min-w-0">
-          <div className="text-base font-semibold">{t("settings.layoutConfigTitle")}</div>
+          <div className="text-sm font-medium text-slate-900 dark:text-slate-100">{t("settings.layoutConfigTitle")}</div>
           <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("settings.layoutConfigDesc")}</div>
         </div>
         <div className="rounded-xl border border-slate-200/70 bg-slate-50/70 p-3 dark:border-slate-600/70 dark:bg-slate-700/35">

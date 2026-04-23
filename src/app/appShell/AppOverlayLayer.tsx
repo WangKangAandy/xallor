@@ -1,18 +1,9 @@
 import { AppMessageDialogs } from "../components/AppMessageDialogs";
 import { SettingsSpotlightModal } from "../components/SettingsSpotlightModal";
 import { useAppI18n } from "../i18n/AppI18n";
-import type { AppContentController } from "../useAppContentController";
+import type { AppOverlayLayerBundle } from "../useAppContentController";
 
-type AppOverlayLayerProps = Pick<
-  AppContentController,
-  | "settingsState"
-  | "settingsActions"
-  | "appMessage"
-  | "clearMessage"
-  | "openSettingsPrivacy"
-  | "resolveFolderHideConfirm"
-  | "desktopBackgroundMenuPortal"
->;
+export type AppOverlayLayerProps = AppOverlayLayerBundle;
 
 export function AppOverlayLayer({
   settingsState,

@@ -16,10 +16,10 @@ export function useAppContentController({ hiddenSpaceEnableHintMessage }: UseApp
   const [isCustomContextMenuEnabled, setIsCustomContextMenuEnabled] = useState(true);
   const {
     isSettingsOpen,
+    openSettingsAt,
     openSettingsDefault,
     openSettingsPrivacy,
     openSettingsWidgets,
-    openSettingsWallpaper,
     settingsInitialSection,
     closeSettings,
   } = useSettingsModalController();
@@ -42,9 +42,15 @@ export function useAppContentController({ hiddenSpaceEnableHintMessage }: UseApp
     requestFolderHideConfirm,
     resolveFolderHideConfirm,
   } = useAppMessageState();
+  const openWidgetsFromBackground = useCallback(() => {
+    openSettingsAt("widgets");
+  }, [openSettingsAt]);
+  const openWallpaperFromBackground = useCallback(() => {
+    openSettingsAt("wallpaper");
+  }, [openSettingsAt]);
   const { onDesktopBackgroundContextMenu, desktopBackgroundMenuPortal } = useDesktopBackgroundActions({
-    onOpenAddSiteOrComponent: openSettingsWidgets,
-    onOpenWallpaperSettings: openSettingsWallpaper,
+    onOpenAddSiteOrComponent: openWidgetsFromBackground,
+    onOpenWallpaperSettings: openWallpaperFromBackground,
     onShowAlert: showAlert,
   });
   const onRequestHideItem = useHideItemRequest({
@@ -78,30 +84,69 @@ export function useAppContentController({ hiddenSpaceEnableHintMessage }: UseApp
     setIsCustomContextMenuEnabled(!isArrangeMode);
   }, []);
 
+  const mainLayer = useMemo(
+    () => ({
+      isSettingsOpen,
+      openSettingsDefault,
+      openSettingsWidgets,
+      effectiveSidebarLayout,
+      gridItemNamesVisible,
+      capabilities,
+      onDesktopBackgroundContextMenu,
+      onRequestHideItem,
+      restoreItems,
+      pendingAddPayloads,
+      onAddPayloadsConsumed,
+      onRestoreApplied,
+      isCustomContextMenuEnabled,
+      onArrangeModeChange,
+    }),
+    [
+      isSettingsOpen,
+      openSettingsDefault,
+      openSettingsWidgets,
+      effectiveSidebarLayout,
+      gridItemNamesVisible,
+      capabilities,
+      onDesktopBackgroundContextMenu,
+      onRequestHideItem,
+      restoreItems,
+      pendingAddPayloads,
+      onAddPayloadsConsumed,
+      onRestoreApplied,
+      isCustomContextMenuEnabled,
+      onArrangeModeChange,
+    ],
+  );
+
+  const overlayLayer = useMemo(
+    () => ({
+      settingsState,
+      settingsActions,
+      appMessage,
+      clearMessage,
+      openSettingsPrivacy,
+      resolveFolderHideConfirm,
+      desktopBackgroundMenuPortal,
+    }),
+    [
+      settingsState,
+      settingsActions,
+      appMessage,
+      clearMessage,
+      openSettingsPrivacy,
+      resolveFolderHideConfirm,
+      desktopBackgroundMenuPortal,
+    ],
+  );
+
   return {
-    isSettingsOpen,
-    openSettingsDefault,
-    openSettingsPrivacy,
-    openSettingsWidgets,
-    effectiveSidebarLayout,
-    gridItemNamesVisible,
-    capabilities,
-    onDesktopBackgroundContextMenu,
-    desktopBackgroundMenuPortal,
-    onRequestHideItem,
-    settingsState,
-    settingsActions,
-    restoreItems,
-    pendingAddPayloads,
-    onAddPayloadsConsumed,
-    onRestoreApplied,
-    isCustomContextMenuEnabled,
-    onArrangeModeChange,
-    appMessage,
-    clearMessage,
-    resolveFolderHideConfirm,
+    mainLayer,
+    overlayLayer,
   };
 }
 
 export type AppContentController = ReturnType<typeof useAppContentController>;
+export type AppMainLayerBundle = AppContentController["mainLayer"];
+export type AppOverlayLayerBundle = AppContentController["overlayLayer"];
 export type AppOnRequestHideItem = (item: GridItemType) => Promise<boolean>;

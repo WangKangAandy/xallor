@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { normalizeSiteUrlInput, safeDomainFromUrl } from "./addIconSubmitPayload";
+import {
+  normalizeSiteUrlInput,
+  safeDomainFromUrl,
+  toCustomIconFailureMessageKey,
+} from "./addIconSubmitPayload";
 
 describe("addIconSubmitPayload helpers", () => {
   /**
@@ -14,5 +18,16 @@ describe("addIconSubmitPayload helpers", () => {
    */
   it("should_normalize_scheme_when_normalizeSiteUrlInput_omits_protocol", () => {
     expect(normalizeSiteUrlInput("github.com", "https://fallback.dev")).toBe("https://github.com");
+  });
+
+  /**
+   * 目的：本地图标上传失败时，错误文案应映射到统一 i18n key，避免分支漏提示。
+   */
+  it("should_map_failure_reason_to_message_key_when_custom_icon_upload_fails", () => {
+    expect(toCustomIconFailureMessageKey("too_large")).toBe("localUpload.errorTooLarge");
+    expect(toCustomIconFailureMessageKey("bad_type")).toBe("localUpload.errorBadType");
+    expect(toCustomIconFailureMessageKey("read_failed")).toBe("localUpload.errorReadFailed");
+    expect(toCustomIconFailureMessageKey("stored_too_large")).toBe("localUpload.errorStoredTooLarge");
+    expect(toCustomIconFailureMessageKey("no_file")).toBeNull();
   });
 });

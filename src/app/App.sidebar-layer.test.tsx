@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 let mockedResting = false;
 let triggerArrangeModeChange: ((isArrangeMode: boolean) => void) | null = null;
-globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 vi.mock("./useRestModeController", () => ({
   useRestModeController: () => ({

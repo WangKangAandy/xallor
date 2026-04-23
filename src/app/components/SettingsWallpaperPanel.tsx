@@ -214,17 +214,16 @@ export function SettingsWallpaperPanel({ mainBodyClassName }: SettingsWallpaperP
                           : "border-slate-200/90 hover:border-cyan-400/40 dark:border-slate-600/80 dark:hover:border-cyan-500/40"
                       }`}
                     >
-                      <div className={`aspect-[4/3] w-full bg-gradient-to-br ${item.gradientClass}`} />
-                      <span className="absolute left-1.5 top-1.5 rounded bg-black/40 px-1 py-0.5 text-[9px] font-medium uppercase text-white/90">
-                        {item.kind === "dynamic" ? t("settings.wallpaperKindDynamic") : t("settings.wallpaperKindStatic")}
-                      </span>
+                      <div className={`aspect-video w-full bg-gradient-to-br ${item.gradientClass}`} />
                       <button
                         type="button"
                         aria-label={fav ? t("settings.wallpaperRemoveFavorite") : t("settings.wallpaperAddToFavorites")}
-                        className="absolute right-1.5 top-1.5 rounded-full bg-black/45 p-1 text-white/90 backdrop-blur-sm transition hover:bg-black/60"
+                        className="absolute right-1 top-1 rounded-sm p-1 text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-0"
                         onClick={(e) => toggleFavorite(item.id, e)}
                       >
-                        <Heart className={`h-3.5 w-3.5 ${fav ? "fill-rose-400 text-rose-400" : ""}`} />
+                        <Heart
+                          className={`h-3.5 w-3.5 drop-shadow-[0_1px_2px_rgb(0_0_0/0.45)] ${fav ? "fill-rose-400 text-rose-400" : "stroke-2"}`}
+                        />
                       </button>
                     </button>
                   </li>
@@ -245,8 +244,8 @@ export function SettingsWallpaperPanel({ mainBodyClassName }: SettingsWallpaperP
           className="flex w-full min-w-0 flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white/85 p-4 shadow-lg backdrop-blur-md dark:border-cyan-500/20 dark:bg-slate-950/70 dark:shadow-[0_0_32px_-10px_rgba(34,211,238,0.35)] lg:grow-0 lg:shrink lg:basis-[min(280px,40%)] lg:max-w-[min(320px,44%)]"
           aria-label={t("settings.wallpaperPreviewPanelTitle")}
         >
-          <div className="relative mx-auto w-full max-w-full min-w-0 overflow-hidden rounded-xl border border-slate-200/60 shadow-inner dark:border-cyan-500/20 sm:max-w-[240px]">
-            <div className="aspect-[3/4] w-full bg-slate-200 dark:bg-slate-900">
+          <div className="relative mx-auto w-full max-w-full min-w-0 overflow-hidden rounded-xl border border-slate-200/60 shadow-inner dark:border-cyan-500/20 sm:max-w-[min(100%,360px)]">
+            <div className="aspect-video w-full bg-slate-200 dark:bg-slate-900">
               <div className={`h-full w-full bg-gradient-to-br ${selected.gradientClass}`} />
             </div>
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />

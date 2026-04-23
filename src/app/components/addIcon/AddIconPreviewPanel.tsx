@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link2, X } from "lucide-react";
+import { Link2, Plus, X } from "lucide-react";
 import { FaviconIcon } from "../shared/FaviconIcon";
 import { LocalFileUploadButton } from "../localUpload/LocalFileUploadButton";
 import type { AddIconCatalogEntry } from "./addIconCatalog";
@@ -61,8 +61,8 @@ function SitePreviewHeaderIcon(props: {
   const { variant, domain, displayName, customIconDataUrl } = props;
   if (variant === 3 && !customIconDataUrl) {
     return (
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-dashed border-[color:var(--add-icon-surface-border)] bg-[color:var(--add-icon-surface-subtle)] text-sm font-medium text-muted-foreground">
-        ···
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-dashed border-[color:var(--add-icon-surface-border)] bg-[color:var(--add-icon-surface-subtle)] text-muted-foreground">
+        <Plus className="h-4 w-4" strokeWidth={2} aria-hidden />
       </div>
     );
   }
@@ -105,9 +105,9 @@ function SitePreviewHeroIcon(props: {
   if (variant === 3 && !customIconDataUrl) {
     return (
       <div
-        className={`${SITE_PREVIEW_HERO_SLOT} border border-dashed border-[color:var(--add-icon-surface-border)] bg-[color:var(--add-icon-surface-subtle)] text-2xl font-medium text-muted-foreground`}
+        className={`${SITE_PREVIEW_HERO_SLOT} border border-dashed border-[color:var(--add-icon-surface-border)] bg-[color:var(--add-icon-surface-subtle)] text-muted-foreground`}
       >
-        ···
+        <Plus className="h-9 w-9" strokeWidth={1.75} aria-hidden />
       </div>
     );
   }
@@ -309,83 +309,66 @@ export function AddIconPreviewPanel({
                   <p id="add-icon-site-icon-label" className="text-xs font-medium text-muted-foreground">
                     {t("addIcon.fieldIcon")}
                   </p>
-                  <div
-                    className="mt-1.5 flex flex-wrap gap-2"
-                    role="radiogroup"
-                    aria-labelledby="add-icon-site-icon-label"
-                  >
-                    <button
-                      type="button"
-                      role="radio"
-                      aria-checked={siteIconVariant === 0}
-                      aria-label={t("addIcon.iconColor")}
-                      onClick={() => setSiteIconVariant(0)}
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[color:var(--add-icon-surface-raised)] p-1 transition-colors ${siteIconOptionClasses(siteIconVariant === 0, "default")}`}
+                  <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                    <div
+                      className="flex flex-wrap gap-2"
+                      role="radiogroup"
+                      aria-labelledby="add-icon-site-icon-label"
                     >
-                      <FaviconIcon domain={sitePreviewDomain} name={siteDisplayName} size={28} />
-                    </button>
-                    <button
-                      type="button"
-                      role="radio"
-                      aria-checked={siteIconVariant === 1}
-                      aria-label={t("addIcon.iconInverted")}
-                      onClick={() => setSiteIconVariant(1)}
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-foreground p-1 hover:bg-foreground/90 ${siteIconOptionClasses(siteIconVariant === 1, "dark")}`}
-                    >
-                      <FaviconIcon
-                        domain={sitePreviewDomain}
-                        name={siteDisplayName}
-                        size={28}
-                        className="brightness-0 invert"
-                      />
-                    </button>
-                    <button
-                      type="button"
-                      role="radio"
-                      aria-checked={siteIconVariant === 2}
-                      aria-label={t("addIcon.iconSmall")}
-                      onClick={() => setSiteIconVariant(2)}
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[color:var(--add-icon-surface-raised)] p-1 ${siteIconOptionClasses(siteIconVariant === 2, "default")}`}
-                    >
-                      <FaviconIcon domain={sitePreviewDomain} name={siteDisplayName} size={22} />
-                    </button>
-                    <button
-                      type="button"
-                      role="radio"
-                      aria-checked={siteIconVariant === 3}
-                      aria-label={t("addIcon.iconMore")}
-                      onClick={() => setSiteIconVariant(3)}
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[color:var(--add-icon-surface-subtle)] text-lg font-medium text-muted-foreground transition-colors hover:bg-[color:var(--add-icon-surface-raised-hover)] ${siteIconOptionClasses(siteIconVariant === 3, "more")}`}
-                    >
-                      ···
-                    </button>
-                  </div>
-                  {siteIconVariant === 3 ? (
-                    <div className="mt-2.5 flex flex-wrap items-center gap-2">
-                      <LocalFileUploadButton
-                        className="rounded-lg border border-border bg-secondary px-2.5 py-1.5 text-xs font-medium text-secondary-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-                        onPick={({ dataUrl }) => {
-                          setSiteCustomIconDataUrl(dataUrl);
-                          setCustomIconError(null);
-                        }}
-                        onPickError={handleCustomIconUploadError}
-                      >
-                        {t("addIcon.uploadCustomIcon")}
-                      </LocalFileUploadButton>
                       <button
                         type="button"
-                        className="rounded-lg border border-[color:var(--add-icon-surface-border)] bg-[color:var(--add-icon-surface-subtle)] px-2.5 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-[color:var(--add-icon-surface-raised-hover)]"
-                        disabled={!siteCustomIconDataUrl}
-                        onClick={() => {
-                          setSiteCustomIconDataUrl(null);
-                          setCustomIconError(null);
-                        }}
+                        role="radio"
+                        aria-checked={siteIconVariant === 0}
+                        aria-label={t("addIcon.iconColor")}
+                        onClick={() => setSiteIconVariant(0)}
+                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[color:var(--add-icon-surface-raised)] p-1 transition-colors ${siteIconOptionClasses(siteIconVariant === 0, "default")}`}
                       >
-                        {t("addIcon.resetCustomIcon")}
+                        <FaviconIcon domain={sitePreviewDomain} name={siteDisplayName} size={28} />
                       </button>
-                      {customIconError ? <p className="w-full text-xs text-amber-700">{customIconError}</p> : null}
+                      <button
+                        type="button"
+                        role="radio"
+                        aria-checked={siteIconVariant === 1}
+                        aria-label={t("addIcon.iconInverted")}
+                        onClick={() => setSiteIconVariant(1)}
+                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-foreground p-1 hover:bg-foreground/90 ${siteIconOptionClasses(siteIconVariant === 1, "dark")}`}
+                      >
+                        <FaviconIcon
+                          domain={sitePreviewDomain}
+                          name={siteDisplayName}
+                          size={28}
+                          className="brightness-0 invert"
+                        />
+                      </button>
+                      <button
+                        type="button"
+                        role="radio"
+                        aria-checked={siteIconVariant === 2}
+                        aria-label={t("addIcon.iconSmall")}
+                        onClick={() => setSiteIconVariant(2)}
+                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[color:var(--add-icon-surface-raised)] p-1 ${siteIconOptionClasses(siteIconVariant === 2, "default")}`}
+                      >
+                        <FaviconIcon domain={sitePreviewDomain} name={siteDisplayName} size={22} />
+                      </button>
                     </div>
-                  ) : null}
+                    <LocalFileUploadButton
+                      aria-label={t("addIcon.uploadCustomIcon")}
+                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[color:var(--add-icon-surface-subtle)] text-muted-foreground transition-colors hover:bg-[color:var(--add-icon-surface-raised-hover)] ${siteIconOptionClasses(siteIconVariant === 3 && Boolean(siteCustomIconDataUrl), "more")}`}
+                      onPick={({ dataUrl }) => {
+                        setSiteIconVariant(3);
+                        setSiteCustomIconDataUrl(dataUrl);
+                        setCustomIconError(null);
+                      }}
+                      onPickError={handleCustomIconUploadError}
+                    >
+                      {siteIconVariant === 3 && siteCustomIconDataUrl ? (
+                        <img src={siteCustomIconDataUrl} alt="" className="h-7 w-7 object-contain" width={28} height={28} />
+                      ) : (
+                        <Plus className="h-5 w-5" strokeWidth={2} aria-hidden />
+                      )}
+                    </LocalFileUploadButton>
+                  </div>
+                  {customIconError ? <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">{customIconError}</p> : null}
                 </div>
               </div>
             ) : (

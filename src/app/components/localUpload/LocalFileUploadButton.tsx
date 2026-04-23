@@ -12,6 +12,8 @@ export type LocalFileUploadButtonProps = {
   maxBytes?: number;
   disabled?: boolean;
   className?: string;
+  /** 可选：触发按钮的 a11y 标签（例如图标槽无可见文案时） */
+  "aria-label"?: string;
   /** 可选：覆盖 hidden input 的 id，便于 aria-labelledby */
   inputId?: string;
   children: ReactNode;
@@ -27,6 +29,7 @@ export function LocalFileUploadButton({
   maxBytes = DEFAULT_MAX_IMAGE_BYTES,
   disabled,
   className,
+  "aria-label": ariaLabel,
   inputId: inputIdProp,
   children,
   onPick,
@@ -68,6 +71,7 @@ export function LocalFileUploadButton({
         type="button"
         disabled={disabled}
         className={className}
+        aria-label={ariaLabel}
         onClick={() => inputRef.current?.click()}
       >
         {children}
