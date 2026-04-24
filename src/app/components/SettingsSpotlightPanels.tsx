@@ -2,7 +2,7 @@ import { Activity, ArrowRight, Bell, FileText, Globe, ShieldCheck, Sparkles } fr
 import { useEffect, useMemo, useState, type MouseEvent, type Ref, type RefObject } from "react";
 import { useAppI18n, type AppLocale } from "../i18n/AppI18n";
 import { useOpenExternalUrl } from "../navigation";
-import { useUiPreferences, type LayoutMode } from "../preferences";
+import { isMinimalDockEnabled, useUiPreferences, type LayoutMode, type MinimalDockMode } from "../preferences";
 import aboutContent from "../config/about-content.json";
 import { AddIconPanelContent, type AddIconSubmitPayload } from "./addIcon";
 import { SegmentedControl } from "./shared/SegmentedControl";
@@ -117,13 +117,13 @@ function SettingsRangeRow({
 /** 外观页：主题与布局走 `UiPreferences`；壁纸请使用侧栏「壁纸」分区。 */
 export function SettingsAppearancePanel({ mainBodyClassName, layoutMode, onLayoutModeChange }: SettingsAppearancePanelProps) {
   const { t } = useAppI18n();
-  const { colorScheme, setColorScheme, gridItemNamesVisible, setGridItemNamesVisible } = useUiPreferences();
+  const { colorScheme, setColorScheme, gridItemNamesVisible, setGridItemNamesVisible, minimalDockMode, setMinimalDockMode } =
+    useUiPreferences();
   const [gridColumns, setGridColumns] = useState(6);
   const [gridRows, setGridRows] = useState(2);
   const [iconSize, setIconSize] = useState<"small" | "medium" | "large">("medium");
   const [iconGap, setIconGap] = useState(16);
   const [minimalShowSearchBar, setMinimalShowSearchBar] = useState(true);
-  const [minimalShowQuickActions, setMinimalShowQuickActions] = useState(true);
   const [minimalContentWidth, setMinimalContentWidth] = useState<"narrow" | "standard" | "wide">("standard");
 
   return (
@@ -232,13 +232,35 @@ export function SettingsAppearancePanel({ mainBodyClassName, layoutMode, onLayou
                 onPressedChange={setMinimalShowSearchBar}
                 testId="settings-minimal-show-search"
               />
-              <SettingsToggleRow
-                title={t("settings.minimalShowQuickActions")}
-                description={t("settings.minimalShowQuickActionsDesc")}
-                pressed={minimalShowQuickActions}
-                onPressedChange={setMinimalShowQuickActions}
-                testId="settings-minimal-show-quick-actions"
-              />
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-4">
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-medium text-slate-900 dark:text-slate-100">{t("settings.minimalDockMode")}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">{t("settings.minimalDockModeDesc")}</div>
+                </div>
+                <SegmentedControl<MinimalDockMode>
+                  value={minimalDockMode}
+                  onChange={setMinimalDockMode}
+                  ariaLabel={t("settings.minimalDockMode")}
+                  className="shrink-0"
+                  options={[
+                    {
+                      value: "off",
+                      label: t("settings.minimalDockModeOff"),
+                      testId: "settings-minimal-dock-mode-off",
+                    },
+                    {
+                      value: "auto_hide",
+                      label: t("settings.minimalDockModeAutoHide"),
+                      testId: "settings-minimal-dock-mode-auto-hide",
+                    },
+                    {
+                      value: "pinned",
+                      label: t("settings.minimalDockModePinned"),
+                      testId: "settings-minimal-dock-mode-pinned",
+                    },
+                  ]}
+                />
+              </div>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                 <span className="text-sm text-slate-700 dark:text-slate-200">{t("settings.minimalContentWidth")}</span>
                 <SegmentedControl<"narrow" | "standard" | "wide">
@@ -381,7 +403,15 @@ export function SettingsAboutPanel({ mainBodyClassName }: SettingsAboutPanelProp
   );
 }
 
-export function SettingsSitesAndComponentsPanel({ onConfirmAdd }: { onConfirmAdd: (payload: AddIconSubmitPayload) => void }) {
+export function SettingsSitesAndComponentsPanel({
+  onConfirmAdd,
+  isMinimalMode,
+  minimalDockVisible,
+}: {
+  onConfirmAdd: (payload: AddIconSubmitPayload) => void;
+  isMinimalMode: boolean;
+  minimalDockVisible: boolean;
+}) {
   return (
     <div className="flex min-h-full min-w-0 flex-col px-6 pb-6 pt-1.5 text-slate-800 dark:text-slate-100">
       <div className="min-h-0 flex-1 overflow-hidden rounded-2xl border border-slate-200/70 bg-white/72 p-2 dark:border-slate-600/60 dark:bg-slate-800/75">
@@ -390,6 +420,8 @@ export function SettingsSitesAndComponentsPanel({ onConfirmAdd }: { onConfirmAdd
           onConfirmAdd={onConfirmAdd}
           onRequestClose={() => {}}
           showCloseButton={false}
+          isMinimalMode={isMinimalMode}
+          minimalDockVisible={minimalDockVisible}
           className="flex h-full min-h-0 min-w-0 flex-col sm:flex-row"
         />
       </div>
@@ -623,6 +655,7 @@ type SettingsPrivacyPanelProps = {
   isHiddenEditing: boolean;
   selectedHiddenIds: Set<string>;
   isMinimalMode: boolean;
+  minimalDockMode: MinimalDockMode;
   folderHintResetVisible: boolean;
   onResetFolderHint?: () => void;
   onRequestToggleHiddenSpace: () => void;
@@ -643,6 +676,7 @@ export function SettingsPrivacyPanel({
   isHiddenEditing,
   selectedHiddenIds,
   isMinimalMode,
+  minimalDockMode,
   folderHintResetVisible,
   onResetFolderHint,
   onRequestToggleHiddenSpace,
@@ -654,6 +688,7 @@ export function SettingsPrivacyPanel({
   onRestoreSelected,
   onOpenDeleteConfirm,
 }: SettingsPrivacyPanelProps) {
+  const { t } = useAppI18n();
   return (
     <div className={mainBodyClassName}>
       <div className="space-y-3 rounded-2xl border border-slate-200/70 bg-white/72 p-4 dark:border-slate-600/60 dark:bg-slate-800/75">
@@ -799,12 +834,11 @@ export function SettingsPrivacyPanel({
             <div className="flex flex-wrap items-center gap-2 pt-1">
               <button
                 type="button"
-                disabled={selectedHiddenIds.size === 0 || isMinimalMode}
+                disabled={selectedHiddenIds.size === 0}
                 className="rounded-lg border border-slate-200 bg-white/85 px-3 py-1.5 text-xs text-slate-700 transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-700/90 dark:text-slate-200 dark:hover:bg-slate-600/90"
                 onClick={onRestoreSelected}
-                title={isMinimalMode ? "极简模式下不可恢复到主页面，请切换为默认模式" : undefined}
               >
-                暴露到主页面
+                {isMinimalMode ? t("settings.hiddenRestoreToDock") : t("settings.hiddenRestoreToDesktop")}
               </button>
               <button
                 type="button"
@@ -816,7 +850,9 @@ export function SettingsPrivacyPanel({
               </button>
               {isMinimalMode ? (
                 <div className="text-xs text-amber-600 dark:text-amber-300">
-                  极简模式下不可恢复到主页面，请切换为默认模式
+                  {isMinimalDockEnabled(minimalDockMode)
+                    ? t("settings.hiddenRestoreHintDockOn")
+                    : t("settings.hiddenRestoreHintDockOff")}
                 </div>
               ) : null}
             </div>

@@ -27,6 +27,7 @@ describe("SettingsSpotlightModal", () => {
       onRestoreHiddenItems: () => {},
       onAddItemFromSettings: () => {},
       isMinimalMode: false,
+      minimalDockMode: "auto_hide" as const,
     };
   }
   /**

@@ -1,9 +1,7 @@
-import type { MouseEvent } from "react";
-import { Plus } from "lucide-react";
 import { GRID_CELL_SIZE } from "../desktopGridConstants";
 import { Z_GRID_ITEM_BASE } from "../desktopGridLayers";
-import { GlassSurface } from "../shared/GlassSurface";
 import { useAppI18n } from "../../i18n/AppI18n";
+import { HoverRevealGlassAddTile } from "./HoverRevealGlassAddTile";
 
 type GridAddSlotCellProps = {
   onOpenAdd: () => void;
@@ -17,11 +15,6 @@ type GridAddSlotCellProps = {
  */
 export function GridAddSlotCell({ onOpenAdd, alwaysVisible = false }: GridAddSlotCellProps) {
   const { t } = useAppI18n();
-  const handleClick = (e: MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onOpenAdd();
-  };
 
   return (
     <div
@@ -32,26 +25,17 @@ export function GridAddSlotCell({ onOpenAdd, alwaysVisible = false }: GridAddSlo
         height: GRID_CELL_SIZE,
         zIndex: Z_GRID_ITEM_BASE,
       }}
-      className="relative flex items-center justify-center pointer-events-auto group/add-slot"
+      className="relative flex items-center justify-center pointer-events-auto"
     >
-      <GlassSurface
-        variant="tile"
-        rounded="none"
-        className={`!rounded-[28px] border border-white/25 p-0 transition-opacity duration-300 ease-out ${
-          alwaysVisible
-            ? "bg-white/12 opacity-100"
-            : "bg-white/5 opacity-0 group-hover/add-slot:bg-white/15 group-hover/add-slot:opacity-100"
-        }`}
-      >
-        <button
-          type="button"
-          aria-label={t("addIcon.dialogTitle")}
-          className="flex h-[88px] w-[88px] shrink-0 items-center justify-center rounded-[28px] text-white/95 outline-none transition-transform hover:brightness-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
-          onClick={handleClick}
-        >
-          <Plus className="h-9 w-9" strokeWidth={2} aria-hidden />
-        </button>
-      </GlassSurface>
+      <HoverRevealGlassAddTile
+        onOpenAdd={onOpenAdd}
+        alwaysVisible={alwaysVisible}
+        hoverGroup="add-slot"
+        sizePx={88}
+        tileRoundedClass="!rounded-[28px]"
+        plusClassName="h-9 w-9"
+        ariaLabel={t("addIcon.dialogTitle")}
+      />
     </div>
   );
 }

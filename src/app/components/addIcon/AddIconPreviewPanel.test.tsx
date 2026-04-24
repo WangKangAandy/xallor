@@ -123,4 +123,89 @@ describe("AddIconPreviewPanel", () => {
     });
     document.body.removeChild(container);
   });
+
+  /**
+   * 目的：极简且 Dock 开启、选中站点时应允许添加（写入 Dock）。
+   * 前置：isMinimalMode 且 minimalDockVisible。
+   * 预期：添加按钮可用；点击触发 onAdd。
+   */
+  it("should_allow_add_site_when_minimal_mode_and_dock_visible", () => {
+    const onAdd = vi.fn();
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    act(() => {
+      root.render(
+        <AppI18nProvider>
+          <AddIconPreviewPanel
+            selected={githubSite}
+            contextSiteId={null}
+            onClose={() => {}}
+            showCloseButton={false}
+            isMinimalMode
+            minimalDockVisible
+            onAdd={onAdd}
+          />
+        </AppI18nProvider>,
+      );
+    });
+
+    const addLabel = ZH_CN["addIcon.add"];
+    const addBtn = [...container.querySelectorAll("button")].find((b) => b.textContent?.trim() === addLabel);
+    expect(addBtn?.disabled).toBe(false);
+
+    act(() => {
+      addBtn?.click();
+    });
+    expect(onAdd).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      root.unmount();
+    });
+    document.body.removeChild(container);
+  });
+
+  /**
+   * 目的：极简且 Dock 关闭时禁止添加站点，并提示先打开 Dock。
+   * 前置：isMinimalMode、minimalDockVisible=false、已选站点。
+   * 预期：添加禁用；文案为 Dock 关闭提示；点击不触发 onAdd。
+   */
+  it("should_disable_add_and_show_dock_off_hint_when_minimal_and_dock_hidden", () => {
+    const onAdd = vi.fn();
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    act(() => {
+      root.render(
+        <AppI18nProvider>
+          <AddIconPreviewPanel
+            selected={githubSite}
+            contextSiteId={null}
+            onClose={() => {}}
+            showCloseButton={false}
+            isMinimalMode
+            minimalDockVisible={false}
+            onAdd={onAdd}
+          />
+        </AppI18nProvider>,
+      );
+    });
+
+    const addLabel = ZH_CN["addIcon.add"];
+    const addBtn = [...container.querySelectorAll("button")].find((b) => b.textContent?.trim() === addLabel);
+    expect(addBtn?.disabled).toBe(true);
+    expect(container.textContent).toContain(ZH_CN["settings.widgetsAddDisabledMinimalDockOff"]);
+
+    act(() => {
+      addBtn?.click();
+    });
+    expect(onAdd).not.toHaveBeenCalled();
+
+    act(() => {
+      root.unmount();
+    });
+    document.body.removeChild(container);
+  });
 });

@@ -1,5 +1,5 @@
-import { useCallback, useMemo, type Dispatch, type SetStateAction } from "react";
-import type { LayoutMode } from "./preferences";
+import { useCallback, useMemo } from "react";
+import type { LayoutMode, MinimalDockMode } from "./preferences";
 import type { SiteItem } from "./components/desktopGridTypes";
 import type { AddIconSubmitPayload } from "./components/addIcon";
 import type { HiddenSpaceSettingsBinding } from "./hiddenSpace/hiddenSpaceSettingsBinding";
@@ -14,8 +14,9 @@ type UseSettingsSpotlightBindingsParams = {
   openLinksInNewTab: boolean;
   setOpenLinksInNewTab: (value: boolean) => void;
   hiddenSpace: HiddenSpaceSettingsBinding;
-  setRestoreQueue: Dispatch<SetStateAction<SiteItem[]>>;
-  setSettingsAddQueue: Dispatch<SetStateAction<AddIconSubmitPayload[]>>;
+  minimalDockMode: MinimalDockMode;
+  onRestoreHiddenItems: (items: SiteItem[]) => void;
+  onAddItemFromSettings: (payload: AddIconSubmitPayload) => void;
 };
 
 export function useSettingsSpotlightBindings({
@@ -27,8 +28,9 @@ export function useSettingsSpotlightBindings({
   openLinksInNewTab,
   setOpenLinksInNewTab,
   hiddenSpace,
-  setRestoreQueue,
-  setSettingsAddQueue,
+  minimalDockMode,
+  onRestoreHiddenItems,
+  onAddItemFromSettings,
 }: UseSettingsSpotlightBindingsParams) {
   const onDisableHiddenSpace = useCallback(
     async (password: string) => {
@@ -40,20 +42,6 @@ export function useSettingsSpotlightBindings({
     [hiddenSpace],
   );
 
-  const onRestoreHiddenItems = useCallback(
-    (items: SiteItem[]) => {
-      setRestoreQueue(items);
-    },
-    [setRestoreQueue],
-  );
-
-  const onAddItemFromSettings = useCallback(
-    (payload: AddIconSubmitPayload) => {
-      setSettingsAddQueue((prev) => [...prev, payload]);
-    },
-    [setSettingsAddQueue],
-  );
-
   const settingsState = useMemo(
     () => ({
       open: isSettingsOpen,
@@ -63,9 +51,19 @@ export function useSettingsSpotlightBindings({
       hiddenSpaceEnabled: hiddenSpace.isEnabled,
       hiddenItems: hiddenSpace.hiddenItems,
       isMinimalMode: layoutMode === "minimal",
+      minimalDockMode,
       folderHintResetVisible: hiddenSpace.isDev,
     }),
-    [hiddenSpace.hiddenItems, hiddenSpace.isDev, hiddenSpace.isEnabled, isSettingsOpen, layoutMode, openLinksInNewTab, settingsInitialSection],
+    [
+      hiddenSpace.hiddenItems,
+      hiddenSpace.isDev,
+      hiddenSpace.isEnabled,
+      isSettingsOpen,
+      layoutMode,
+      minimalDockMode,
+      openLinksInNewTab,
+      settingsInitialSection,
+    ],
   );
 
   const settingsActions = useMemo(

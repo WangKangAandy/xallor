@@ -1,5 +1,12 @@
 export type { ColorSchemePreference } from "./colorSchemeStorage";
 export { parseStoredColorScheme, UI_COLOR_SCHEME_STORAGE_KEY } from "./colorSchemeStorage";
+export type { MinimalDockMode } from "./minimalDockMode";
+export {
+  isMinimalDockEnabled,
+  parseStoredMinimalDockMode,
+  UI_MINIMAL_DOCK_MODE_STORAGE_KEY,
+  UI_MINIMAL_DOCK_VISIBLE_STORAGE_KEY,
+} from "./minimalDockMode";
 export type { LayoutCapabilities, LayoutMode } from "./layoutTypes";
 export { getLayoutCapabilities } from "./layoutCapabilities";
 export {

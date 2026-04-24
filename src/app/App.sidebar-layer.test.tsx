@@ -9,6 +9,21 @@ let mockedResting = false;
 let triggerArrangeModeChange: ((isArrangeMode: boolean) => void) | null = null;
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
+Object.defineProperty(window, "matchMedia", {
+  writable: true,
+  configurable: true,
+  value: vi.fn().mockImplementation((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
+
 vi.mock("./useRestModeController", () => ({
   useRestModeController: () => ({
     isResting: mockedResting,
@@ -33,6 +48,8 @@ vi.mock("./preferences", async (importOriginal) => {
       setSearchEngine: vi.fn(),
       gridItemNamesVisible: true,
       setGridItemNamesVisible: vi.fn(),
+      minimalDockMode: "auto_hide" as const,
+      setMinimalDockMode: vi.fn(),
     }),
   };
 });
@@ -102,9 +119,9 @@ describe("App sidebar layer", () => {
   );
 
   /**
-   * 目的：整理态切换应通过统一开关禁用网格域自定义右键菜单，避免三处散落判断。
+   * 目的：整理态切换应通过统一开关禁用主列自定义右键菜单，避免散落判断。
    * 前置：渲染 App 后触发 MultiDesktopStrip 的 onArrangeModeChange(true)。
-   * 预期：desktop-main-slot 挂载 `data-context-disabled="true"`。
+   * 预期：`app-main-content-column` 挂载 `data-context-disabled="true"`（背景菜单监听上提至主列容器）。
    */
   it("should_toggle_desktop_context_disabled_flag_when_arrange_mode_changes", async () => {
     const mod = await import("./App");
@@ -116,19 +133,19 @@ describe("App sidebar layer", () => {
     act(() => {
       root.render(<App />);
     });
-    const desktopSlot = host.querySelector('[data-testid="desktop-main-slot"]') as HTMLDivElement | null;
-    expect(desktopSlot).not.toBeNull();
-    expect(desktopSlot?.getAttribute("data-context-disabled")).toBeNull();
+    const mainColumn = host.querySelector('[data-testid="app-main-content-column"]') as HTMLDivElement | null;
+    expect(mainColumn).not.toBeNull();
+    expect(mainColumn?.getAttribute("data-context-disabled")).toBeNull();
 
     act(() => {
       triggerArrangeModeChange?.(true);
     });
-    expect(desktopSlot?.getAttribute("data-context-disabled")).toBe("true");
+    expect(mainColumn?.getAttribute("data-context-disabled")).toBe("true");
 
     act(() => {
       triggerArrangeModeChange?.(false);
     });
-    expect(desktopSlot?.getAttribute("data-context-disabled")).toBeNull();
+    expect(mainColumn?.getAttribute("data-context-disabled")).toBeNull();
 
     act(() => {
       root.unmount();

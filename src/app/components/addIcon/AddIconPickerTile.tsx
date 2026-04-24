@@ -1,4 +1,3 @@
-import { Check } from "lucide-react";
 import { useAppI18n } from "../../i18n/AppI18n";
 import { FaviconIcon } from "../shared/FaviconIcon";
 import type { AddIconCatalogEntry } from "./addIconCatalog";
@@ -18,7 +17,9 @@ const idleSurface =
   "border border-[color:var(--add-icon-surface-border)] bg-[color:var(--add-icon-surface-raised)] shadow-sm " +
   "hover:border-[color:var(--add-icon-surface-border)] hover:bg-[color:var(--add-icon-surface-raised-hover)] hover:shadow-md";
 
-const selectedSurface = "border border-primary bg-primary/12 shadow-sm ring-1 ring-ring/30";
+/** 浅色主题 `--primary` 近黑，选中态改用与设置/壁纸一致的青色描边，避免「黑框」观感。 */
+const selectedSurface =
+  "border-2 border-cyan-500 bg-cyan-500/10 shadow-sm ring-2 ring-cyan-400/35 dark:border-cyan-400 dark:bg-cyan-500/15 dark:ring-cyan-400/30";
 
 /**
  * 站点：方形磁贴；组件：与站点同列宽（同网格），图标区与站点同一套 h-8 / sm:h-9。
@@ -38,12 +39,6 @@ export function AddIconPickerTile({ entry, selected, onSelect }: AddIconPickerTi
           selected ? selectedSurface : idleSurface,
         ].join(" ")}
       >
-        {selected ? (
-          <span className="absolute right-0.5 top-0.5 z-[1] flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
-            <Check className="h-2 w-2" strokeWidth={3} aria-hidden />
-          </span>
-        ) : null}
-
         <div className="flex h-8 w-8 shrink-0 items-center justify-center sm:h-9 sm:w-9">
           <FaviconIcon domain={entry.domain} name={entry.name} size={22} />
         </div>
@@ -67,12 +62,6 @@ export function AddIconPickerTile({ entry, selected, onSelect }: AddIconPickerTi
         selected ? selectedSurface : idleSurface,
       ].join(" ")}
     >
-      {selected ? (
-        <span className="absolute right-1 top-1 z-[1] flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
-          <Check className="h-2 w-2" strokeWidth={3} aria-hidden />
-        </span>
-      ) : null}
-
       <div
         className="flex h-10 w-10 shrink-0 items-center justify-center text-2xl leading-none sm:h-11 sm:w-11 sm:text-3xl"
         aria-hidden

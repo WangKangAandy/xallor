@@ -18,6 +18,10 @@ type AddIconPreviewPanelProps = {
   contextSiteId: string | null;
   onClose: () => void;
   showCloseButton?: boolean;
+  /** 极简布局下无桌面挂载位：禁用添加，与「通用」里侧栏锁定提示一致。 */
+  isMinimalMode?: boolean;
+  /** 极简模式下 Dock 是否显示；关闭时仅站点也不可添加。 */
+  minimalDockVisible?: boolean;
   /** 添加当前选中项并关闭（名称/网址/图标由面板内草稿与选项决定）。 */
   onAdd: (payload: AddIconSubmitPayload) => void;
 };
@@ -40,7 +44,7 @@ const footerPrimaryBtn =
 
 function siteIconOptionClasses(active: boolean, variant: "default" | "dark" | "more") {
   if (active) {
-    return "border-2 border-primary ring-2 ring-ring/35";
+    return "border-2 border-cyan-500 ring-2 ring-cyan-400/40 dark:border-cyan-400 dark:ring-cyan-400/35";
   }
   if (variant === "more") {
     return "border border-dashed border-border hover:border-muted-foreground/50";
@@ -147,10 +151,17 @@ export function AddIconPreviewPanel({
   contextSiteId: _contextSiteId,
   onClose,
   showCloseButton = true,
+  isMinimalMode = false,
+  minimalDockVisible = true,
   onAdd,
 }: AddIconPreviewPanelProps) {
   const { t } = useAppI18n();
   const canSubmit = Boolean(selected);
+  const isComponentSelected = selected?.kind === "component";
+  const addDisabled =
+    !canSubmit ||
+    (isMinimalMode && !minimalDockVisible) ||
+    (isMinimalMode && isComponentSelected);
 
   const [siteDraftName, setSiteDraftName] = useState("");
   const [siteDraftUrl, setSiteDraftUrl] = useState("");
@@ -195,6 +206,7 @@ export function AddIconPreviewPanel({
   };
 
   const handleAddClick = () => {
+    if (isMinimalMode && (!minimalDockVisible || isComponentSelected)) return;
     const payload = buildSubmitPayload();
     if (payload) onAdd(payload);
   };
@@ -421,9 +433,21 @@ export function AddIconPreviewPanel({
 
           <div className="shrink-0 px-4 py-2.5">
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
-              <button type="button" disabled={!canSubmit} className={footerPrimaryBtn} onClick={handleAddClick}>
-                {t("addIcon.add")}
-              </button>
+              <div className="flex w-full flex-col items-stretch gap-1.5 sm:w-auto sm:items-end">
+                <button type="button" disabled={addDisabled} className={footerPrimaryBtn} onClick={handleAddClick}>
+                  {t("addIcon.add")}
+                </button>
+                {isMinimalMode && (!minimalDockVisible || isComponentSelected) ? (
+                  <p
+                    className="text-right text-xs leading-snug text-amber-600 dark:text-amber-300"
+                    role="note"
+                  >
+                    {!minimalDockVisible
+                      ? t("settings.widgetsAddDisabledMinimalDockOff")
+                      : t("settings.widgetsAddDisabledMinimalComponent")}
+                  </p>
+                ) : null}
+              </div>
             </div>
           </div>
         </div>

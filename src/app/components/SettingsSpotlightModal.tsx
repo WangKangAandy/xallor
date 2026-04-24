@@ -11,8 +11,8 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useAppI18n } from "../i18n/AppI18n";
-import type { LayoutMode } from "../preferences";
-import { useUiPreferences } from "../preferences";
+import type { LayoutMode, MinimalDockMode } from "../preferences";
+import { isMinimalDockEnabled, useUiPreferences } from "../preferences";
 import {
   getAllSearchEngines,
   getSearchEngineById,
@@ -57,6 +57,7 @@ type SettingsSpotlightModalProps = {
   onRestoreHiddenItems: (items: SiteItem[]) => void;
   onAddItemFromSettings: (payload: AddIconSubmitPayload) => void;
   isMinimalMode: boolean;
+  minimalDockMode: MinimalDockMode;
   folderHintResetVisible?: boolean;
   onResetFolderHint?: () => void;
 };
@@ -109,6 +110,7 @@ export function SettingsSpotlightModal({
   onRestoreHiddenItems,
   onAddItemFromSettings,
   isMinimalMode,
+  minimalDockMode,
   folderHintResetVisible = false,
   onResetFolderHint,
 }: SettingsSpotlightModalProps) {
@@ -270,7 +272,13 @@ export function SettingsSpotlightModal({
   } else if (activeSection === "wallpaper") {
     mainBody = <SettingsWallpaperPanel mainBodyClassName={SETTINGS_MAIN_BODY_CLASS} />;
   } else if (activeSection === "widgets") {
-    mainBody = <SettingsSitesAndComponentsPanel onConfirmAdd={onAddItemFromSettings} />;
+    mainBody = (
+      <SettingsSitesAndComponentsPanel
+        onConfirmAdd={onAddItemFromSettings}
+        isMinimalMode={isMinimalMode}
+        minimalDockVisible={isMinimalDockEnabled(minimalDockMode)}
+      />
+    );
   } else if (activeSection === "privacy") {
     mainBody = (
       <SettingsPrivacyPanel
@@ -281,6 +289,7 @@ export function SettingsSpotlightModal({
         isHiddenEditing={isHiddenEditing}
         selectedHiddenIds={selectedHiddenIds}
         isMinimalMode={isMinimalMode}
+        minimalDockMode={minimalDockMode}
         folderHintResetVisible={folderHintResetVisible}
         onResetFolderHint={onResetFolderHint}
         onRequestToggleHiddenSpace={() => requestToggleHiddenSpace(hiddenSpaceEnabled)}

@@ -30,6 +30,7 @@ export function useAppContentController({ hiddenSpaceEnableHintMessage }: UseApp
     setOpenLinksInNewTab,
     sidebarLayout,
     gridItemNamesVisible,
+    minimalDockMode,
   } = useUiPreferences();
   const capabilities = useMemo(() => getLayoutCapabilities(layoutMode), [layoutMode]);
   const effectiveSidebarLayout = layoutMode === "minimal" ? "auto-hide" : sidebarLayout;
@@ -70,6 +71,8 @@ export function useAppContentController({ hiddenSpaceEnableHintMessage }: UseApp
     pendingAddPayloads,
     onAddPayloadsConsumed,
     onRestoreApplied,
+    minimalDockEntries,
+    onMinimalDockReorder,
   } = useSettingsDesktopIntegration({
     isSettingsOpen,
     settingsInitialSection,
@@ -100,6 +103,10 @@ export function useAppContentController({ hiddenSpaceEnableHintMessage }: UseApp
       onRestoreApplied,
       isCustomContextMenuEnabled,
       onArrangeModeChange,
+      layoutMode,
+      minimalDockMode,
+      minimalDockEntries,
+      onMinimalDockReorder,
     }),
     [
       isSettingsOpen,
@@ -116,6 +123,10 @@ export function useAppContentController({ hiddenSpaceEnableHintMessage }: UseApp
       onRestoreApplied,
       isCustomContextMenuEnabled,
       onArrangeModeChange,
+      layoutMode,
+      minimalDockMode,
+      minimalDockEntries,
+      onMinimalDockReorder,
     ],
   );
 

@@ -16,6 +16,12 @@ import {
   UI_COLOR_SCHEME_STORAGE_KEY,
   type ColorSchemePreference,
 } from "./colorSchemeStorage";
+import {
+  parseStoredMinimalDockMode,
+  UI_MINIMAL_DOCK_MODE_STORAGE_KEY,
+  UI_MINIMAL_DOCK_VISIBLE_STORAGE_KEY,
+  type MinimalDockMode,
+} from "./minimalDockMode";
 
 export type { ColorSchemePreference } from "./colorSchemeStorage";
 export { parseStoredColorScheme, UI_COLOR_SCHEME_STORAGE_KEY } from "./colorSchemeStorage";
@@ -74,6 +80,13 @@ function readInitialGridItemNamesVisible(): boolean {
   );
 }
 
+function readInitialMinimalDockMode(): MinimalDockMode {
+  return parseStoredMinimalDockMode(
+    globalThis.localStorage?.getItem(UI_MINIMAL_DOCK_MODE_STORAGE_KEY) ?? null,
+    globalThis.localStorage?.getItem(UI_MINIMAL_DOCK_VISIBLE_STORAGE_KEY) ?? null,
+  );
+}
+
 /** 搜索引擎 id 存储读取：允许自定义 id（如 `custom-*`），仅在空值时回退默认。 */
 export function parseStoredSearchEngineId(raw: string | null): string {
   if (typeof raw === "string" && raw.trim().length > 0) return raw.trim();
@@ -99,6 +112,9 @@ export type UiPreferencesContextValue = {
   setSearchEngine: (id: string) => void;
   gridItemNamesVisible: boolean;
   setGridItemNamesVisible: (value: boolean) => void;
+  /** 极简布局下 Dock：关闭 / 底部悬停唤出 / 常驻。 */
+  minimalDockMode: MinimalDockMode;
+  setMinimalDockMode: (mode: MinimalDockMode) => void;
 };
 
 const UiPreferencesContext = createContext<UiPreferencesContextValue | null>(null);
@@ -119,6 +135,7 @@ export function UiPreferencesProvider({ children }: { children: ReactNode }) {
   const [gridItemNamesVisible, setGridItemNamesVisibleState] = useState<boolean>(() =>
     readInitialGridItemNamesVisible(),
   );
+  const [minimalDockMode, setMinimalDockModeState] = useState<MinimalDockMode>(() => readInitialMinimalDockMode());
   const [systemPrefersDark, setSystemPrefersDark] = useState<boolean>(() => matchesPrefersColorSchemeDark());
 
   useEffect(() => {
@@ -172,6 +189,12 @@ export function UiPreferencesProvider({ children }: { children: ReactNode }) {
     globalThis.localStorage?.setItem(UI_GRID_ITEM_NAMES_VISIBLE_STORAGE_KEY, value ? "1" : "0");
   }, []);
 
+  const setMinimalDockMode = useCallback((mode: MinimalDockMode) => {
+    setMinimalDockModeState(mode);
+    globalThis.localStorage?.setItem(UI_MINIMAL_DOCK_MODE_STORAGE_KEY, mode);
+    globalThis.localStorage?.removeItem(UI_MINIMAL_DOCK_VISIBLE_STORAGE_KEY);
+  }, []);
+
   const value = useMemo(
     () => ({
       layoutMode,
@@ -186,6 +209,8 @@ export function UiPreferencesProvider({ children }: { children: ReactNode }) {
       setSearchEngine,
       gridItemNamesVisible,
       setGridItemNamesVisible,
+      minimalDockMode,
+      setMinimalDockMode,
     }),
     [
       layoutMode,
@@ -200,6 +225,8 @@ export function UiPreferencesProvider({ children }: { children: ReactNode }) {
       setSearchEngine,
       gridItemNamesVisible,
       setGridItemNamesVisible,
+      minimalDockMode,
+      setMinimalDockMode,
     ],
   );
 

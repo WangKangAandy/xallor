@@ -8,6 +8,10 @@ type AddIconPanelContentProps = {
   onConfirmAdd?: (payload: AddIconSubmitPayload) => void;
   onRequestClose?: () => void;
   showCloseButton?: boolean;
+  /** 设置内嵌时由外壳传入，与 `SettingsSpotlightModal` 的极简布局一致。 */
+  isMinimalMode?: boolean;
+  /** 极简模式下 Dock 栏是否开启（来自 `UiPreferences`）。 */
+  minimalDockVisible?: boolean;
   className?: string;
 };
 
@@ -20,6 +24,8 @@ export function AddIconPanelContent({
   onConfirmAdd,
   onRequestClose,
   showCloseButton = true,
+  isMinimalMode = false,
+  minimalDockVisible = true,
   className,
 }: AddIconPanelContentProps) {
   const {
@@ -55,6 +61,8 @@ export function AddIconPanelContent({
         onClose={handleClose}
         onAdd={handleAdd}
         showCloseButton={showCloseButton}
+        isMinimalMode={isMinimalMode}
+        minimalDockVisible={minimalDockVisible}
       />
     </div>
   );

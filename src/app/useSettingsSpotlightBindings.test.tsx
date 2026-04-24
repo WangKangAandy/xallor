@@ -58,8 +58,9 @@ function mountBindingsHarness(params?: { verifyOk?: boolean }) {
         removeHiddenItemsByIds,
         resetFolderWarnedInDev,
       },
-      setRestoreQueue,
-      setSettingsAddQueue,
+      minimalDockMode: "auto_hide",
+      onRestoreHiddenItems: (items) => setRestoreQueue(items),
+      onAddItemFromSettings: (p) => setSettingsAddQueue((prev) => [...prev, p]),
     });
     useEffect(() => {
       latest = bindings;
