@@ -54,6 +54,7 @@ describe("AppMinimalDockLayer", () => {
               minimalDockMode="auto_hide"
               minimalDockEntries={minimalDockEntries}
               forceDockVisibleInAutoHide={false}
+              dockFullPulseSeq={0}
               onMinimalDockReorder={vi.fn()}
               openSettingsWidgets={vi.fn()}
               isCustomContextMenuEnabled
@@ -123,6 +124,7 @@ describe("AppMinimalDockLayer", () => {
               minimalDockMode="auto_hide"
               minimalDockEntries={entries}
               forceDockVisibleInAutoHide
+              dockFullPulseSeq={0}
               onMinimalDockReorder={vi.fn()}
               openSettingsWidgets={vi.fn()}
               isCustomContextMenuEnabled
@@ -158,6 +160,7 @@ describe("AppMinimalDockLayer", () => {
               minimalDockMode="pinned"
               minimalDockEntries={[]}
               forceDockVisibleInAutoHide={false}
+              dockFullPulseSeq={0}
               onMinimalDockReorder={vi.fn()}
               openSettingsWidgets={vi.fn()}
               isCustomContextMenuEnabled

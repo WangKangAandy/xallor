@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
+import { useEffect, useRef } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import type { AppMinimalDockLayerBundle } from "../useAppContentController";
@@ -25,12 +26,34 @@ export function AppMinimalDockLayer({
   onMinimalDockHideSiteEntry,
   onMinimalDockEnterArrangeMode,
   forceDockVisibleInAutoHide,
+  dockFullPulseSeq,
 }: AppMinimalDockLayerProps) {
   const dockLayerEnabled = layoutMode === "minimal" && isMinimalDockEnabled(minimalDockMode);
   // 仅在 auto-hide 且存在站点时启用收起/唤出；空 Dock 需要露出「+」给用户发现入口。
   const shouldUseAutoHideShell =
     minimalDockMode === "auto_hide" && minimalDockEntries.some((entry) => entry.kind === "site");
   const reduceMotion = usePrefersReducedMotion();
+  const shellRef = useRef<HTMLDivElement | null>(null);
+  const prevDockFullPulseSeqRef = useRef(dockFullPulseSeq);
+
+  useEffect(() => {
+    if (dockFullPulseSeq <= prevDockFullPulseSeqRef.current) return;
+    prevDockFullPulseSeqRef.current = dockFullPulseSeq;
+    if (reduceMotion) return;
+    const ringEl = shellRef.current?.querySelector(
+      "[data-testid='minimal-dock-capsule-breath-ring']",
+    ) as HTMLElement | null;
+    if (!ringEl) return;
+    // 仅让独立边框环做呼吸式放大缩小，图标层保持静止。
+    ringEl.animate(
+      [
+        { transform: "scale(1)", opacity: 0.78, borderColor: "rgba(255,255,255,0.42)" },
+        { transform: "scale(1.065)", opacity: 1, borderColor: "rgba(255,255,255,0.72)" },
+        { transform: "scale(1)", opacity: 0.78, borderColor: "rgba(255,255,255,0.42)" },
+      ],
+      { duration: 560, easing: "cubic-bezier(0.22, 0.61, 0.36, 1)" },
+    );
+  }, [dockFullPulseSeq, reduceMotion]);
 
   return (
     <AnimatePresence>
@@ -46,6 +69,7 @@ export function AppMinimalDockLayer({
         >
           <div className="pointer-events-auto mx-auto flex max-w-[100vw] justify-center">
             <div
+              ref={shellRef}
               className="flex w-fit max-w-full flex-col items-center justify-end pb-2 pt-1"
               data-testid="minimal-dock-shell"
             >

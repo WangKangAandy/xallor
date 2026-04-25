@@ -79,6 +79,7 @@ export function useAppContentController({ hiddenSpaceEnableHintMessage }: UseApp
     onMinimalDockDeleteSiteEntry,
     onMinimalDockHideSiteEntry,
     onMinimalDockEnterArrangeMode,
+    dockFullPulseSeq,
   } = useSettingsDesktopIntegration({
     isSettingsOpen,
     settingsInitialSection,
@@ -148,6 +149,7 @@ export function useAppContentController({ hiddenSpaceEnableHintMessage }: UseApp
       onMinimalDockHideSiteEntry,
       onMinimalDockEnterArrangeMode,
       forceDockVisibleInAutoHide: isSettingsWidgetsSectionActive,
+      dockFullPulseSeq,
     }),
     [
       layoutMode,
@@ -160,6 +162,7 @@ export function useAppContentController({ hiddenSpaceEnableHintMessage }: UseApp
       onMinimalDockHideSiteEntry,
       onMinimalDockEnterArrangeMode,
       isSettingsWidgetsSectionActive,
+      dockFullPulseSeq,
     ],
   );
 

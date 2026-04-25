@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { SiteItem } from "./components/desktopGridTypes";
 import type { AddIconSubmitPayload } from "./components/addIcon";
 import { MINIMAL_DOCK_PENDING_RESTORE_KEY, MINIMAL_DOCK_STORAGE_KEY } from "./minimalDock";
+import { MINIMAL_DOCK_MAX_SLOTS } from "./minimalDock/minimalDockConstants";
 import { UiPreferencesProvider } from "./preferences";
 import type { LayoutMode } from "./preferences";
 import { useSettingsDesktopIntegration } from "./useSettingsDesktopIntegration";
@@ -285,6 +286,34 @@ describe("useSettingsDesktopIntegration", () => {
       harness.getLatest().onMinimalDockDeleteSiteEntry("dock-site-2");
     });
     expect(harness.getLatest().minimalDockEntries).toHaveLength(0);
+    harness.cleanup();
+  });
+
+  /**
+   * 目的：当 Dock 达到上限后继续添加，列表不变但应触发一次「已接收」反馈脉冲。
+   */
+  it("should_increment_dock_full_pulse_seq_when_adding_site_beyond_max_slots", () => {
+    const fullDockPayload = {
+      version: 1 as const,
+      entries: Array.from({ length: MINIMAL_DOCK_MAX_SLOTS }, (_, i) => ({
+        kind: "site" as const,
+        id: `dock-full-${i}`,
+        site: { name: `Full${i}`, domain: `full${i}.com`, url: `https://full${i}.com/` },
+      })),
+    };
+    localStorage.setItem("xallor_ui_layout", "minimal");
+    localStorage.setItem("xallor_ui_minimal_dock_mode", "pinned");
+    localStorage.setItem(MINIMAL_DOCK_STORAGE_KEY, JSON.stringify(fullDockPayload));
+    const harness = mountSettingsDesktopIntegrationHarness({ layoutMode: "minimal" });
+    const beforeSeq = harness.getLatest().dockFullPulseSeq;
+    act(() => {
+      harness.getLatest().settingsActions.onAddItemFromSettings({
+        kind: "site",
+        site: { name: "Overflow", domain: "overflow.com", url: "https://overflow.com/" },
+      });
+    });
+    expect(harness.getLatest().minimalDockEntries).toHaveLength(MINIMAL_DOCK_MAX_SLOTS);
+    expect(harness.getLatest().dockFullPulseSeq).toBe(beforeSeq + 1);
     harness.cleanup();
   });
 });

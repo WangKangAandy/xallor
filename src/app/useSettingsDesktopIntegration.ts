@@ -46,6 +46,7 @@ export function useSettingsDesktopIntegration({
   const [restoreItems, setRestoreItems] = useState<SiteItem[]>([]);
   const [pendingAddPayloads, setPendingAddPayloads] = useState<AddIconSubmitPayload[]>([]);
   const [minimalDockEntries, setMinimalDockEntries] = useState<MinimalDockEntry[]>(() => readMinimalDockFromStorage());
+  const [dockFullPulseSeq, setDockFullPulseSeq] = useState(0);
 
   useEffect(() => {
     writeMinimalDockToStorage(minimalDockEntries);
@@ -80,6 +81,10 @@ export function useSettingsDesktopIntegration({
         if (created.type !== "site") return;
         setMinimalDockEntries((prev) => {
           const r = appendSiteItemsToMinimalDockEntries(prev, [created]);
+          if (r.appendedSiteEntryIds.length === 0 && r.remaining.length > 0) {
+            // Dock 已满时触发一次轻呼吸反馈，告知点击已被接收但未能继续添加。
+            setDockFullPulseSeq((seq) => seq + 1);
+          }
           return r.nextEntries;
         });
         return;
@@ -173,5 +178,6 @@ export function useSettingsDesktopIntegration({
     onMinimalDockDeleteSiteEntry,
     onMinimalDockHideSiteEntry,
     onMinimalDockEnterArrangeMode,
+    dockFullPulseSeq,
   };
 }
