@@ -395,7 +395,7 @@ export function SettingsSpotlightModal({
             </aside>
 
             <section className="relative flex h-full min-h-0 min-w-0 flex-col">
-            <div className="flex min-w-0 shrink-0 items-center justify-end gap-3 px-6 py-2">
+            <div className="flex min-w-0 shrink-0 items-center justify-end gap-3 pl-6 pr-2 pt-2 pb-2">
               <button
                 type="button"
                 data-testid="settings-modal-close"
