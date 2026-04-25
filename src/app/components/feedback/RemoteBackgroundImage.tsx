@@ -38,6 +38,7 @@ export function RemoteBackgroundImage({
   src,
   fallbackClassName = "absolute inset-0 bg-gradient-to-b from-slate-900 via-sky-950 to-blue-950",
 }: RemoteBackgroundImageProps) {
+  const fetchPriorityAttr = { fetchpriority: "low" } as Record<string, string>;
   const memoryKey = useMemo(() => src.trim(), [src]);
   const candidates = useMemo(() => buildBackgroundCandidates(src), [src]);
   const [resolvedSrc, setResolvedSrc] = useState<string | null>(null);
@@ -124,7 +125,7 @@ export function RemoteBackgroundImage({
       className="absolute inset-0 h-full w-full object-cover"
       onError={() => setFailed(true)}
       decoding="async"
-      fetchPriority="low"
+      {...fetchPriorityAttr}
     />
   );
 }

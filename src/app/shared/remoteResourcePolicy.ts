@@ -154,6 +154,10 @@ export type RaceRemoteCandidatesOptions = {
    * 不传或 ≤0 表示不启用单候选超时（与 F3 之前行为一致）。
    */
   perCandidateTimeoutMs?: number;
+  /**
+   * 单候选失败（包含 loader reject / timeout）时的回调。
+   */
+  onCandidateFailure?: (candidate: RemoteCandidate, error: unknown) => void;
 };
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
@@ -180,14 +184,16 @@ export async function raceRemoteCandidates(
   options?: RaceRemoteCandidatesOptions,
 ): Promise<RemoteCandidate | null> {
   const timeoutMs = options?.perCandidateTimeoutMs;
+  const onCandidateFailure = options?.onCandidateFailure;
   const tasks = candidates.map((candidate) => {
     const settled = loader(candidate).then(() => ({
       candidate,
     }));
-    if (timeoutMs == null || timeoutMs <= 0) {
-      return settled;
-    }
-    return withTimeout(settled, timeoutMs);
+    const guarded = timeoutMs == null || timeoutMs <= 0 ? settled : withTimeout(settled, timeoutMs);
+    return guarded.catch((error: unknown) => {
+      onCandidateFailure?.(candidate, error);
+      throw error;
+    });
   });
   try {
     const result = await Promise.any(tasks);

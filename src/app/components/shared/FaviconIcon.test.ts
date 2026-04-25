@@ -1,5 +1,12 @@
-import { describe, expect, it } from "vitest";
-import { buildFaviconCandidates, summarizeFaviconMetrics } from "./FaviconIcon";
+/** @vitest-environment jsdom */
+import { describe, expect, it, vi } from "vitest";
+import {
+  buildFaviconCandidates,
+  markFaviconProviderFailureForTest,
+  orderFaviconCandidates,
+  resetFaviconProviderFailureScoresForTest,
+  summarizeFaviconMetrics,
+} from "./FaviconIcon";
 
 describe("buildFaviconCandidates", () => {
   /**
@@ -10,9 +17,9 @@ describe("buildFaviconCandidates", () => {
     const result = buildFaviconCandidates(domain);
 
     expect(result).toEqual([
+      { id: "icon-horse", url: "https://icon.horse/icon/github.com" },
       { id: "duckduckgo", url: "https://icons.duckduckgo.com/ip3/github.com.ico" },
       { id: "google-s2", url: "https://www.google.com/s2/favicons?domain=github.com&sz=64" },
-      { id: "icon-horse", url: "https://icon.horse/icon/github.com" },
     ]);
   });
 
@@ -21,8 +28,38 @@ describe("buildFaviconCandidates", () => {
    */
   it("should_trim_domain_before_generating_favicon_candidate_urls", () => {
     const result = buildFaviconCandidates("  example.com  ");
-    expect(result[0]?.url).toContain("example.com.ico");
-    expect(result[2]?.url).toContain("example.com");
+    expect(result[0]?.url).toContain("example.com");
+    expect(result[1]?.url).toContain("example.com.ico");
+  });
+
+  /**
+   * 目的：存在历史成功记忆时，首候选应与记忆一致，保证首帧 src 与竞速顺序统一。
+   */
+  it("should_put_remembered_candidate_first_when_ordering_favicon_candidates", () => {
+    const getItem = vi.spyOn(Storage.prototype, "getItem").mockReturnValue(
+      JSON.stringify({
+        "github.com": "google-s2",
+      }),
+    );
+    resetFaviconProviderFailureScoresForTest();
+    const result = orderFaviconCandidates("github.com");
+    expect(result[0]?.id).toBe("google-s2");
+    getItem.mockRestore();
+  });
+
+  /**
+   * 目的：会话内失败次数高的源应被降级，减少连续命中不可达源。
+   */
+  it("should_deprioritize_provider_when_session_failure_score_is_higher", () => {
+    const getItem = vi.spyOn(Storage.prototype, "getItem").mockReturnValue("{}");
+    resetFaviconProviderFailureScoresForTest();
+    markFaviconProviderFailureForTest("icon-horse");
+    markFaviconProviderFailureForTest("icon-horse");
+    const result = orderFaviconCandidates("github.com");
+    expect(result[0]?.id).toBe("duckduckgo");
+    expect(result[2]?.id).toBe("icon-horse");
+    getItem.mockRestore();
+    resetFaviconProviderFailureScoresForTest();
   });
 });
 

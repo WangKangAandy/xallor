@@ -10,15 +10,66 @@ import { useUiPreferences } from "../preferences";
 import { useAppI18n } from "../i18n/AppI18n";
 import {
   getAllSearchEngines,
+  getBuiltinSearchEngineIcon,
   getSearchEngineDisplayName,
   getSearchEngineById,
   resolveSearchEngineId,
   type SearchEngine,
 } from "../search/searchEngineRegistry";
+import googleMulticolorIcon from "@/assets/icons/google-multicolor.svg";
 
 interface AddEngineFormProps {
   onAdd: (engine: SearchEngine) => void;
   onCancel: () => void;
+}
+
+interface SearchEngineBrandIconProps {
+  engine: SearchEngine;
+  size: number;
+  className?: string;
+}
+
+function SearchEngineBrandIcon({ engine, size, className }: SearchEngineBrandIconProps) {
+  if (engine.id === "google") {
+    return (
+      <img
+        src={googleMulticolorIcon}
+        alt=""
+        aria-hidden
+        width={size}
+        height={size}
+        className={className}
+        loading="lazy"
+        decoding="async"
+      />
+    );
+  }
+
+  const builtinIcon = getBuiltinSearchEngineIcon(engine.id);
+  if (builtinIcon) {
+    return (
+      <span
+        className={`inline-flex items-center justify-center ${className ?? ""}`}
+        style={{ width: size, height: size, color: `#${builtinIcon.hex}` }}
+        aria-hidden
+      >
+        <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor">
+          <path d={builtinIcon.path} />
+        </svg>
+      </span>
+    );
+  }
+
+  return (
+    <FaviconIcon
+      domain={engine.domain}
+      name={engine.name}
+      size={size}
+      className={className}
+      style={{ imageRendering: "auto" }}
+      fallbackClassName="!bg-transparent shadow-none ring-0 text-slate-600 dark:text-slate-300"
+    />
+  );
 }
 
 function AddEngineForm({ onAdd, onCancel }: AddEngineFormProps) {
@@ -191,14 +242,7 @@ export function SearchBar() {
           }`}
           aria-label="选择搜索引擎"
         >
-          <FaviconIcon
-            domain={selected.domain}
-            name={selected.name}
-            size={26}
-            className="shrink-0 object-contain"
-            style={{ imageRendering: "auto" }}
-            fallbackClassName="!bg-transparent shadow-none ring-0 text-slate-600 dark:text-slate-300"
-          />
+          <SearchEngineBrandIcon engine={selected} size={26} className="shrink-0 object-contain" />
           {/* Right-pointing chevron rotates down when open */}
           <ChevronRight
             className="h-3.5 w-3.5 text-slate-500/90 dark:text-slate-300/90 transition-transform duration-300"
@@ -250,13 +294,7 @@ export function SearchBar() {
                   selected.id === engine.id ? "bg-white/78 dark:bg-white/18" : ""
                 }`}
               >
-                <FaviconIcon
-                  domain={engine.domain}
-                  name={engine.name}
-                  size={18}
-                  className="rounded-sm object-contain"
-                  style={{ imageRendering: 'auto' }}
-                />
+                <SearchEngineBrandIcon engine={engine} size={18} className="rounded-sm object-contain" />
                 <span className="flex-1 whitespace-nowrap text-sm text-gray-700 dark:text-slate-200">
                   {getSearchEngineDisplayName(engine, locale)}
                 </span>

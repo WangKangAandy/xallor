@@ -11,13 +11,49 @@ import {
   type RemoteResourceMetricEvent,
 } from "../../shared/remoteResourcePolicy";
 
+const faviconProviderFailureScores = new Map<string, number>();
+
 export function buildFaviconCandidates(domain: string): RemoteCandidate[] {
   const safeDomain = domain.trim();
   return [
+    { id: "icon-horse", url: `https://icon.horse/icon/${safeDomain}` },
     { id: "duckduckgo", url: `https://icons.duckduckgo.com/ip3/${safeDomain}.ico` },
     { id: "google-s2", url: `https://www.google.com/s2/favicons?domain=${encodeURIComponent(safeDomain)}&sz=64` },
-    { id: "icon-horse", url: `https://icon.horse/icon/${safeDomain}` },
   ];
+}
+
+function getProviderFailureScore(providerId: string): number {
+  return faviconProviderFailureScores.get(providerId) ?? 0;
+}
+
+function markProviderFailure(providerId: string): void {
+  const score = getProviderFailureScore(providerId);
+  faviconProviderFailureScores.set(providerId, score + 1);
+}
+
+function markProviderSuccess(providerId: string): void {
+  if (!faviconProviderFailureScores.has(providerId)) return;
+  faviconProviderFailureScores.delete(providerId);
+}
+
+export function resetFaviconProviderFailureScoresForTest(): void {
+  faviconProviderFailureScores.clear();
+}
+
+export function markFaviconProviderFailureForTest(providerId: string): void {
+  markProviderFailure(providerId);
+}
+
+/**
+ * 排序规则：
+ * 1) 默认候选顺序（国内优先）；
+ * 2) 历史成功记忆优先；
+ * 3) 会话内失败次数越多，优先级越低。
+ */
+export function orderFaviconCandidates(domain: string): RemoteCandidate[] {
+  const defaults = buildFaviconCandidates(domain);
+  const byMemory = orderCandidatesByMemory("favicon", domain, defaults);
+  return [...byMemory].sort((a, b) => getProviderFailureScore(a.id) - getProviderFailureScore(b.id));
 }
 
 function preloadFavicon(src: string): Promise<void> {
@@ -141,7 +177,7 @@ export function FaviconIcon({
   fallbackClassName = "",
 }: FaviconIconProps) {
   ensureFaviconMetricsApi();
-  const candidates = useMemo(() => buildFaviconCandidates(domain), [domain]);
+  const candidates = useMemo(() => orderFaviconCandidates(domain), [domain]);
   const [resolvedSrc, setResolvedSrc] = useState<string | null>(null);
   const [isFallback, setIsFallback] = useState(false);
   const startAtRef = useRef(nowMs());
@@ -153,16 +189,18 @@ export function FaviconIcon({
     setIsFallback(false);
     startAtRef.current = nowMs();
     reportedRef.current = false;
-    const ordered = orderCandidatesByMemory("favicon", domain, candidates);
-
-    raceRemoteCandidates(ordered, (candidate) => preloadFavicon(candidate.url), {
+    raceRemoteCandidates(candidates, (candidate) => preloadFavicon(candidate.url), {
       perCandidateTimeoutMs: DEFAULT_FAVICON_REMOTE_CANDIDATE_TIMEOUT_MS,
+      onCandidateFailure: (candidate) => {
+        markProviderFailure(candidate.id);
+      },
     })
       .then((winner) => {
         if (cancelled) return;
         if (winner) {
           setResolvedSrc(winner.url);
           rememberSuccessfulCandidate("favicon", domain, winner.id);
+          markProviderSuccess(winner.id);
         } else {
           setIsFallback(true);
         }

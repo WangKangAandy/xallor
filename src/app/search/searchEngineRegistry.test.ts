@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { getAllSearchEngines, getSearchEngineById, getSearchEngineDisplayName, resolveSearchEngineId } from "./searchEngineRegistry";
+import {
+  getAllSearchEngines,
+  getBuiltinSearchEngineIcon,
+  getSearchEngineById,
+  getSearchEngineDisplayName,
+  resolveSearchEngineId,
+} from "./searchEngineRegistry";
 
 describe("searchEngineRegistry", () => {
   it("should_resolve_to_baidu_when_stored_id_missing_or_invalid", () => {
@@ -23,6 +29,17 @@ describe("searchEngineRegistry", () => {
     expect(engine).not.toBeNull();
     expect(getSearchEngineDisplayName(engine!, "zh-CN")).toBe("百度");
     expect(getSearchEngineDisplayName(engine!, "en-US")).toBe("Baidu");
+  });
+
+  it("should_return_builtin_transparent_icon_data_for_core_search_engines", () => {
+    expect(getBuiltinSearchEngineIcon("baidu")?.path.length).toBeGreaterThan(0);
+    expect(getBuiltinSearchEngineIcon("google")?.path.length).toBeGreaterThan(0);
+    expect(getBuiltinSearchEngineIcon("duckduckgo")?.path.length).toBeGreaterThan(0);
+    expect(getBuiltinSearchEngineIcon("brave")?.path.length).toBeGreaterThan(0);
+  });
+
+  it("should_return_null_builtin_icon_for_custom_engine_id", () => {
+    expect(getBuiltinSearchEngineIcon("custom-any")).toBeNull();
   });
 });
 

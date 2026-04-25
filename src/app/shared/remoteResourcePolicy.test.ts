@@ -80,5 +80,26 @@ describe("raceRemoteCandidates per-candidate timeout (F3)", () => {
     const result = await raceRemoteCandidates(candidates, loader);
     expect(result?.id).toBe("a");
   });
+
+  /**
+   * 目的：超时与 reject 都应触发失败回调，供上层做会话级降级排序。
+   */
+  it("should_invoke_failure_callback_when_candidate_rejects_or_times_out", async () => {
+    const candidates: RemoteCandidate[] = [
+      { id: "reject", url: "r" },
+      { id: "timeout", url: "t" },
+    ];
+    const failures: string[] = [];
+    const loader = async (c: RemoteCandidate) => {
+      if (c.id === "reject") throw new Error("reject");
+      await new Promise((r) => setTimeout(r, 120));
+    };
+    const result = await raceRemoteCandidates(candidates, loader, {
+      perCandidateTimeoutMs: 30,
+      onCandidateFailure: (candidate) => failures.push(candidate.id),
+    });
+    expect(result).toBeNull();
+    expect(failures).toEqual(expect.arrayContaining(["reject", "timeout"]));
+  }, 3000);
 });
 
