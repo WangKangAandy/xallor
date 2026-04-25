@@ -71,8 +71,7 @@ export function MinimalDockBar({
       className="flex w-full max-w-[min(92vw,640px)] items-center justify-center pointer-events-none"
       data-testid="minimal-dock-bar"
     >
-      {/* 让悬停胶囊本体时也能触发 dock-add 的 hover 显示逻辑。 */}
-      <div className="group/dock-add relative inline-flex items-center justify-center">
+      <div className="relative inline-flex items-center justify-center">
         <div className={CAPSULE_CLASS} data-testid="minimal-dock-capsule">
           {siteEntries.map((entry, index) => (
             <MinimalDockSiteSlot

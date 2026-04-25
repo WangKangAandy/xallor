@@ -107,7 +107,7 @@ test.describe("minimal dock context menu and reorder", () => {
   });
 
   /**
-   * 目的：Dock 存在站点时，「+」默认自动隐藏；悬停 Dock 胶囊后再显示。
+   * 目的：Dock 存在站点时，「+」默认自动隐藏；仅悬停到加号区域时才显示。
    */
   test("should_auto_hide_add_tile_when_dock_has_sites_and_reveal_on_hover", async ({ page }) => {
     await gotoMinimalDockWithSites(page);
@@ -116,7 +116,7 @@ test.describe("minimal dock context menu and reorder", () => {
     await expect
       .poll(async () => Number.parseFloat((await addGlass.evaluate((el) => getComputedStyle(el).opacity)) || "1"))
       .toBeLessThan(0.1);
-    await page.getByTestId("minimal-dock-capsule").hover();
+    await addTile.hover();
     await expect
       .poll(async () => Number.parseFloat((await addGlass.evaluate((el) => getComputedStyle(el).opacity)) || "0"))
       .toBeGreaterThan(0.9);
