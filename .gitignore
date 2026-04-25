@@ -1,5 +1,8 @@
 node_modules/
 dist/
+
+# 可选：本地浅克隆 simple-icons 供站点市场构建脚本读取（勿提交整仓）
+vendor/simple-icons/
 .DS_Store
 *.log
 npm-debug.log*

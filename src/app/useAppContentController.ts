@@ -50,6 +50,7 @@ export function useAppContentController({ hiddenSpaceEnableHintMessage }: UseApp
     openSettingsAt("wallpaper");
   }, [openSettingsAt]);
   const { onDesktopBackgroundContextMenu, desktopBackgroundMenuPortal } = useDesktopBackgroundActions({
+    layoutMode,
     onOpenAddSiteOrComponent: openWidgetsFromBackground,
     onOpenWallpaperSettings: openWallpaperFromBackground,
     onShowAlert: showAlert,
@@ -73,6 +74,9 @@ export function useAppContentController({ hiddenSpaceEnableHintMessage }: UseApp
     onRestoreApplied,
     minimalDockEntries,
     onMinimalDockReorder,
+    onMinimalDockDeleteSiteEntry,
+    onMinimalDockHideSiteEntry,
+    onMinimalDockEnterArrangeMode,
   } = useSettingsDesktopIntegration({
     isSettingsOpen,
     settingsInitialSection,
@@ -82,6 +86,7 @@ export function useAppContentController({ hiddenSpaceEnableHintMessage }: UseApp
     openLinksInNewTab,
     setOpenLinksInNewTab,
     hiddenSpace,
+    onRequestHideGridItem: onRequestHideItem,
   });
   const onArrangeModeChange = useCallback((isArrangeMode: boolean) => {
     setIsCustomContextMenuEnabled(!isArrangeMode);
@@ -105,8 +110,6 @@ export function useAppContentController({ hiddenSpaceEnableHintMessage }: UseApp
       onArrangeModeChange,
       layoutMode,
       minimalDockMode,
-      minimalDockEntries,
-      onMinimalDockReorder,
     }),
     [
       isSettingsOpen,
@@ -125,8 +128,31 @@ export function useAppContentController({ hiddenSpaceEnableHintMessage }: UseApp
       onArrangeModeChange,
       layoutMode,
       minimalDockMode,
+    ],
+  );
+
+  const minimalDockLayer = useMemo(
+    () => ({
+      layoutMode,
+      minimalDockMode,
       minimalDockEntries,
       onMinimalDockReorder,
+      openSettingsWidgets,
+      isCustomContextMenuEnabled,
+      onMinimalDockDeleteSiteEntry,
+      onMinimalDockHideSiteEntry,
+      onMinimalDockEnterArrangeMode,
+    }),
+    [
+      layoutMode,
+      minimalDockMode,
+      minimalDockEntries,
+      onMinimalDockReorder,
+      openSettingsWidgets,
+      isCustomContextMenuEnabled,
+      onMinimalDockDeleteSiteEntry,
+      onMinimalDockHideSiteEntry,
+      onMinimalDockEnterArrangeMode,
     ],
   );
 
@@ -153,11 +179,13 @@ export function useAppContentController({ hiddenSpaceEnableHintMessage }: UseApp
 
   return {
     mainLayer,
+    minimalDockLayer,
     overlayLayer,
   };
 }
 
 export type AppContentController = ReturnType<typeof useAppContentController>;
 export type AppMainLayerBundle = AppContentController["mainLayer"];
+export type AppMinimalDockLayerBundle = AppContentController["minimalDockLayer"];
 export type AppOverlayLayerBundle = AppContentController["overlayLayer"];
 export type AppOnRequestHideItem = (item: GridItemType) => Promise<boolean>;

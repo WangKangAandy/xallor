@@ -22,11 +22,16 @@ export const Z_GRID_ITEM_BASE = 10;
 export const Z_GRID_ITEM_MERGE_TARGET = 20;
 /** 正在拖拽的源格。 */
 export const Z_GRID_ITEM_DRAGGING = 30;
-/** 网格卡片右键菜单（须低于文件夹弹层 z-[100]）。 */
-export const Z_GRID_CONTEXT_MENU = 60;
+/** 网格卡片右键菜单（高于极简 Dock z-[125]，低于确认弹层 z-[130]）。 */
+export const Z_GRID_CONTEXT_MENU = 126;
 /** 搜索栏容器（高于网格卡片与右键菜单，低于文件夹弹层）。 */
 export const Z_SEARCH_BAR = 70;
 /** 搜索引擎下拉层（高于搜索栏容器，低于文件夹弹层）。 */
 export const Z_SEARCH_DROPDOWN = 80;
 /** 添加图标 / 网址导航模块（须高于文件夹弹层与右键菜单）。 */
 export const Z_ADD_ICON_DIALOG = 110;
+/**
+ * 极简 Dock：须高于 {@link SettingsSpotlightModal} 全屏层（z-[120]），否则开启设置时 Dock 被遮罩完全挡住；
+ * 须低于 `GlassMessageDialog` 等 z-[130] 的确认层。
+ */
+export const Z_MINIMAL_DOCK_LAYER = 125;

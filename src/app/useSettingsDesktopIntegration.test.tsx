@@ -7,7 +7,7 @@ import { useEffect } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { SiteItem } from "./components/desktopGridTypes";
 import type { AddIconSubmitPayload } from "./components/addIcon";
-import { MINIMAL_DOCK_PENDING_RESTORE_KEY } from "./minimalDock";
+import { MINIMAL_DOCK_PENDING_RESTORE_KEY, MINIMAL_DOCK_STORAGE_KEY } from "./minimalDock";
 import { UiPreferencesProvider } from "./preferences";
 import type { LayoutMode } from "./preferences";
 import { useSettingsDesktopIntegration } from "./useSettingsDesktopIntegration";
@@ -19,6 +19,7 @@ type IntegrationSnapshot = ReturnType<typeof useSettingsDesktopIntegration>;
 function mountSettingsDesktopIntegrationHarness(options?: { layoutMode?: LayoutMode }) {
   let latest: IntegrationSnapshot | null = null;
   const removeHiddenItemsByIds = vi.fn();
+  const onRequestHideGridItem = vi.fn(async () => true);
   const layoutMode = options?.layoutMode ?? "default";
 
   const hiddenItem: SiteItem = {
@@ -47,6 +48,7 @@ function mountSettingsDesktopIntegrationHarness(options?: { layoutMode?: LayoutM
         removeHiddenItemsByIds,
         resetFolderWarnedInDev: vi.fn(),
       },
+      onRequestHideGridItem,
     });
     useEffect(() => {
       latest = integration;
@@ -76,7 +78,7 @@ function mountSettingsDesktopIntegrationHarness(options?: { layoutMode?: LayoutM
     document.body.removeChild(container);
   };
 
-  return { getLatest, cleanup, removeHiddenItemsByIds };
+  return { getLatest, cleanup, removeHiddenItemsByIds, onRequestHideGridItem };
 }
 
 describe("useSettingsDesktopIntegration", () => {
@@ -231,6 +233,58 @@ describe("useSettingsDesktopIntegration", () => {
     expect(harness.getLatest().settingsState.open).toBe(true);
     expect(harness.getLatest().settingsState.initialSection).toBe("widgets");
     expect(harness.getLatest().settingsState.isMinimalMode).toBe(false);
+    harness.cleanup();
+  });
+
+  /**
+   * 目的：Dock 右键「隐藏」接受后应从 Dock 列表移除对应站点槽。
+   * 前置：localStorage 已有一条 Dock 站点；onRequestHideGridItem 返回 true。
+   * 预期：hide 回调收到 SiteItem；minimalDockEntries 不再含该槽。
+   */
+  it("should_remove_dock_site_when_minimal_dock_hide_request_accepted", async () => {
+    const dockPayload = {
+      version: 1 as const,
+      entries: [
+        {
+          kind: "site" as const,
+          id: "dock-site-1",
+          site: { name: "Ex", domain: "ex.com", url: "https://ex.com/" },
+        },
+      ],
+    };
+    localStorage.setItem(MINIMAL_DOCK_STORAGE_KEY, JSON.stringify(dockPayload));
+    const harness = mountSettingsDesktopIntegrationHarness({ layoutMode: "minimal" });
+    expect(harness.getLatest().minimalDockEntries).toHaveLength(1);
+    await act(async () => {
+      await harness.getLatest().onMinimalDockHideSiteEntry("dock-site-1");
+    });
+    expect(harness.onRequestHideGridItem).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "dock-site-1", type: "site", site: expect.objectContaining({ url: "https://ex.com/" }) }),
+    );
+    expect(harness.getLatest().minimalDockEntries).toHaveLength(0);
+    harness.cleanup();
+  });
+
+  /**
+   * 目的：Dock 右键「删除」应仅从 Dock 移除，不依赖隐藏空间回调。
+   */
+  it("should_remove_dock_site_when_minimal_dock_delete_called", () => {
+    const dockPayload = {
+      version: 1 as const,
+      entries: [
+        {
+          kind: "site" as const,
+          id: "dock-site-2",
+          site: { name: "Del", domain: "del.com", url: "https://del.com/" },
+        },
+      ],
+    };
+    localStorage.setItem(MINIMAL_DOCK_STORAGE_KEY, JSON.stringify(dockPayload));
+    const harness = mountSettingsDesktopIntegrationHarness({ layoutMode: "minimal" });
+    act(() => {
+      harness.getLatest().onMinimalDockDeleteSiteEntry("dock-site-2");
+    });
+    expect(harness.getLatest().minimalDockEntries).toHaveLength(0);
     harness.cleanup();
   });
 });

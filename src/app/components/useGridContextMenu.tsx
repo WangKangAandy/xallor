@@ -4,11 +4,12 @@ import type { GridContextMenuEntry } from "./gridItemContextMenuConfig";
 import { GridItemContextMenu } from "./GridItemContextMenu";
 import { useDismissOnPointerDownOutside } from "./useDismissOnPointerDownOutside";
 
-type MenuPos = { x: number; y: number };
+type MenuPos = { anchorX: number; anchorY: number; left: number; top: number };
 
 /** 与菜单 `w-max` 实际宽度同量级，用于视口边缘夹紧。 */
 const MENU_MIN_WIDTH = 128;
 const MENU_MIN_HEIGHT = 44;
+const MENU_VIEWPORT_GAP = 8;
 
 const EDITABLE_SELECTOR = [
   "input",
@@ -19,12 +20,17 @@ const EDITABLE_SELECTOR = [
 ].join(",");
 const CONTEXT_DISABLED_SELECTOR = "[data-context-disabled='true']";
 
-function clampMenuPosition(x: number, y: number) {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
+export function clampMenuPosition(
+  x: number,
+  y: number,
+  menuWidth: number,
+  menuHeight: number,
+  vw = window.innerWidth,
+  vh = window.innerHeight,
+) {
   return {
-    left: Math.max(8, Math.min(x, vw - MENU_MIN_WIDTH - 8)),
-    top: Math.max(8, Math.min(y, vh - MENU_MIN_HEIGHT - 8)),
+    left: Math.max(MENU_VIEWPORT_GAP, Math.min(x, vw - menuWidth - MENU_VIEWPORT_GAP)),
+    top: Math.max(MENU_VIEWPORT_GAP, Math.min(y, vh - menuHeight - MENU_VIEWPORT_GAP)),
   };
 }
 
@@ -51,12 +57,33 @@ export function useGridContextMenu(entries: GridContextMenuEntry[]) {
       if (shouldBypassCustomContextMenu(e.target as HTMLElement | null)) return;
       e.preventDefault();
       e.stopPropagation();
-      setMenu({ x: e.clientX, y: e.clientY });
+      const initial = clampMenuPosition(e.clientX, e.clientY, MENU_MIN_WIDTH, MENU_MIN_HEIGHT);
+      setMenu({ anchorX: e.clientX, anchorY: e.clientY, left: initial.left, top: initial.top });
     },
     [hasEntries],
   );
 
   useDismissOnPointerDownOutside(menuRef, Boolean(menu), () => setMenu(null));
+  useEffect(() => {
+    if (!menu) return;
+    const menuEl = menuRef.current;
+    if (menuEl) {
+      const rect = menuEl.getBoundingClientRect();
+      const measured = clampMenuPosition(menu.anchorX, menu.anchorY, rect.width, rect.height);
+      if (measured.left !== menu.left || measured.top !== menu.top) {
+        setMenu((prev) =>
+          prev
+            ? {
+                ...prev,
+                left: measured.left,
+                top: measured.top,
+              }
+            : prev,
+        );
+      }
+    }
+  }, [menu]);
+
   useEffect(() => {
     if (!menu) return;
     const onKey = (e: KeyboardEvent) => {
@@ -73,23 +100,21 @@ export function useGridContextMenu(entries: GridContextMenuEntry[]) {
     setMenu(null);
   }, []);
 
-  const pos = menu ? clampMenuPosition(menu.x, menu.y) : { left: 0, top: 0 };
-
   const portal = useMemo(
     () =>
       menu && hasEntries
         ? createPortal(
             <GridItemContextMenu
               menuRef={menuRef}
-              left={pos.left}
-              top={pos.top}
+              left={menu.left}
+              top={menu.top}
               entries={entries}
               onEntrySelect={handleEntrySelect}
             />,
             document.body,
           )
         : null,
-    [menu, hasEntries, pos.left, pos.top, entries, handleEntrySelect],
+    [menu, hasEntries, entries, handleEntrySelect],
   );
 
   return {

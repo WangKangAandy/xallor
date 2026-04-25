@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { describe, expect, it } from "vitest";
-import { shouldBypassCustomContextMenu } from "./useGridContextMenu";
+import { clampMenuPosition, shouldBypassCustomContextMenu } from "./useGridContextMenu";
 
 describe("shouldBypassCustomContextMenu", () => {
   /**
@@ -47,6 +47,25 @@ describe("shouldBypassCustomContextMenu", () => {
     document.body.appendChild(plain);
     expect(shouldBypassCustomContextMenu(plain)).toBe(false);
     document.body.removeChild(plain);
+  });
+});
+
+describe("clampMenuPosition", () => {
+  /**
+   * 目的：靠近底部触发右键时，菜单应自动上翻，保证完整可见。
+   */
+  it("should_flip_up_when_menu_would_overflow_bottom", () => {
+    const result = clampMenuPosition(180, 190, 160, 120, 320, 220);
+    expect(result.top).toBe(92);
+  });
+
+  /**
+   * 目的：靠近右下角触发右键时，菜单横向纵向都应被夹紧在视口内。
+   */
+  it("should_clamp_within_viewport_when_opening_near_bottom_right", () => {
+    const result = clampMenuPosition(310, 215, 120, 60, 320, 220);
+    expect(result.left).toBe(192);
+    expect(result.top).toBe(152);
   });
 });
 

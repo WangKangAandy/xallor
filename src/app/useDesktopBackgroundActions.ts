@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   DEFAULT_NEW_TAB_BACKGROUND_URL,
   downloadWallpaper,
@@ -6,9 +6,13 @@ import {
   type DownloadWallpaperResult,
 } from "./components/feedback";
 import { ENTER_ARRANGE_FROM_BACKGROUND_EVENT } from "./components/contextMenuEvents";
-import { useGridBackgroundContextMenu } from "./components/useGridBackgroundContextMenu";
+import { useGridContextMenu } from "./components/useGridContextMenu";
+import { buildDesktopBackgroundMenuEntries } from "./components/desktopBackgroundMenuModel";
+import type { LayoutMode } from "./preferences";
+import { useAppI18n } from "./i18n/AppI18n";
 
 type UseDesktopBackgroundActionsParams = {
+  layoutMode: LayoutMode;
   onOpenAddSiteOrComponent: () => void;
   onOpenWallpaperSettings: () => void;
   onShowAlert: (message: string) => void;
@@ -31,10 +35,12 @@ export function getWallpaperDownloadAlertMessage(result: DownloadWallpaperResult
 }
 
 export function useDesktopBackgroundActions({
+  layoutMode,
   onOpenAddSiteOrComponent,
   onOpenWallpaperSettings,
   onShowAlert,
 }: UseDesktopBackgroundActionsParams) {
+  const { t } = useAppI18n();
   const [isDownloadingWallpaper, setIsDownloadingWallpaper] = useState(false);
 
   const handleDownloadWallpaper = useCallback(async () => {
@@ -53,15 +59,28 @@ export function useDesktopBackgroundActions({
     }
   }, [isDownloadingWallpaper, onShowAlert]);
 
-  const { onContextMenu: onDesktopBackgroundContextMenu, portal: desktopBackgroundMenuPortal } = useGridBackgroundContextMenu(
-    () => {
-      window.dispatchEvent(new Event(ENTER_ARRANGE_FROM_BACKGROUND_EVENT));
-    },
-    onOpenAddSiteOrComponent,
-    handleDownloadWallpaper,
-    onOpenWallpaperSettings,
-    isDownloadingWallpaper,
+  const entries = useMemo(
+    () =>
+      buildDesktopBackgroundMenuEntries({
+        layoutMode,
+        onEnterArrangeMode: () => {
+          window.dispatchEvent(new Event(ENTER_ARRANGE_FROM_BACKGROUND_EVENT));
+        },
+        onOpenAddSiteOrComponent,
+        onDownloadWallpaper: handleDownloadWallpaper,
+        onSwitchWallpaper: onOpenWallpaperSettings,
+        isDownloadingWallpaper,
+        labels: {
+          addSiteOrComponent: t("contextMenu.addSiteOrComponent"),
+          downloadWallpaper: t("contextMenu.downloadWallpaper"),
+          switchWallpaper: t("contextMenu.switchWallpaper"),
+          downloadingWallpaper: t("contextMenu.downloadingWallpaper"),
+          arrangeMode: t("contextMenu.arrangeMode"),
+        },
+      }),
+    [layoutMode, onOpenAddSiteOrComponent, handleDownloadWallpaper, onOpenWallpaperSettings, isDownloadingWallpaper, t],
   );
+  const { onContextMenu: onDesktopBackgroundContextMenu, portal: desktopBackgroundMenuPortal } = useGridContextMenu(entries);
 
   return {
     onDesktopBackgroundContextMenu,

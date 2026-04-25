@@ -14,12 +14,7 @@ export function MinimalDockHoverShell({ reduceMotion, children }: MinimalDockHov
   const { revealed, reveal, scheduleClose } = useMinimalDockReveal();
 
   return (
-    <div
-      className="flex w-full flex-col items-center justify-end pb-2 pt-1"
-      data-testid="minimal-dock-hover-shell"
-      onMouseEnter={reveal}
-      onMouseLeave={scheduleClose}
-    >
+    <div className="relative flex w-full items-end justify-center" data-testid="minimal-dock-hover-shell" onMouseEnter={reveal} onMouseLeave={scheduleClose}>
       <motion.div
         initial={false}
         animate={
@@ -35,7 +30,7 @@ export function MinimalDockHoverShell({ reduceMotion, children }: MinimalDockHov
       </motion.div>
       {/* 底部命中条：收起时仍可悬浮唤出 */}
       <div
-        className="mt-0.5 h-5 w-full min-w-[200px] shrink-0"
+        className="pointer-events-auto absolute inset-x-0 -bottom-5 h-5 min-w-[200px]"
         aria-hidden
         data-testid="minimal-dock-hit-strip"
       />

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import type { LayoutMode } from "./preferences";
 import { isMinimalDockEnabled, useUiPreferences } from "./preferences";
-import type { SiteItem } from "./components/desktopGridTypes";
+import type { GridItemType, SiteItem } from "./components/desktopGridTypes";
+import { ENTER_ARRANGE_FROM_BACKGROUND_EVENT } from "./components/contextMenuEvents";
 import type { AddIconSubmitPayload } from "./components/addIcon";
 import type { HiddenSpaceSettingsBinding } from "./hiddenSpace/hiddenSpaceSettingsBinding";
 import type { AppSettingsInitialSection } from "./useSettingsModalController";
@@ -16,7 +17,7 @@ import {
   writeMinimalDockToStorage,
   writePendingDockRestoreQueue,
 } from "./minimalDock";
-import type { MinimalDockEntry } from "./minimalDock";
+import type { MinimalDockEntry, MinimalDockSiteEntry } from "./minimalDock";
 
 type UseSettingsDesktopIntegrationParams = {
   isSettingsOpen: boolean;
@@ -27,6 +28,7 @@ type UseSettingsDesktopIntegrationParams = {
   openLinksInNewTab: boolean;
   setOpenLinksInNewTab: (value: boolean) => void;
   hiddenSpace: HiddenSpaceSettingsBinding;
+  onRequestHideGridItem: (item: GridItemType) => Promise<boolean>;
 };
 
 export function useSettingsDesktopIntegration({
@@ -38,6 +40,7 @@ export function useSettingsDesktopIntegration({
   openLinksInNewTab,
   setOpenLinksInNewTab,
   hiddenSpace,
+  onRequestHideGridItem,
 }: UseSettingsDesktopIntegrationParams) {
   const { minimalDockMode } = useUiPreferences();
   const [restoreItems, setRestoreItems] = useState<SiteItem[]>([]);
@@ -116,6 +119,34 @@ export function useSettingsDesktopIntegration({
     setMinimalDockEntries((prev) => reorderMinimalDockEntries(prev, fromIndex, toIndex));
   }, []);
 
+  const onMinimalDockDeleteSiteEntry = useCallback((dockEntryId: string) => {
+    setMinimalDockEntries((prev) => prev.filter((e) => e.id !== dockEntryId));
+  }, []);
+
+  const onMinimalDockHideSiteEntry = useCallback(
+    async (dockEntryId: string) => {
+      const entry = minimalDockEntries.find((e): e is MinimalDockSiteEntry => e.kind === "site" && e.id === dockEntryId);
+      if (!entry) return;
+      const siteItem: SiteItem = {
+        id: entry.id,
+        type: "site",
+        shape: { cols: 1, rows: 1 },
+        site: { ...entry.site },
+      };
+      const accepted = await onRequestHideGridItem(siteItem);
+      if (!accepted) return;
+      setMinimalDockEntries((prev) => prev.filter((e) => e.id !== dockEntryId));
+    },
+    [minimalDockEntries, onRequestHideGridItem],
+  );
+
+  const onMinimalDockEnterArrangeMode = useCallback(() => {
+    setLayoutMode("default");
+    window.setTimeout(() => {
+      window.dispatchEvent(new Event(ENTER_ARRANGE_FROM_BACKGROUND_EVENT));
+    }, 200);
+  }, [setLayoutMode]);
+
   useLayoutEffect(() => {
     if (layoutMode !== "minimal" || !isMinimalDockEnabled(minimalDockMode)) return;
     const queued = readPendingDockRestoreQueue();
@@ -139,5 +170,8 @@ export function useSettingsDesktopIntegration({
     onRestoreApplied,
     minimalDockEntries,
     onMinimalDockReorder,
+    onMinimalDockDeleteSiteEntry,
+    onMinimalDockHideSiteEntry,
+    onMinimalDockEnterArrangeMode,
   };
 }

@@ -166,6 +166,7 @@ export function SearchBar() {
       data-search-bar-root="true"
       data-context-entity="true"
       data-context-entity-type="search"
+      data-allow-native-context="true"
     >
       {/* Search Input Row */}
       <GlassSurface
@@ -185,24 +186,22 @@ export function SearchBar() {
         {/* Engine Selector Trigger */}
         <button
           onClick={() => { setIsOpen(v => !v); setShowAddForm(false); }}
-          className={`flex items-center gap-1.5 rounded-full px-1.5 py-1 transition-all group shrink-0 ${
+          className={`flex items-center gap-2 rounded-full px-1 py-1 transition-all group shrink-0 ${
             isFocused ? "hover:bg-white/52 dark:hover:bg-white/16" : "hover:bg-white/40 dark:hover:bg-white/10"
           }`}
           aria-label="选择搜索引擎"
         >
-          {/* Engine favicon: keep crisp and stable */}
-          <div className={`relative rounded-full p-[1px] ${isFocused ? "bg-white/65 dark:bg-white/18" : "bg-white/48 dark:bg-white/10"}`}>
-            <FaviconIcon
-              domain={selected.domain}
-              name={selected.name}
-              size={20}
-              className="rounded-sm object-contain"
-              style={{ imageRendering: 'auto' }}
-            />
-          </div>
+          <FaviconIcon
+            domain={selected.domain}
+            name={selected.name}
+            size={26}
+            className="shrink-0 object-contain"
+            style={{ imageRendering: "auto" }}
+            fallbackClassName="!bg-transparent shadow-none ring-0 text-slate-600 dark:text-slate-300"
+          />
           {/* Right-pointing chevron rotates down when open */}
           <ChevronRight
-            className="h-3.5 w-3.5 text-slate-400/85 dark:text-slate-300/80 transition-transform duration-300"
+            className="h-3.5 w-3.5 text-slate-500/90 dark:text-slate-300/90 transition-transform duration-300"
             style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}
             strokeWidth={2.5}
           />
@@ -210,7 +209,7 @@ export function SearchBar() {
 
         {/* Divider */}
         <div
-          className="h-5 w-px shrink-0 bg-slate-400/85 dark:bg-slate-300/80"
+          className="h-6 w-px shrink-0 bg-slate-400/85 dark:bg-slate-300/80"
           style={{ boxShadow: "0 0 0.5px rgba(148,163,184,0.55)" }}
         />
 

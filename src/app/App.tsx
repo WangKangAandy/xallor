@@ -3,12 +3,12 @@ import { UserLocalAssetsProvider } from "./localUpload";
 import { UiPreferencesProvider } from "./preferences";
 import { useRestModeController } from "./useRestModeController";
 import { useAppContentController } from "./useAppContentController";
-import { AppBackgroundLayer, AppMainLayer, AppOverlayLayer } from "./appShell";
+import { AppBackgroundLayer, AppMainLayer, AppMinimalDockLayer, AppOverlayLayer } from "./appShell";
 
 function AppContent() {
   const { t } = useAppI18n();
   const { isResting, handleDoubleClickCapture } = useRestModeController();
-  const { mainLayer, overlayLayer } = useAppContentController({
+  const { mainLayer, minimalDockLayer, overlayLayer } = useAppContentController({
     hiddenSpaceEnableHintMessage: t("app.hiddenSpaceEnableHint"),
   });
 
@@ -22,6 +22,7 @@ function AppContent() {
       <AppBackgroundLayer />
       <AppMainLayer isResting={isResting} {...mainLayer} />
       <AppOverlayLayer {...overlayLayer} />
+      <AppMinimalDockLayer {...minimalDockLayer} />
     </div>
   );
 }
