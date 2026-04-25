@@ -1,20 +1,40 @@
 import { motion } from "motion/react";
+import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { useMinimalDockReveal } from "./useMinimalDockReveal";
 
 type MinimalDockHoverShellProps = {
   reduceMotion: boolean;
   children: ReactNode;
+  forceRevealed?: boolean;
 };
 
 /**
  * 极简 Dock：默认收起在屏外，仅当指针进入底部热区或 Dock 区域时滑入显示。
  */
-export function MinimalDockHoverShell({ reduceMotion, children }: MinimalDockHoverShellProps) {
+export function MinimalDockHoverShell({
+  reduceMotion,
+  children,
+  forceRevealed = false,
+}: MinimalDockHoverShellProps) {
   const { revealed, reveal, scheduleClose } = useMinimalDockReveal();
 
+  // 复用原有“自下而上”动效：当外部要求常显时，仅驱动 revealed 状态，不改动画实现。
+  useEffect(() => {
+    if (forceRevealed) {
+      reveal();
+      return;
+    }
+    scheduleClose(0);
+  }, [forceRevealed, reveal, scheduleClose]);
+
   return (
-    <div className="relative flex w-full items-end justify-center" data-testid="minimal-dock-hover-shell" onMouseEnter={reveal} onMouseLeave={scheduleClose}>
+    <div
+      className="relative flex w-full items-end justify-center"
+      data-testid="minimal-dock-hover-shell"
+      onMouseEnter={reveal}
+      onMouseLeave={forceRevealed ? undefined : scheduleClose}
+    >
       <motion.div
         initial={false}
         animate={

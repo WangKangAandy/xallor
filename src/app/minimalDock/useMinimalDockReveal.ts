@@ -21,9 +21,9 @@ export function useMinimalDockReveal() {
     setRevealed(true);
   }, [cancelClose]);
 
-  const scheduleClose = useCallback(() => {
+  const scheduleClose = useCallback((delayMs = CLOSE_DELAY_MS) => {
     cancelClose();
-    closeTimerRef.current = setTimeout(() => setRevealed(false), CLOSE_DELAY_MS);
+    closeTimerRef.current = setTimeout(() => setRevealed(false), delayMs);
   }, [cancelClose]);
 
   useEffect(() => () => cancelClose(), [cancelClose]);

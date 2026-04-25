@@ -58,6 +58,7 @@ type SettingsSpotlightModalProps = {
   onAddItemFromSettings: (payload: AddIconSubmitPayload) => void;
   isMinimalMode: boolean;
   minimalDockMode: MinimalDockMode;
+  onActiveSectionChange?: (section: SettingsSectionId | null) => void;
   folderHintResetVisible?: boolean;
   onResetFolderHint?: () => void;
 };
@@ -111,6 +112,7 @@ export function SettingsSpotlightModal({
   onAddItemFromSettings,
   isMinimalMode,
   minimalDockMode,
+  onActiveSectionChange,
   folderHintResetVisible = false,
   onResetFolderHint,
 }: SettingsSpotlightModalProps) {
@@ -200,6 +202,10 @@ export function SettingsSpotlightModal({
       cancelled = true;
     };
   }, [open, selectedSearchEngineId]);
+
+  useEffect(() => {
+    onActiveSectionChange?.(open ? activeSection : null);
+  }, [open, activeSection, onActiveSectionChange]);
 
   useEffect(() => {
     if (availableSearchEngines.length === 0) return;

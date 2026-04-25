@@ -53,6 +53,7 @@ describe("AppMinimalDockLayer", () => {
               layoutMode="minimal"
               minimalDockMode="auto_hide"
               minimalDockEntries={minimalDockEntries}
+              forceDockVisibleInAutoHide={false}
               onMinimalDockReorder={vi.fn()}
               openSettingsWidgets={vi.fn()}
               isCustomContextMenuEnabled
@@ -98,6 +99,48 @@ describe("AppMinimalDockLayer", () => {
   });
 
   /**
+   * 目的：设置页位于「站点与组件」分区时，auto_hide 仍应复用 hover shell 动画，仅强制保持展开。
+   * 前置：minimal + auto_hide + 含站点 + forceDockVisibleInAutoHide=true。
+   * 预期：继续渲染 hover shell（不切分支直出 DockBar）。
+   */
+  it("should_keep_hover_shell_when_widgets_settings_requests_force_visible", () => {
+    const entries: MinimalDockSiteEntry[] = [
+      {
+        kind: "site",
+        id: "dock-entry-2",
+        site: { name: "KeepVisible", domain: "visible.example", url: "https://visible.example/" },
+      },
+    ];
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    act(() => {
+      root.render(
+        <UiPreferencesProvider>
+          <AppI18nProvider>
+            <AppMinimalDockLayer
+              layoutMode="minimal"
+              minimalDockMode="auto_hide"
+              minimalDockEntries={entries}
+              forceDockVisibleInAutoHide
+              onMinimalDockReorder={vi.fn()}
+              openSettingsWidgets={vi.fn()}
+              isCustomContextMenuEnabled
+              onMinimalDockDeleteSiteEntry={vi.fn()}
+              onMinimalDockHideSiteEntry={vi.fn()}
+              onMinimalDockEnterArrangeMode={vi.fn()}
+            />
+          </AppI18nProvider>
+        </UiPreferencesProvider>,
+      );
+    });
+    expect(container.querySelector("[data-testid='minimal-dock-hover-shell']")).toBeTruthy();
+    expect(container.querySelector("[data-testid='minimal-dock-bar']")).toBeTruthy();
+    root.unmount();
+    document.body.removeChild(container);
+  });
+
+  /**
    * 目的：常驻模式且 Dock 为空时，底部应保留可见的加号入口。
    * 前置：minimal + pinned + entries 为空。
    * 预期：渲染 dock bar 与 add 入口，不渲染 hover shell。
@@ -114,6 +157,7 @@ describe("AppMinimalDockLayer", () => {
               layoutMode="minimal"
               minimalDockMode="pinned"
               minimalDockEntries={[]}
+              forceDockVisibleInAutoHide={false}
               onMinimalDockReorder={vi.fn()}
               openSettingsWidgets={vi.fn()}
               isCustomContextMenuEnabled

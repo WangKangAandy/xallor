@@ -40,7 +40,7 @@ const KIND_TAG_EMERALD = "shrink-0 rounded-md bg-emerald-600/95 px-2 py-0.5 text
 const SITE_NAME_MAX = 30;
 
 const footerPrimaryBtn =
-  "rounded-xl border border-border bg-secondary px-3 py-2 text-sm font-medium text-secondary-foreground shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground disabled:cursor-not-allowed disabled:opacity-45";
+  "rounded-xl border border-border bg-secondary px-3 py-2 text-sm font-medium text-secondary-foreground shadow-sm transition-[transform,box-shadow,background-color,color] duration-150 hover:bg-accent hover:text-accent-foreground active:translate-y-[1px] active:scale-[0.985] active:shadow-[inset_0_2px_6px_rgba(2,6,23,0.22)] disabled:cursor-not-allowed disabled:opacity-45";
 
 function siteIconOptionClasses(active: boolean, variant: "default" | "dark" | "more") {
   if (active) {
@@ -208,7 +208,8 @@ export function AddIconPreviewPanel({
   const handleAddClick = () => {
     if (isMinimalMode && (!minimalDockVisible || isComponentSelected)) return;
     const payload = buildSubmitPayload();
-    if (payload) onAdd(payload);
+    if (!payload) return;
+    onAdd(payload);
   };
 
   const handleCustomIconUploadError = (reason: AddIconUploadFailureReason) => {

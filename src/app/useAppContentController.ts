@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { type GridItemType } from "./components/desktopGridTypes";
+import type { SettingsSectionId } from "./components/useSettingsSectionRouting";
 import { getLayoutCapabilities, useUiPreferences } from "./preferences";
 import { useHiddenSpace } from "./hiddenSpace/useHiddenSpace";
 import { useDesktopBackgroundActions } from "./useDesktopBackgroundActions";
@@ -14,6 +15,7 @@ type UseAppContentControllerParams = {
 
 export function useAppContentController({ hiddenSpaceEnableHintMessage }: UseAppContentControllerParams) {
   const [isCustomContextMenuEnabled, setIsCustomContextMenuEnabled] = useState(true);
+  const [isSettingsWidgetsSectionActive, setIsSettingsWidgetsSectionActive] = useState(false);
   const {
     isSettingsOpen,
     openSettingsAt,
@@ -91,6 +93,9 @@ export function useAppContentController({ hiddenSpaceEnableHintMessage }: UseApp
   const onArrangeModeChange = useCallback((isArrangeMode: boolean) => {
     setIsCustomContextMenuEnabled(!isArrangeMode);
   }, []);
+  const onSettingsActiveSectionChange = useCallback((section: SettingsSectionId | null) => {
+    setIsSettingsWidgetsSectionActive(section === "widgets");
+  }, []);
 
   const mainLayer = useMemo(
     () => ({
@@ -142,6 +147,7 @@ export function useAppContentController({ hiddenSpaceEnableHintMessage }: UseApp
       onMinimalDockDeleteSiteEntry,
       onMinimalDockHideSiteEntry,
       onMinimalDockEnterArrangeMode,
+      forceDockVisibleInAutoHide: isSettingsWidgetsSectionActive,
     }),
     [
       layoutMode,
@@ -153,6 +159,7 @@ export function useAppContentController({ hiddenSpaceEnableHintMessage }: UseApp
       onMinimalDockDeleteSiteEntry,
       onMinimalDockHideSiteEntry,
       onMinimalDockEnterArrangeMode,
+      isSettingsWidgetsSectionActive,
     ],
   );
 
@@ -165,6 +172,7 @@ export function useAppContentController({ hiddenSpaceEnableHintMessage }: UseApp
       openSettingsPrivacy,
       resolveFolderHideConfirm,
       desktopBackgroundMenuPortal,
+      onSettingsActiveSectionChange,
     }),
     [
       settingsState,
@@ -174,6 +182,7 @@ export function useAppContentController({ hiddenSpaceEnableHintMessage }: UseApp
       openSettingsPrivacy,
       resolveFolderHideConfirm,
       desktopBackgroundMenuPortal,
+      onSettingsActiveSectionChange,
     ],
   );
 

@@ -24,10 +24,11 @@ export function AppMinimalDockLayer({
   onMinimalDockDeleteSiteEntry,
   onMinimalDockHideSiteEntry,
   onMinimalDockEnterArrangeMode,
+  forceDockVisibleInAutoHide,
 }: AppMinimalDockLayerProps) {
   const dockLayerEnabled = layoutMode === "minimal" && isMinimalDockEnabled(minimalDockMode);
   // 仅在 auto-hide 且存在站点时启用收起/唤出；空 Dock 需要露出「+」给用户发现入口。
-  const shouldAutoHideDock =
+  const shouldUseAutoHideShell =
     minimalDockMode === "auto_hide" && minimalDockEntries.some((entry) => entry.kind === "site");
   const reduceMotion = usePrefersReducedMotion();
 
@@ -49,8 +50,8 @@ export function AppMinimalDockLayer({
               data-testid="minimal-dock-shell"
             >
               <DndProvider backend={HTML5Backend}>
-                {shouldAutoHideDock ? (
-                  <MinimalDockHoverShell reduceMotion={reduceMotion}>
+                {shouldUseAutoHideShell ? (
+                  <MinimalDockHoverShell reduceMotion={reduceMotion} forceRevealed={forceDockVisibleInAutoHide}>
                     <MinimalDockBar
                       entries={minimalDockEntries}
                       onReorder={onMinimalDockReorder}
