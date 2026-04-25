@@ -131,4 +131,37 @@ test.describe("minimal dock context menu and reorder", () => {
     await openSettingsAppearance(page);
     await expect(page.getByTestId("minimal-dock-add-outer")).toBeVisible({ timeout: 10_000 });
   });
+
+  /**
+   * 目的：auto-hide 模式下离开 Dock 后不应立刻收起，应至少保持 1s 再进入收起动画。
+   */
+  test("should_wait_about_one_second_before_hiding_after_pointer_leaves_dock", async ({ page }) => {
+    await gotoMinimalDockWithSites(page);
+    await page.evaluate(() => {
+      globalThis.localStorage.setItem("xallor_ui_minimal_dock_mode", "auto_hide");
+    });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.waitForTimeout(600);
+
+    const shell = page.getByTestId("minimal-dock-hover-shell");
+    const capsule = page.getByTestId("minimal-dock-capsule");
+    const animatedShell = shell.locator(":scope > div").first();
+    await expect(shell).toBeVisible({ timeout: 15_000 });
+
+    await shell.hover();
+    await expect(capsule).toBeVisible();
+
+    // 离开 Dock 区域，触发 auto-hide 计时。
+    await page.mouse.move(5, 5);
+
+    // 1s 延迟前应保持可见（给一点裕量，900ms 仍可见）。
+    await page.waitForTimeout(900);
+    await expect(capsule).toBeVisible();
+
+    // 超过 1s 延迟并给动画留时间后，shell 透明度应降到接近 0。
+    await page.waitForTimeout(700);
+    await expect
+      .poll(async () => Number.parseFloat((await animatedShell.evaluate((el) => getComputedStyle(el).opacity)) || "1"))
+      .toBeLessThan(0.1);
+  });
 });

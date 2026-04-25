@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const CLOSE_DELAY_MS = 380;
+// 鼠标离开 Dock 后延迟 1s 再收起，减少移动到右侧「+」时的误判抖动。
+const CLOSE_DELAY_MS = 1000;
 
 /**
  * Dock 自动隐藏显隐状态：进入命中区立即展开，离开后延时收起。

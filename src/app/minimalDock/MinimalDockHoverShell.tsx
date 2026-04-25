@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { useMinimalDockReveal } from "./useMinimalDockReveal";
 
@@ -18,14 +18,17 @@ export function MinimalDockHoverShell({
   forceRevealed = false,
 }: MinimalDockHoverShellProps) {
   const { revealed, reveal, scheduleClose } = useMinimalDockReveal();
+  const prevForceRevealedRef = useRef(forceRevealed);
 
   // 复用原有“自下而上”动效：当外部要求常显时，仅驱动 revealed 状态，不改动画实现。
   useEffect(() => {
     if (forceRevealed) {
       reveal();
-      return;
+    } else if (prevForceRevealedRef.current) {
+      // 仅在离开“强制常显”态时触发收起，走默认 delay（1s）。
+      scheduleClose();
     }
-    scheduleClose(0);
+    prevForceRevealedRef.current = forceRevealed;
   }, [forceRevealed, reveal, scheduleClose]);
 
   return (
@@ -33,7 +36,7 @@ export function MinimalDockHoverShell({
       className="relative flex w-full items-end justify-center"
       data-testid="minimal-dock-hover-shell"
       onMouseEnter={reveal}
-      onMouseLeave={forceRevealed ? undefined : scheduleClose}
+      onMouseLeave={forceRevealed ? undefined : () => scheduleClose()}
     >
       <motion.div
         initial={false}

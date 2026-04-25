@@ -31,7 +31,7 @@ export const Z_SEARCH_DROPDOWN = 80;
 /** 添加图标 / 网址导航模块（须高于文件夹弹层与右键菜单）。 */
 export const Z_ADD_ICON_DIALOG = 110;
 /**
- * 极简 Dock：须高于 {@link SettingsSpotlightModal} 全屏层（z-[120]），否则开启设置时 Dock 被遮罩完全挡住；
- * 须低于 `GlassMessageDialog` 等 z-[130] 的确认层。
+ * 极简 Dock：应低于 {@link SettingsSpotlightModal} 全屏层（z-[120]），
+ * 避免设置打开时 Dock 盖住设置面板；同时高于普通网格内容层。
  */
-export const Z_MINIMAL_DOCK_LAYER = 125;
+export const Z_MINIMAL_DOCK_LAYER = 110;
