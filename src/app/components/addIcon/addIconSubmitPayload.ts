@@ -23,10 +23,26 @@ export function safeDomainFromUrl(urlStr: string, fallbackDomain: string): strin
   }
 }
 
+/**
+ * 已知站点中，裸域名输入时默认补 `www.` 的白名单。
+ * 说明：仅用于「用户未显式输入 `www.`」的默认归一化，显式输入保持原样。
+ */
+const WWW_PREFERRED_DOMAINS = new Set(["baidu.com"]);
+
 export function normalizeSiteUrlInput(raw: string, fallbackUrl: string): string {
   const t = raw.trim();
   if (!t) return fallbackUrl;
   if (/^https?:\/\//i.test(t)) return t;
+  if (/^www\./i.test(t)) return `https://${t}`;
+  const hostMatch = t.match(/^([^/?#]+)(.*)$/);
+  if (hostMatch) {
+    const host = hostMatch[1];
+    const rest = hostMatch[2] ?? "";
+    const hostWithoutPort = host.split(":")[0]?.toLowerCase() ?? "";
+    if (WWW_PREFERRED_DOMAINS.has(hostWithoutPort)) {
+      return `https://www.${host}${rest}`;
+    }
+  }
   return `https://${t}`;
 }
 

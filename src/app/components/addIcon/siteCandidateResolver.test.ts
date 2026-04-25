@@ -23,6 +23,15 @@ describe("siteCandidateResolver", () => {
   });
 
   /**
+   * 目的：命中目录站点时仍应保留用户输入 URL，避免 `www.` 被目录默认值回写丢失。
+   */
+  it("should_preserve_input_url_when_domain_matches_catalog_site_with_www_prefix", () => {
+    const out = resolveQuickSiteCandidate("https://www.youtube.com", ADD_ICON_CATALOG);
+    expect(out?.id).toBe("cat-site-youtube");
+    expect(out?.url).toBe("https://www.youtube.com");
+  });
+
+  /**
    * 目的：若输入不在目录中，创建可添加的临时站点候选并补全名称/URL。
    */
   it("should_create_quick_site_candidate_when_domain_not_in_catalog", () => {

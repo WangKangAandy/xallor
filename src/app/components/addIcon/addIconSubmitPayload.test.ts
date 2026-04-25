@@ -21,6 +21,13 @@ describe("addIconSubmitPayload helpers", () => {
   });
 
   /**
+   * 目的：对约定需要 `www.` 的站点（如 baidu），裸域名输入应默认补齐，避免历史回归。
+   */
+  it("should_prepend_www_when_normalizeSiteUrlInput_given_www_preferred_domain_without_protocol", () => {
+    expect(normalizeSiteUrlInput("baidu.com", "https://fallback.dev")).toBe("https://www.baidu.com");
+  });
+
+  /**
    * 目的：本地图标上传失败时，错误文案应映射到统一 i18n key，避免分支漏提示。
    */
   it("should_map_failure_reason_to_message_key_when_custom_icon_upload_fails", () => {

@@ -38,7 +38,11 @@ export function resolveQuickSiteCandidate(raw: string, catalog: AddIconCatalogEn
 
   const existing = catalog.find((entry) => entry.kind === "site" && entry.domain.toLowerCase() === domain.toLowerCase());
   if (existing && existing.kind === "site") {
-    return existing;
+    return {
+      ...existing,
+      // 保留用户当前输入（例如 www 前缀），避免被目录默认 URL 覆盖。
+      url: normalizedUrl,
+    };
   }
 
   return {
